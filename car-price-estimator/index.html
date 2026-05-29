@@ -1,0 +1,270 @@
+﻿<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoAI – Nástroje pro autobazary</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="shared.js" defer></script>
+</head>
+<body>
+
+<nav class="site-nav">
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+            <span class="nav-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>
+            <span class="nav-logo-text">AutoAI</span>
+        </a>
+        <div class="nav-links">
+            <a href="profil.html">Profil</a>
+            <a href="ceny.html">Odhad ceny</a>
+            <a href="popisky.html">Popisky</a>
+            <a href="market-monitor.html">Monitoring</a>
+            <a href="skaut.html">Skaut</a>
+            <a href="ceny.html" class="nav-cta">Začít →</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero fade-up">
+    <div class="container">
+        <span class="hero-badge fade-up fade-up-d1">Poháněno Claude AI</span>
+        <h1 class="hero-heading fade-up fade-up-d1">Hodiny práce<br>za pár minut</h1>
+        <p class="hero-subtitle fade-up fade-up-d2">Oceňování vozu, psaní inzerátů i sledování konkurence — to vše uděláme automaticky za vás.<br>Místo hodin hledání a porovnávání máte výsledky během 30 sekund.</p>
+        <div class="hero-actions fade-up fade-up-d3">
+            <a href="ceny.html" class="btn-hero-primary">Začít s odhadem ceny →</a>
+            <a href="#nastroje" class="btn-hero-secondary">Prozkoumat nástroje ↓</a>
+        </div>
+    </div>
+</section>
+
+<!-- Statistiky -->
+<section class="stats-bar fade-up fade-up-d3">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number">2+ hod</span>
+                <span class="stat-label">Ušetříte na každém autě</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">~30s</span>
+                <span class="stat-label">Místo hodin hledání</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">24/7</span>
+                <span class="stat-label">Monitoring bez vaší práce</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">0 min</span>
+                <span class="stat-label">Psaní inzerátů ručně</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Nástroje -->
+<section id="nastroje" class="tools-section">
+    <div class="container">
+        <h2 class="section-heading fade-up">Co AutoAI umí</h2>
+        <p class="section-subtitle fade-up fade-up-d1">Pět specializovaných nástrojů, které pokryjí celý prodejní proces</p>
+
+        <div class="tool-grid">
+            <a href="profil.html" class="tool-card fade-up fade-up-d2">
+                <div class="tool-card-badge" style="background:#E8F5EF;color:#1F6E5A;">Profil</div>
+                <span class="tool-icon">🧩</span>
+                <strong>Profil prodejce</strong>
+                <p>Uložte firemní profil, přidejte URL webů a nechte AI vytáhnout vozy, ceny a informace přímo do karet bez ručního přepisování.</p>
+                <ul class="tool-features">
+                    <li>Import vozů z webových stránek</li>
+                    <li>Karty aut bez fotek do 1 profilu</li>
+                    <li>Jedním klikem do garáže AutoAI</li>
+                    <li>Demo email digest monitoringu a skauta</li>
+                </ul>
+                <span class="tool-link">Otevřít profil →</span>
+            </a>
+            <a href="ceny.html" class="tool-card fade-up fade-up-d2">
+                <div class="tool-card-badge tool-badge-green">Nejoblíbenější</div>
+                <span class="tool-icon">💰</span>
+                <strong>Odhad tržní ceny</strong>
+                <p>Zadejte parametry vozu a AI prohledá aktuální inzeráty na českém trhu. Získáte realistický cenový odhad s rozptylem, srovnávací inzeráty a doporučení pro prodej.</p>
+                <ul class="tool-features">
+                    <li>Analýza reálných inzerátů z bazarů</li>
+                    <li>Cenový rozptyl min/průměr/max</li>
+                    <li>Vliv výbavy a stavu na cenu</li>
+                    <li>Podpora fotografií vozu</li>
+                </ul>
+                <span class="tool-link">Spustit odhad →</span>
+            </a>
+            <a href="popisky.html" class="tool-card fade-up fade-up-d3">
+                <span class="tool-icon">📝</span>
+                <strong>Generátor popisků</strong>
+                <p>Vytvořte profesionální popisek pro inzerát během vteřin. Vyberte si styl (prodejní, informační, prémiový) a rozsah textu podle platformy.</p>
+                <ul class="tool-features">
+                    <li>Více stylů popisku na výběr</li>
+                    <li>Přizpůsobení délky textu</li>
+                    <li>Automatické načtení dat z odhadu</li>
+                    <li>Vlastní poznámky jako podklad</li>
+                </ul>
+                <span class="tool-link">Vytvořit popisek →</span>
+            </a>
+            <a href="market-monitor.html" class="tool-card fade-up fade-up-d4">
+                <span class="tool-icon">📊</span>
+                <strong>Monitoring konkurence</strong>
+                <p>Sledujte ceny konkurenčních vozů na českých bazarových portálech. Přidejte auta ke sledování a systém automaticky skenuje trh každé 3,5 dne.</p>
+                <ul class="tool-features">
+                    <li>Automatické scany každých 3,5 dne</li>
+                    <li>Cenové trendy a vývoj trhu</li>
+                    <li>Více vozů najednou</li>
+                    <li>Shrnutí od AI ke každému scanu</li>
+                </ul>
+                <span class="tool-link">Otevřít monitoring →</span>
+            </a>
+            <a href="skaut.html" class="tool-card fade-up fade-up-d5">
+                <div class="tool-card-badge" style="background:#F5E6D3;color:#8B5E3C;">Nové</div>
+                <span class="tool-icon">🔎</span>
+                <strong>Skaut výhodných nabídek</strong>
+                <p>AI prohledá české bazary a najde auta, která jsou inzerována pod obvyklou tržní cenou. Ideální pro nákup za výhodnou cenu nebo přeprodej.</p>
+                <ul class="tool-features">
+                    <li>Hledání aut pod tržní cenou</li>
+                    <li>Porovnání s tržním průměrem</li>
+                    <li>Analýza rizik u každé nabídky</li>
+                    <li>Tipy na vyjednávání</li>
+                </ul>
+                <span class="tool-link">Spustit hledání →</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Moje garáž -->
+<section class="garage-section" id="garageSection" style="display:none;">
+    <div class="container">
+        <h2 class="section-heading fade-up">Moje garáž</h2>
+        <p class="section-subtitle fade-up fade-up-d1">Vaše uložená auta — použijte je v libovolném nástroji</p>
+        <div class="garage-grid" id="garageGrid"></div>
+    </div>
+</section>
+
+<!-- Jak to funguje -->
+<section class="how-section">
+    <div class="container">
+        <h2 class="section-heading fade-up">Jak to funguje</h2>
+        <p class="section-subtitle fade-up fade-up-d1">Tři jednoduché kroky k profesionálnímu prodeji</p>
+        <div class="steps-grid">
+            <div class="step-card fade-up fade-up-d2">
+                <span class="step-number">1</span>
+                <strong>Zadejte data vozu</strong>
+                <p>Vyplňte značku, model, rok, kilometry a další parametry. Můžete přidat i fotografie.</p>
+            </div>
+            <div class="step-card fade-up fade-up-d3">
+                <span class="step-number">2</span>
+                <strong>AI analyzuje trh</strong>
+                <p>Claude AI prohledá aktuální inzeráty na českých bazarových portálech v reálném čase.</p>
+            </div>
+            <div class="step-card fade-up fade-up-d4">
+                <span class="step-number">3</span>
+                <strong>Získejte výsledky</strong>
+                <p>Obdržíte cenový odhad, hotový popisek pro inzerát a průběžný monitoring konkurence.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Kolik času ušetříte -->
+<section class="time-section">
+    <div class="container">
+        <h2 class="section-heading fade-up">Kolik času vám AutoAI ušetří</h2>
+        <p class="section-subtitle fade-up fade-up-d1">Srovnejte, jak dlouho trvá práce ručně vs. s AI asistentem</p>
+        <div class="time-grid">
+            <div class="time-card fade-up fade-up-d2">
+                <div class="time-card-header time-header-old">Bez AutoAI</div>
+                <div class="time-card-body">
+                    <div class="time-row"><span>Průzkum cen na bazarech</span><span class="time-val time-slow">45–90 min</span></div>
+                    <div class="time-row"><span>Psaní popisku inzerátu</span><span class="time-val time-slow">20–40 min</span></div>
+                    <div class="time-row"><span>Sledování konkurence</span><span class="time-val time-slow">30–60 min / týden</span></div>
+                    <div class="time-row time-row-total"><span>Celkem na jedno auto</span><span class="time-val time-slow">2–3 hodiny</span></div>
+                </div>
+            </div>
+            <div class="time-card fade-up fade-up-d3">
+                <div class="time-card-header time-header-new">S AutoAI</div>
+                <div class="time-card-body">
+                    <div class="time-row"><span>AI odhad ceny z trhu</span><span class="time-val time-fast">~30 sekund</span></div>
+                    <div class="time-row"><span>Vygenerování popisku</span><span class="time-val time-fast">~15 sekund</span></div>
+                    <div class="time-row"><span>Automatický monitoring</span><span class="time-val time-fast">0 min (běží sám)</span></div>
+                    <div class="time-row time-row-total"><span>Celkem na jedno auto</span><span class="time-val time-fast">Pod 2 minuty</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section fade-up">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Přestaňte trávit hodiny průzkumem trhu</h2>
+            <p>Stačí váš Anthropic API klíč a AI udělá práci za vás. Bez povinné registrace — ušetřete čas hned teď.</p>
+            <a href="ceny.html" class="btn-hero-primary">Vyzkoušet zdarma →</a>
+        </div>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <span>© 2026 AutoAI</span>
+    </div>
+</footer>
+
+<script>
+(function () {
+    if (typeof CarGarage === 'undefined') return;
+    var section = document.getElementById('garageSection');
+    var grid = document.getElementById('garageGrid');
+    if (!section || !grid) return;
+
+    function render() {
+        var cars = CarGarage.getAll();
+        if (cars.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = '';
+        grid.innerHTML = cars.map(function (car) {
+            var detail = CarGarage.getDetail(car);
+            return '<div class="garage-card fade-up">'
+                + '<div class="garage-card-header">'
+                + '<strong>' + escHtml(CarGarage.getLabel(car)) + '</strong>'
+                + '<button class="garage-remove-btn" data-id="' + car.id + '" title="Smazat">×</button>'
+                + '</div>'
+                + (detail ? '<p class="garage-card-detail">' + escHtml(detail) + '</p>' : '')
+                + '<div class="garage-card-actions">'
+                + '<a href="ceny.html#garage=' + car.id + '" class="garage-action">💰 Odhad ceny</a>'
+                + '<a href="popisky.html#garage=' + car.id + '" class="garage-action">📝 Popisek</a>'
+                + '<a href="market-monitor.html#garage=' + car.id + '" class="garage-action">📊 Monitoring</a>'
+                + '</div>'
+                + '</div>';
+        }).join('');
+
+        grid.querySelectorAll('.garage-remove-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var car = CarGarage.get(btn.dataset.id);
+                if (car && confirm('Smazat "' + CarGarage.getLabel(car) + '" z garáže?')) {
+                    CarGarage.remove(btn.dataset.id);
+                    render();
+                }
+            });
+        });
+    }
+
+    function escHtml(s) {
+        var d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+
+    window.addEventListener('garage-changed', render);
+    render();
+})();
+</script>
+
+</body>
+</html>

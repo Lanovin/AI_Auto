@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring cen – AutoAI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== Modrý akcent pro monitoring ===== */
+        #scanAllBtn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--blue-dark);
+            color: #fff;
+            border: none;
+            padding: 11px 26px;
+            font-size: .85rem;
+            font-weight: 500;
+            font-family: var(--font-sans);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .2s;
+            letter-spacing: .03em;
+            white-space: nowrap;
+        }
+
+        #scanAllBtn:hover:not(:disabled) {
+            background: #15304f;
+            box-shadow: 0 4px 12px rgba(30,58,95,.22);
+        }
+
+        #scanAllBtn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        #addCarBtn {
+            align-self: flex-end;
+            padding: 10px 24px;
+            background: var(--blue-dark);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 500;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+
+        #addCarBtn:hover {
+            background: #15304f;
+        }
+
+        /* Ovládací panel scanů */
+        .scan-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .scan-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .scan-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .scan-info-label {
+            font-size: .72rem;
+            font-weight: 500;
+            color: var(--stone-400);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .scan-info-value {
+            font-size: .85rem;
+            color: var(--stone-900);
+            font-weight: 500;
+        }
+
+        /* Grid sledovaných aut */
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        /* Karta sledovaného auta */
+        .monitor-card {
+            background: var(--warm-white);
+            border: 1px solid var(--stone-200);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .monitor-card:hover {
+            border-color: var(--stone-400);
+            box-shadow: 0 8px 24px rgba(0,0,0,.06);
+        }
+
+        .monitor-card.scanning {
+            opacity: .7;
+            pointer-events: none;
+        }
+
+        .monitor-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 18px 20px 12px;
+            border-bottom: 1px solid var(--stone-200);
+        }
+
+        .monitor-car-name {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--blue-dark);
+        }
+
+        .monitor-car-details {
+            font-size: .8rem;
+            color: var(--stone-400);
+            margin-top: 4px;
+        }
+
+        .monitor-card-body {
+            padding: 16px 20px;
+            position: relative;
+            min-height: 80px;
+        }
+
+        .monitor-price-main {
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .monitor-price-range {
+            font-size: .85rem;
+            color: var(--stone-400);
+            margin-bottom: 8px;
+        }
+
+        .monitor-count {
+            font-size: .8rem;
+            color: var(--stone-400);
+            margin-bottom: 10px;
+        }
+
+        .monitor-trend {
+            font-size: .82rem;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .monitor-trend.up {
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .monitor-trend.down {
+            color: var(--danger);
+            background: rgba(185, 28, 28, .06);
+        }
+
+        .monitor-trend.neutral {
+            color: var(--stone-400);
+            background: var(--stone-100);
+        }
+
+        .monitor-summary {
+            font-size: .82rem;
+            color: var(--stone-700);
+            line-height: 1.5;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .monitor-compare {
+            margin-top: 10px;
+            padding: 9px 10px;
+            border-radius: 10px;
+            font-size: .8rem;
+            line-height: 1.45;
+        }
+
+        .monitor-compare.cheap {
+            background: #EAF7F2;
+            color: #1F6E5A;
+            border: 1px solid #C8EBDD;
+        }
+
+        .monitor-compare.expensive {
+            background: #FFF1E8;
+            color: #B45309;
+            border: 1px solid #FED7AA;
+        }
+
+        .monitor-compare.neutral {
+            background: var(--stone-100);
+            color: var(--stone-700);
+            border: 1px solid var(--stone-200);
+        }
+
+        .monitor-source-badge {
+            display: inline-flex;
+            margin-top: 8px;
+            font-size: .72rem;
+            color: var(--stone-500);
+            background: var(--stone-100);
+            border-radius: 999px;
+            padding: 4px 8px;
+        }
+
+        .monitor-scan-date {
+            font-size: .75rem;
+            color: var(--stone-400);
+        }
+
+        .monitor-card-footer {
+            padding: 10px 20px 14px;
+            border-top: 1px solid var(--stone-200);
+            display: flex;
+            gap: 8px;
+        }
+
+        .car-remove-btn {
+            background: transparent;
+            border: none;
+            color: var(--stone-400);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all .15s;
+            line-height: 1;
+        }
+
+        .car-remove-btn:hover {
+            color: var(--danger);
+            background: rgba(185, 28, 28, .08);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: .8rem;
+            font-weight: 500;
+            background: transparent;
+            color: var(--blue-dark);
+            border: 1px solid var(--stone-200);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all .15s;
+        }
+
+        .btn-sm:hover {
+            border-color: var(--blue-dark);
+            background: var(--blue-light);
+        }
+
+        .btn-sm:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .no-data {
+            color: var(--stone-400);
+            font-size: .85rem;
+            font-style: italic;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--stone-400);
+            font-size: .9rem;
+        }
+
+        .client-import-box {
+            border: 1px dashed var(--stone-300);
+            border-radius: 12px;
+            padding: 14px;
+            background: #fff;
+        }
+
+        .client-import-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        #importClientCarsBtn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--blue-dark);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+
+        #prefillProfileWebsBtn {
+            background: transparent;
+            color: var(--blue-dark);
+            border: 1px solid var(--stone-200);
+            border-radius: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(255,255,255,.88);
+            font-size: .85rem;
+            color: var(--stone-400);
+            z-index: 1;
+            border-radius: 8px;
+        }
+
+        .scan-error {
+            font-size: .8rem;
+            color: var(--danger);
+            margin-top: 8px;
+        }
+
+        .auto-scan-notice {
+            background: var(--blue-light);
+            color: var(--blue-dark);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            border: 1px solid rgba(30,58,95,.15);
+            display: none;
+        }
+
+        .auto-scan-notice.visible {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .monitor-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .scan-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            #scanAllBtn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .monitor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Usage dashboard */
+        .usage-dashboard {
+            margin-top: 1.2rem;
+            padding: 1rem 1.2rem;
+            background: linear-gradient(135deg, #EEF4FF 0%, #F0F4FF 100%);
+            border: 1px solid #D0DFFF;
+            border-radius: 12px;
+        }
+        .usage-bar-wrap { margin-bottom: 0.8rem; }
+        .usage-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--stone-700);
+            margin-bottom: 6px;
+        }
+        .usage-bar {
+            height: 8px;
+            background: #D0DFFF;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .usage-bar-fill {
+            height: 100%;
+            background: var(--accent, #1E3A5F);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .usage-bar-fill.over-budget {
+            background: #C0392B;
+        }
+        .usage-stats {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .usage-stat {
+            display: flex;
+            flex-direction: column;
+        }
+        .usage-stat-val {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--stone-900);
+        }
+        .usage-stat-lbl {
+            font-size: 0.75rem;
+            color: var(--stone-400);
+        }
+        @media (max-width: 640px) {
+            .usage-stats { flex-direction: column; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+            <span class="nav-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>
+            <span class="nav-logo-text">AutoAI</span>
+        </a>
+        <div class="nav-links">
+            <a href="profil.html">Profil</a>
+            <a href="ceny.html">Odhad ceny</a>
+            <a href="popisky.html">Popisky</a>
+            <a href="market-monitor.html" class="active">Monitoring</a>
+            <a href="skaut.html">Skaut</a>
+            <a href="ceny.html" class="nav-cta">Začít →</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header fade-up">
+        <h1>Monitoring cen konkurence</h1>
+        <p>Sken webu klienta a porovnání jeho cen vozů s aktuálním trhem</p>
+    </div>
+
+    <section class="tool-hero fade-up fade-up-d1">
+        <div class="tool-hero-grid">
+            <div class="tool-hero-copy">
+                <span class="tool-pill">B2B monitoring</span>
+                <h2>Import z webu klienta, srovnání s trhem a pravidelný scan na jednom místě.</h2>
+                <p>Monitoring je určený pro bazary, které chtějí hlídat cenovou hladinu skladu bez ručního obcházení inzertních portálů. Importujete vozy, nastavíte frekvenci a sledujete rozdíly vůči trhu.</p>
+            </div>
+            <div class="tool-kpi-grid">
+                <article class="tool-kpi">
+                    <strong>Import z URL</strong>
+                    <span>Vozy klienta lze natáhnout přímo z jeho webu.</span>
+                </article>
+                <article class="tool-kpi">
+                    <strong>Historie scanů</strong>
+                    <span>Vývoj ceny a doporučení se ukládají ke každému autu.</span>
+                </article>
+                <article class="tool-kpi">
+                    <strong>Rozpočet tokenů</strong>
+                    <span>Vizuální kontrola měsíční spotřeby monitoringu.</span>
+                </article>
+            </div>
+        </div>
+    </section>
+</div>
+
+<main class="container">
+
+    <!-- Import vozů z webu klienta -->
+    <section class="form-section fade-up fade-up-d1">
+        <h2>Web klienta a jeho vozy</h2>
+        <div class="client-import-box">
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="clientWebsites">URL stránky klienta (1 řádek = 1 URL)</label>
+                    <textarea id="clientWebsites" rows="4" placeholder="https://www.vaseautobazar.cz\nhttps://www.vaseautobazar.cz/nabidka"></textarea>
+                    <small>Agent vytáhne auta, jejich ceny a informace do karet monitoringu bez fotek.</small>
+                </div>
+            </div>
+            <div class="client-import-actions">
+                <button type="button" id="importClientCarsBtn">📥 Importovat vozy z webu</button>
+                <button type="button" id="prefillProfileWebsBtn">Načíst URL z profilu</button>
+            </div>
+            <small id="clientImportStatus" style="display:block;margin-top:8px;color:var(--stone-400);">Zatím bez importu.</small>
+        </div>
+    </section>
+
+    <!-- Načíst auto z garáže -->
+    <section class="form-section fade-up fade-up-d1 garage-picker-section" id="garagePickerSection" style="display:none;">
+        <h2>Přidat z garáže</h2>
+        <div class="form-row">
+            <div class="form-group" style="flex:1;">
+                <label for="garagePicker">Vyberte auto z garáže</label>
+                <select id="garagePicker">
+                    <option value="">-- Vyberte auto --</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:0 0 auto;display:flex;align-items:flex-end;">
+                <button type="button" id="garageAddBtn" style="padding:0.65rem 1.2rem;">Přidat do monitoringu</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Přidat auto ke sledování -->
+    <section class="form-section fade-up fade-up-d1">
+        <h2>Přidat auto ke sledování</h2>
+        <form id="addCarForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addBrand">Značka <span class="required">*</span></label>
+                    <select id="addBrand" required>
+                        <option value="">-- Vyberte --</option>
+                        <option>Škoda</option>
+                        <option>VW</option>
+                        <option>BMW</option>
+                        <option>Mercedes</option>
+                        <option>Audi</option>
+                        <option>Toyota</option>
+                        <option>Ford</option>
+                        <option>Hyundai</option>
+                        <option>Kia</option>
+                        <option>Peugeot</option>
+                        <option>Renault</option>
+                        <option>Opel</option>
+                        <option>Seat</option>
+                        <option>Volvo</option>
+                        <option>Honda</option>
+                        <option>Mazda</option>
+                        <option>Nissan</option>
+                        <option>Citroën</option>
+                        <option>Fiat</option>
+                        <option>Porsche</option>
+                        <option>Land Rover</option>
+                        <option>Subaru</option>
+                        <option>Jiná</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addModel">Model <span class="required">*</span></label>
+                    <input type="text" id="addModel" placeholder="např. Octavia, Golf..." required>
+                </div>
+                <div class="form-group">
+                    <label for="addYear">Rok výroby <span class="required">*</span></label>
+                    <select id="addYear" required>
+                        <option value="">-- Vyberte --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addMileage">Najeto (km)</label>
+                    <input type="number" id="addMileage" placeholder="např. 125000" min="0" max="9999999">
+                </div>
+                <div class="form-group">
+                    <label for="addTransmission">Převodovka</label>
+                    <select id="addTransmission">
+                        <option value="">-- Vyberte --</option>
+                        <option>Manuál</option>
+                        <option>Automat</option>
+                        <option>DSG/PDK</option>
+                        <option>CVT</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addFuel">Palivo</label>
+                    <select id="addFuel">
+                        <option value="">-- Vyberte --</option>
+                        <option>Benzín</option>
+                        <option>Diesel</option>
+                        <option>Hybrid</option>
+                        <option>Plug-in hybrid</option>
+                        <option>Elektro</option>
+                        <option>LPG</option>
+                        <option>CNG</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="addClientPrice">Cena klienta (Kč)</label>
+                    <input type="number" id="addClientPrice" placeholder="např. 349000" min="0" max="99999999">
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button type="submit" id="addCarBtn">+ Přidat</button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <!-- Nastavení monitoringu -->
+    <section class="form-section fade-up fade-up-d2">
+        <h2>Nastavení monitoringu</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="scanFrequency">Frekvence scanů</label>
+                <select id="scanFrequency">
+                    <option value="1">Každý den</option>
+                    <option value="3.5" selected>Každé 3,5 dne</option>
+                    <option value="7">Jednou týdně</option>
+                    <option value="14">Jednou za 2 týdny</option>
+                    <option value="30">Jednou měsíčně</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="scanModel">Model AI pro scany</label>
+                <select id="scanModel">
+                    <option value="claude-opus-4-6" selected>Opus 4.6 – jediný aktivní model</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="monthlyBudgetMonitor">Měsíční limit tokenů</label>
+                <select id="monthlyBudgetMonitor">
+                    <option value="0">Bez limitu</option>
+                    <option value="50000">50k tokenů</option>
+                    <option value="100000">100k tokenů</option>
+                    <option value="250000" selected>250k tokenů</option>
+                    <option value="500000">500k tokenů</option>
+                    <option value="1000000">1M tokenů</option>
+                </select>
+            </div>
+        </div>
+        <!-- Usage dashboard -->
+        <div class="usage-dashboard" id="usageDashboard">
+            <div class="usage-bar-wrap">
+                <div class="usage-bar-label">
+                    <span>Spotřeba tento měsíc</span>
+                    <span id="usageText">0 / 250k tokenů</span>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div>
+                </div>
+            </div>
+            <div class="usage-stats">
+                <div class="usage-stat">
+                    <span class="usage-stat-val" id="usageRequests">0</span>
+                    <span class="usage-stat-lbl">Scanů tento měsíc</span>
+                </div>
+                <div class="usage-stat">
+                    <span class="usage-stat-val" id="usageCost">$0.00</span>
+                    <span class="usage-stat-lbl">Přibližné náklady</span>
+                </div>
+                <div class="usage-stat">
+                    <span class="usage-stat-val" id="usageRemaining">250k</span>
+                    <span class="usage-stat-lbl">Zbývá tokenů</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ovládání scanů -->
+    <section class="form-section fade-up fade-up-d2">
+        <h2>Přehled scanů</h2>
+        <div id="autoScanNotice" class="auto-scan-notice">
+            ⏳ Automatický scan se spouští…
+        </div>
+        <div class="scan-panel">
+            <div class="scan-info">
+                <div class="scan-info-item">
+                    <span class="scan-info-label">Poslední scan</span>
+                    <span class="scan-info-value" id="lastScanTime">Nebyl proveden</span>
+                </div>
+                <div class="scan-info-item">
+                    <span class="scan-info-label">Další automatický scan</span>
+                    <span class="scan-info-value" id="nextScanTime">–</span>
+                </div>
+                <div class="scan-info-item">
+                    <span class="scan-info-label">Sledovaná auta</span>
+                    <span class="scan-info-value" id="carCount">0</span>
+                </div>
+            </div>
+            <button id="scanAllBtn">🔍 Spustit scan všech aut</button>
+        </div>
+    </section>
+
+    <!-- Sledovaná auta -->
+    <div id="carGrid" class="monitor-grid"></div>
+
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <span>© 2025 AutoAI</span>
+        <span>Vytvořeno s Claude AI</span>
+    </div>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+/* ===== AutoCeny – Monitoring cen konkurence ===== */
+(function () {
+    'use strict';
+
+    // ---------- Konstanty ----------
+    var STORAGE_KEY_CARS = 'autoceny_monitor_cars';
+    var STORAGE_KEY_LAST_SCAN = 'autoceny_monitor_last_scan';
+    var MAX_SCAN_HISTORY = 10;
+
+    // ---------- Nastavení – frekvence, model, rozpočet ----------
+    var scanFreqSelect = document.getElementById('scanFrequency');
+    var scanModelSelect = document.getElementById('scanModel');
+    var monthlyBudgetSelect = document.getElementById('monthlyBudgetMonitor');
+
+    function loadSettings() {
+        if (typeof AutoAISettings === 'undefined') return;
+        scanFreqSelect.value = AutoAISettings.get('monitor_freq', '3.5');
+        scanModelSelect.value = 'claude-opus-4-6';
+        monthlyBudgetSelect.value = AutoAISettings.get('monitor_budget', '250000');
+        if (clientWebsitesInput) {
+            clientWebsitesInput.value = AutoAISettings.get('monitor_client_websites', '');
+        }
+    }
+
+    function saveSettings() {
+        if (typeof AutoAISettings === 'undefined') return;
+        AutoAISettings.set('monitor_freq', scanFreqSelect.value);
+        AutoAISettings.set('monitor_model', 'claude-opus-4-6');
+        AutoAISettings.set('monitor_budget', monthlyBudgetSelect.value);
+        if (clientWebsitesInput) {
+            AutoAISettings.set('monitor_client_websites', clientWebsitesInput.value);
+        }
+    }
+
+    scanFreqSelect.addEventListener('change', saveSettings);
+    scanModelSelect.addEventListener('change', saveSettings);
+    monthlyBudgetSelect.addEventListener('change', function () { saveSettings(); refreshUsageDashboard(); });
+
+    function getScanIntervalMs() {
+        return parseFloat(scanFreqSelect.value) * 24 * 60 * 60 * 1000;
+    }
+
+    function getMonthlyBudget() {
+        return parseInt(monthlyBudgetSelect.value, 10) || 0;
+    }
+
+    // ---------- Usage dashboard ----------
+    function refreshUsageDashboard() {
+        if (typeof TokenTracker === 'undefined') return;
+        var monthly = TokenTracker.getMonthlyBySource('monitor');
+        var budget = getMonthlyBudget();
+
+        document.getElementById('usageRequests').textContent = monthly.requests;
+
+        // Odhad nákladů
+        var cost = 0;
+        var recent = TokenTracker.getRecent(500);
+        for (var i = 0; i < recent.length; i++) {
+            var e = recent[i];
+            var now = new Date();
+            var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            if (e.source === 'monitor' && e.timestamp >= monthStart) {
+                cost += TokenTracker.estimateCost(e.inputTokens, e.outputTokens, e.model);
+            }
+        }
+        document.getElementById('usageCost').textContent = '$' + cost.toFixed(2);
+
+        // Progress bar
+        var usageText = document.getElementById('usageText');
+        var barFill = document.getElementById('usageBarFill');
+        var remainingEl = document.getElementById('usageRemaining');
+
+        if (budget > 0) {
+            var pct = Math.min((monthly.total / budget) * 100, 100);
+            barFill.style.width = pct + '%';
+            barFill.classList.toggle('over-budget', monthly.total >= budget);
+            usageText.textContent = TokenTracker.formatTokens(monthly.total) + ' / ' + TokenTracker.formatTokens(budget) + ' tokenů';
+            var remaining = Math.max(budget - monthly.total, 0);
+            remainingEl.textContent = TokenTracker.formatTokens(remaining);
+        } else {
+            barFill.style.width = '0%';
+            usageText.textContent = TokenTracker.formatTokens(monthly.total) + ' tokenů (bez limitu)';
+            remainingEl.textContent = '∞';
+        }
+    }
+
+    function checkBudget() {
+        if (typeof TokenTracker === 'undefined') return true;
+        var budget = getMonthlyBudget();
+        if (budget === 0) return true; // bez limitu
+        var monthly = TokenTracker.getMonthlyBySource('monitor');
+        if (monthly.total >= budget) {
+            alert('Dosáhli jste měsíčního limitu tokenů pro monitoring (' + TokenTracker.formatTokens(budget) + ').\nZvyšte limit v nastavení nebo počkejte na další měsíc.');
+            return false;
+        }
+        return true;
+    }
+
+    // ---------- DOM reference ----------
+    var addCarForm = document.getElementById('addCarForm');
+    var scanAllBtn = document.getElementById('scanAllBtn');
+    var carGrid = document.getElementById('carGrid');
+    var lastScanEl = document.getElementById('lastScanTime');
+    var nextScanEl = document.getElementById('nextScanTime');
+    var carCountEl = document.getElementById('carCount');
+    var autoScanNotice = document.getElementById('autoScanNotice');
+    var yearSelect = document.getElementById('addYear');
+    var clientWebsitesInput = document.getElementById('clientWebsites');
+    var importClientCarsBtn = document.getElementById('importClientCarsBtn');
+    var prefillProfileWebsBtn = document.getElementById('prefillProfileWebsBtn');
+    var clientImportStatus = document.getElementById('clientImportStatus');
+
+    // ---------- Naplnění roků ----------
+    (function populateYears() {
+        var currentYear = new Date().getFullYear();
+        for (var y = currentYear; y >= 1990; y--) {
+            var opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            yearSelect.appendChild(opt);
+        }
+    })();
+
+    // ---------- localStorage operace ----------
+
+    /** Načte pole sledovaných aut */
+    function loadCars() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY_CARS)) || [];
+        } catch (e) { return []; }
+    }
+
+    /** Uloží pole sledovaných aut */
+    function saveCars(cars) {
+        localStorage.setItem(STORAGE_KEY_CARS, JSON.stringify(cars));
+    }
+
+    /** Vrátí timestamp posledního scanu */
+    function getLastScanTime() {
+        return parseInt(localStorage.getItem(STORAGE_KEY_LAST_SCAN), 10) || 0;
+    }
+
+    /** Uloží timestamp posledního scanu */
+    function setLastScanTime(ts) {
+        localStorage.setItem(STORAGE_KEY_LAST_SCAN, String(ts));
+    }
+
+    function saveMonitorDigest(cars) {
+        var payload = {
+            timestamp: Date.now(),
+            cars: (cars || []).map(function (car) {
+                var lastScan = car.scans && car.scans.length ? car.scans[car.scans.length - 1] : null;
+                return {
+                    brand: car.brand,
+                    model: car.model,
+                    year: car.year,
+                    clientPrice: car.clientPrice || 0,
+                    marketAvg: lastScan ? (lastScan.avgPrice || 0) : 0,
+                    summary: lastScan ? (lastScan.summary || '') : ''
+                };
+            })
+        };
+        try { localStorage.setItem('autoai_monitor_last_snapshot', JSON.stringify(payload)); } catch (e) { /* ignore */ }
+    }
+
+    function parseJsonArrayFromResponse(text) {
+        try { return JSON.parse(text.trim()); } catch (e) {}
+
+        var block = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (block) {
+            try { return JSON.parse(block[1]); } catch (e2) {}
+        }
+
+        var arrMatch = text.match(/\[[\s\S]*\]/);
+        if (arrMatch) {
+            try { return JSON.parse(arrMatch[0]); } catch (e3) {}
+        }
+
+        throw new Error('Nepodařilo se parsovat seznam vozů z webu klienta.');
+    }
+
+    function extractResponseText(apiData) {
+        var out = '';
+        var content = apiData && apiData.content ? apiData.content : [];
+        for (var i = 0; i < content.length; i++) {
+            if (content[i].type === 'text') out += content[i].text;
+        }
+        return out;
+    }
+
+    function toNumber(val) {
+        if (val === null || val === undefined || val === '') return 0;
+        if (typeof val === 'number') return val;
+        var cleaned = String(val).replace(/\s/g, '').replace(/[^0-9]/g, '');
+        return parseInt(cleaned, 10) || 0;
+    }
+
+    async function fetchCarsFromClientWebsite(url) {
+        var requestBody = {
+            model: scanModelSelect.value || 'claude-opus-4-6',
+            max_tokens: 3000,
+            system: 'Jsi extraktor nabídek aut z webu klienta. Vrať pouze validní JSON pole bez markdownu a bez vysvětlení.',
+            tools: [{
+                type: 'web_search_20250305',
+                name: 'web_search',
+                max_uses: 5
+            }],
+            messages: [{
+                role: 'user',
+                content: 'Projdi web ' + url + ' a vrať POUZE JSON pole vozů bez dalšího textu. Každá položka musí mít klíče: brand, model, year, mileage, transmission, fuel, price, url, sourceSite. Cena a rok mají být čísla pokud lze. Max 40 položek.'
+            }]
+        };
+
+        if (!window.AutoAIAnthropic) {
+            throw new Error('Centrální Anthropic vrstva není načtená.');
+        }
+
+        var data = await window.AutoAIAnthropic.call(requestBody);
+
+        if (typeof TokenTracker !== 'undefined') {
+            TokenTracker.record('monitor', data);
+        }
+
+        var parsed = parseJsonArrayFromResponse(extractResponseText(data));
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed.map(function (item) {
+            return {
+                id: 'car_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                brand: (item.brand || '').trim(),
+                model: (item.model || '').trim(),
+                year: toNumber(item.year),
+                mileage: toNumber(item.mileage),
+                transmission: item.transmission || '',
+                fuel: item.fuel || '',
+                clientPrice: toNumber(item.price),
+                sourceUrl: item.url || '',
+                sourceSite: item.sourceSite || url,
+                importedFromClientWeb: true,
+                scans: []
+            };
+        }).filter(function (car) {
+            return car.brand && car.model && car.year;
+        });
+    }
+
+    function getClientWebsiteUrls() {
+        if (!clientWebsitesInput) return [];
+        return clientWebsitesInput.value.split('\n').map(function (s) {
+            return s.trim();
+        }).filter(function (s) { return s; });
+    }
+
+    function dedupeCars(cars) {
+        var seen = {};
+        return cars.filter(function (car) {
+            var key = [car.brand, car.model, String(car.year), String(car.clientPrice || 0)].join('|').toLowerCase();
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+        });
+    }
+
+    // ---------- Inicializace ----------
+    function init() {
+        // Načíst nastavení
+        loadSettings();
+
+        if (clientWebsitesInput && !clientWebsitesInput.value && typeof ProfileHub !== 'undefined') {
+            var p = ProfileHub.get();
+            if (p && Array.isArray(p.websites) && p.websites.length > 0) {
+                clientWebsitesInput.value = p.websites.join('\n');
+            }
+        }
+
+        // Vykreslit sledovaná auta
+        renderCars();
+
+        // Aktualizovat informace o scanech
+        updateScanStatus();
+
+        // Zkontrolovat, zda je potřeba automatický scan
+        checkAutoScan();
+    }
+
+    if (clientWebsitesInput) {
+        clientWebsitesInput.addEventListener('input', saveSettings);
+    }
+
+    if (prefillProfileWebsBtn) {
+        prefillProfileWebsBtn.addEventListener('click', function () {
+            if (typeof ProfileHub === 'undefined') {
+                alert('Profil není dostupný.');
+                return;
+            }
+            var profile = ProfileHub.get();
+            var websites = Array.isArray(profile.websites) ? profile.websites : [];
+            if (websites.length === 0) {
+                alert('V profilu zatím nejsou uložené žádné URL.');
+                return;
+            }
+            clientWebsitesInput.value = websites.join('\n');
+            saveSettings();
+            clientImportStatus.textContent = 'Načteno ' + websites.length + ' URL z profilu.';
+        });
+    }
+
+    if (importClientCarsBtn) {
+        importClientCarsBtn.addEventListener('click', async function () {
+            var urls = getClientWebsiteUrls();
+            if (urls.length === 0) {
+                alert('Zadejte alespoň jednu URL webu klienta.');
+                return;
+            }
+
+            if (!checkBudget()) return;
+
+            importClientCarsBtn.disabled = true;
+            importClientCarsBtn.textContent = 'Importuji...';
+            clientImportStatus.textContent = 'Probíhá import vozů z webu klienta...';
+
+            try {
+                var importedCars = [];
+                for (var i = 0; i < urls.length; i++) {
+                    var carsFromSite = await fetchCarsFromClientWebsite(urls[i]);
+                    importedCars = importedCars.concat(carsFromSite || []);
+                }
+
+                importedCars = dedupeCars(importedCars);
+                var monitorCars = loadCars();
+                var existing = {};
+
+                for (var j = 0; j < monitorCars.length; j++) {
+                    var c = monitorCars[j];
+                    existing[[c.brand, c.model, String(c.year), String(c.clientPrice || 0)].join('|').toLowerCase()] = true;
+                }
+
+                var added = 0;
+                importedCars.forEach(function (car) {
+                    var key = [car.brand, car.model, String(car.year), String(car.clientPrice || 0)].join('|').toLowerCase();
+                    if (existing[key]) return;
+                    existing[key] = true;
+                    monitorCars.push(car);
+                    added++;
+                });
+
+                saveCars(monitorCars);
+                renderCars();
+                updateScanStatus();
+                clientImportStatus.textContent = 'Hotovo. Přidáno ' + added + ' nových vozů (zdroje: ' + urls.length + ').';
+            } catch (err) {
+                console.error(err);
+                clientImportStatus.textContent = 'Import se nezdařil: ' + err.message;
+                alert(err.message);
+            } finally {
+                importClientCarsBtn.disabled = false;
+                importClientCarsBtn.textContent = '📥 Importovat vozy z webu';
+            }
+        });
+    }
+
+    // ---------- Přidání auta ----------
+    addCarForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var brand = document.getElementById('addBrand').value.trim();
+        var model = document.getElementById('addModel').value.trim();
+        var year = document.getElementById('addYear').value;
+
+        if (!brand || !model || !year) {
+            alert('Vyplňte značku, model a rok výroby.');
+            return;
+        }
+
+        var car = {
+            id: 'car_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            brand: brand,
+            model: model,
+            year: parseInt(year, 10),
+            mileage: parseInt(document.getElementById('addMileage').value, 10) || 0,
+            transmission: document.getElementById('addTransmission').value,
+            fuel: document.getElementById('addFuel').value,
+            clientPrice: parseInt(document.getElementById('addClientPrice').value, 10) || 0,
+            scans: []
+        };
+
+        var cars = loadCars();
+
+        // Kontrola duplicit
+        var exists = cars.some(function (c) {
+            return c.brand === car.brand && c.model === car.model &&
+                   c.year === car.year && c.mileage === car.mileage;
+        });
+
+        if (exists) {
+            alert('Toto auto již je v monitoringu.');
+            return;
+        }
+
+        cars.push(car);
+        saveCars(cars);
+
+        addCarForm.reset();
+        renderCars();
+        updateScanStatus();
+    });
+
+    // ---------- Smazání auta ----------
+    function removeCar(carId) {
+        if (!confirm('Opravdu chcete odebrat toto auto z monitoringu?')) return;
+        var cars = loadCars();
+        cars = cars.filter(function (c) { return c.id !== carId; });
+        saveCars(cars);
+        renderCars();
+        updateScanStatus();
+    }
+
+    // ---------- Vykreslení karet ----------
+    function renderCars() {
+        var cars = loadCars();
+        carCountEl.textContent = cars.length;
+
+        if (cars.length === 0) {
+            carGrid.innerHTML = '<div class="empty-state">Zatím nesledujete žádná auta.<br>Přidejte první auto pomocí formuláře výše nebo tlačítkem „Přidat do monitoringu" na stránce odhadu cen.</div>';
+            return;
+        }
+
+        carGrid.innerHTML = cars.map(function (car) {
+            return renderCarCard(car);
+        }).join('');
+
+        // Event listenery – smazání
+        carGrid.querySelectorAll('.car-remove-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                removeCar(btn.dataset.carId);
+            });
+        });
+
+        // Event listenery – jednotlivý scan
+        carGrid.querySelectorAll('.car-scan-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                scanSingleCar(btn.dataset.carId);
+            });
+        });
+    }
+
+    /** Vykreslí HTML kartu jednoho auta */
+    function renderCarCard(car) {
+        var lastScan = car.scans.length > 0 ? car.scans[car.scans.length - 1] : null;
+        var prevScan = car.scans.length > 1 ? car.scans[car.scans.length - 2] : null;
+
+        var priceHtml = '<div class="no-data">Zatím bez dat – spusťte scan</div>';
+        var trendHtml = '';
+        var metaHtml = '';
+
+        if (lastScan) {
+            priceHtml =
+                '<div class="monitor-price-main">' + formatPrice(lastScan.avgPrice) + '</div>' +
+                '<div class="monitor-price-range">Rozsah: ' + formatPrice(lastScan.minPrice) + ' – ' + formatPrice(lastScan.maxPrice) + '</div>' +
+                '<div class="monitor-count">' + lastScan.count + ' inzerátů nalezeno</div>';
+
+            if (car.clientPrice) {
+                priceHtml += '<div class="monitor-count">Cena klienta: <strong>' + formatPrice(car.clientPrice) + '</strong></div>';
+            }
+
+            trendHtml = renderTrend(lastScan, prevScan);
+            if (car.clientPrice) {
+                trendHtml += renderClientVsMarket(car.clientPrice, lastScan.avgPrice);
+            }
+
+            if (lastScan.summary) {
+                metaHtml += '<div class="monitor-summary">' + escapeHtml(lastScan.summary) + '</div>';
+            }
+
+            if (car.sourceSite) {
+                metaHtml += '<div class="monitor-source-badge">Zdroj klienta: ' + escapeHtml(car.sourceSite) + '</div>';
+            }
+
+            var scanDate = new Date(lastScan.timestamp);
+            metaHtml += '<div class="monitor-scan-date">Poslední scan: ' + formatDate(scanDate) + '</div>';
+
+            if (lastScan.cached === true && lastScan.ageHours != null) {
+                metaHtml += '<div class="monitor-source-badge">📋 Aktualizováno před ' + Math.round(lastScan.ageHours) + ' h (z cache)</div>';
+            } else if (lastScan.cached === false) {
+                metaHtml += '<div class="monitor-source-badge">✨ Čerstvý scan</div>';
+            }
+        } else if (car.clientPrice) {
+            priceHtml += '<div class="monitor-count">Cena klienta: <strong>' + formatPrice(car.clientPrice) + '</strong></div>';
+            if (car.sourceSite) {
+                metaHtml += '<div class="monitor-source-badge">Zdroj klienta: ' + escapeHtml(car.sourceSite) + '</div>';
+            }
+        }
+
+        var mileageStr = car.mileage ? car.mileage.toLocaleString('cs-CZ') + ' km' : '–';
+
+        return '' +
+            '<div class="monitor-card" id="card-' + car.id + '">' +
+                '<div class="monitor-card-header">' +
+                    '<div>' +
+                        '<strong class="monitor-car-name">' + escapeHtml(car.brand) + ' ' + escapeHtml(car.model) + '</strong>' +
+                        '<div class="monitor-car-details">' + car.year + ' · ' + mileageStr + ' · ' + escapeHtml(car.transmission || '–') + ' · ' + escapeHtml(car.fuel || '–') + '</div>' +
+                    '</div>' +
+                    '<button class="car-remove-btn" data-car-id="' + car.id + '" title="Odebrat z monitoringu">✕</button>' +
+                '</div>' +
+                '<div class="monitor-card-body">' +
+                    priceHtml +
+                    trendHtml +
+                    metaHtml +
+                '</div>' +
+                '<div class="monitor-card-footer">' +
+                    '<button class="car-scan-btn btn-sm" data-car-id="' + car.id + '">🔄 Aktualizovat</button>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function renderClientVsMarket(clientPrice, marketPrice) {
+        if (!clientPrice || !marketPrice) return '';
+        var diff = clientPrice - marketPrice;
+        var pct = (diff / marketPrice) * 100;
+
+        if (Math.abs(pct) < 2) {
+            return '<div class="monitor-compare neutral">Klientova cena je téměř na trhu (' + pct.toFixed(1) + ' %).</div>';
+        }
+        if (diff < 0) {
+            return '<div class="monitor-compare cheap">Klient je pod trhem o ' + formatPrice(Math.abs(diff)) + ' (' + Math.abs(pct).toFixed(1) + ' %). Silně konkurenceschopná nabídka.</div>';
+        }
+        return '<div class="monitor-compare expensive">Klient je nad trhem o ' + formatPrice(diff) + ' (' + pct.toFixed(1) + ' %). Zvažte úpravu ceny.</div>';
+    }
+
+    /** Vykreslí trend oproti minulému scanu */
+    function renderTrend(current, previous) {
+        if (!previous) {
+            return '<div class="monitor-trend neutral">— První scan</div>';
+        }
+
+        var diff = current.avgPrice - previous.avgPrice;
+        var pct = (diff / previous.avgPrice) * 100;
+
+        // Tolerance ± 2 % = beze změny
+        if (Math.abs(pct) < 2) {
+            return '<div class="monitor-trend neutral">→ Beze změny</div>';
+        } else if (diff > 0) {
+            return '<div class="monitor-trend up">↑ Zdražilo o ' + formatPrice(Math.abs(diff)) + ' (' + pct.toFixed(1) + ' %)</div>';
+        } else {
+            return '<div class="monitor-trend down">↓ Zlevnilo o ' + formatPrice(Math.abs(diff)) + ' (' + Math.abs(pct).toFixed(1) + ' %)</div>';
+        }
+    }
+
+    // ---------- Scan všech aut ----------
+    var scanInProgress = false;
+
+    scanAllBtn.addEventListener('click', function () {
+        scanAllCars();
+    });
+
+    async function scanAllCars() {
+        var cars = loadCars();
+        if (cars.length === 0) {
+            alert('Nejprve přidejte alespoň jedno auto ke sledování.');
+            return;
+        }
+        if (!checkBudget()) return;
+
+        if (scanInProgress) return;
+        scanInProgress = true;
+
+        scanAllBtn.disabled = true;
+        scanAllBtn.innerHTML = '<span class="spinner"></span> Skenuji…';
+
+        // Sekvenční skenování – jedno auto po druhém (kvůli rate limitům)
+        for (var i = 0; i < cars.length; i++) {
+            var car = cars[i];
+            updateCardStatus(car.id, 'loading', 'Skenování ' + (i + 1) + '/' + cars.length + '…');
+
+            try {
+                var result = await scanCar(car);
+                car.scans.push(result);
+
+                // Omezení historie na MAX_SCAN_HISTORY záznamů
+                if (car.scans.length > MAX_SCAN_HISTORY) {
+                    car.scans = car.scans.slice(-MAX_SCAN_HISTORY);
+                }
+            } catch (err) {
+                console.error('Chyba při skenování ' + car.brand + ' ' + car.model + ':', err);
+                updateCardStatus(car.id, 'error', err.message);
+            }
+        }
+
+        // Uložit výsledky a aktualizovat UI
+        saveCars(cars);
+        saveMonitorDigest(cars);
+        setLastScanTime(Date.now());
+
+        renderCars();
+        updateScanStatus();
+
+        scanAllBtn.disabled = false;
+        scanAllBtn.innerHTML = '🔍 Spustit scan všech aut';
+        scanInProgress = false;
+        autoScanNotice.classList.remove('visible');
+    }
+
+    // ---------- Scan jednoho auta ----------
+    async function scanSingleCar(carId) {
+        var cars = loadCars();
+        var carIndex = cars.findIndex(function (c) { return c.id === carId; });
+        if (carIndex === -1) return;
+
+        var car = cars[carIndex];
+        if (!checkBudget()) return;
+
+        // Disable tlačítko
+        var btn = document.querySelector('.car-scan-btn[data-car-id="' + carId + '"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Skenování…'; }
+
+        updateCardStatus(carId, 'loading', 'Skenování…');
+
+        try {
+            var result = await scanCar(car);
+            car.scans.push(result);
+            if (car.scans.length > MAX_SCAN_HISTORY) {
+                car.scans = car.scans.slice(-MAX_SCAN_HISTORY);
+            }
+            saveCars(cars);
+            saveMonitorDigest(cars);
+        } catch (err) {
+            console.error('Chyba:', err);
+            updateCardStatus(carId, 'error', err.message);
+        }
+
+        renderCars();
+        updateScanStatus();
+    }
+
+    // ---------- Scan jednoho auta přes server-side API (s DB cache) ----------
+    async function scanCar(car) {
+        var response = await fetch('/api/market-monitor/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                brand:        car.brand,
+                model:        car.model,
+                year:         car.year,
+                mileage:      car.mileage  || 0,
+                transmission: car.transmission || '',
+                fuel:         car.fuel         || ''
+            })
+        });
+
+        if (!response.ok) {
+            var errBody = {};
+            try { errBody = await response.json(); } catch (e) { /* ignore */ }
+            throw new Error('Chyba API (' + response.status + '): ' + (errBody.error || response.statusText));
+        }
+
+        var data = await response.json();
+
+        return {
+            timestamp:   Date.now(),
+            avgPrice:    data.averagePrice  || 0,
+            minPrice:    data.minPrice      || 0,
+            maxPrice:    data.maxPrice      || 0,
+            count:       data.listingCount  || 0,
+            summary:     data.summary       || '',
+            cached:      data.cached,
+            ageHours:    data.ageHours
+        };
+    }
+
+    /** Pokusí se extrahovat JSON objekt z odpovědi AI */
+    function parseJsonFromResponse(text) {
+        // Pokus 1: celý text je JSON
+        try {
+            return JSON.parse(text.trim());
+        } catch (e) {}
+
+        // Pokus 2: JSON v markdown code bloku
+        var jsonBlockMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        if (jsonBlockMatch) {
+            try { return JSON.parse(jsonBlockMatch[1]); } catch (e) {}
+        }
+
+        // Pokus 3: najít JSON objekt s klíčem avgPrice kdekoli v textu
+        var objectMatch = text.match(/\{[^{}]*"avgPrice"\s*:\s*\d[\s\S]*?\}/);
+        if (objectMatch) {
+            try { return JSON.parse(objectMatch[0]); } catch (e) {}
+        }
+
+        // Pokus 4: najít jakýkoli JSON objekt
+        var anyJsonMatch = text.match(/\{[\s\S]*?\}/);
+        if (anyJsonMatch) {
+            try { return JSON.parse(anyJsonMatch[0]); } catch (e) {}
+        }
+
+        throw new Error('Nepodařilo se parsovat odpověď z API.');
+    }
+
+    // ---------- Automatický scan ----------
+    function checkAutoScan() {
+        var lastScan = getLastScanTime();
+        var now = Date.now();
+        var cars = loadCars();
+        var interval = getScanIntervalMs();
+
+        // Spustit auto-scan pokud: jsou auta, uplynul interval a nepřekročen budget
+        if (cars.length > 0 && (now - lastScan) > interval && checkBudget()) {
+            autoScanNotice.classList.add('visible');
+            setTimeout(function () {
+                scanAllCars();
+            }, 1500);
+        }
+    }
+
+    // ---------- Aktualizace stavu karet ----------
+    function updateCardStatus(carId, status, message) {
+        var card = document.getElementById('card-' + carId);
+        if (!card) return;
+
+        // Odebrat předchozí overlaye
+        var oldOverlay = card.querySelector('.scan-overlay');
+        if (oldOverlay) oldOverlay.remove();
+        var oldError = card.querySelector('.scan-error');
+        if (oldError) oldError.remove();
+
+        if (status === 'loading') {
+            card.classList.add('scanning');
+            var body = card.querySelector('.monitor-card-body');
+            if (body) {
+                body.insertAdjacentHTML('afterbegin',
+                    '<div class="scan-overlay"><span class="spinner"></span> ' + escapeHtml(message) + '</div>'
+                );
+            }
+        } else if (status === 'error') {
+            card.classList.remove('scanning');
+            var body2 = card.querySelector('.monitor-card-body');
+            if (body2) {
+                body2.insertAdjacentHTML('beforeend',
+                    '<div class="scan-error">❌ ' + escapeHtml(message) + '</div>'
+                );
+            }
+        } else {
+            card.classList.remove('scanning');
+        }
+    }
+
+    // ---------- Aktualizace celkového stavu scanů ----------
+    function updateScanStatus() {
+        var lastScan = getLastScanTime();
+        var cars = loadCars();
+        carCountEl.textContent = cars.length;
+        var interval = getScanIntervalMs();
+
+        if (lastScan) {
+            lastScanEl.textContent = formatDate(new Date(lastScan));
+            var nextScan = new Date(lastScan + interval);
+            if (nextScan > new Date()) {
+                nextScanEl.textContent = formatDate(nextScan);
+            } else {
+                nextScanEl.textContent = 'Při dalším načtení stránky';
+            }
+        } else {
+            lastScanEl.textContent = 'Nebyl proveden';
+            nextScanEl.textContent = '–';
+        }
+        refreshUsageDashboard();
+    }
+
+    // ---------- Pomocné funkce ----------
+
+    /** Formátuje cenu do českého formátu */
+    function formatPrice(price) {
+        if (!price) return '–';
+        return Math.round(price).toLocaleString('cs-CZ') + ' Kč';
+    }
+
+    /** Formátuje datum do čitelné podoby */
+    function formatDate(date) {
+        return date.toLocaleDateString('cs-CZ', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    /** Escapuje HTML entity proti XSS */
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // ---------- Garáž: přidání aut z garáže do monitoringu ----------
+    function initGaragePicker() {
+        if (typeof CarGarage === 'undefined') return;
+        var section = document.getElementById('garagePickerSection');
+        var picker = document.getElementById('garagePicker');
+        var addBtn = document.getElementById('garageAddBtn');
+        if (!section || !picker) return;
+
+        function refreshPicker() {
+            var garageCars = CarGarage.getAll();
+            picker.innerHTML = '<option value="">-- Vyberte auto --</option>';
+            garageCars.forEach(function (car) {
+                var opt = document.createElement('option');
+                opt.value = car.id;
+                opt.textContent = CarGarage.getLabel(car) + (CarGarage.getDetail(car) ? ' · ' + CarGarage.getDetail(car) : '');
+                picker.appendChild(opt);
+            });
+            section.style.display = garageCars.length > 0 ? '' : 'none';
+        }
+
+        addBtn.addEventListener('click', function () {
+            var id = picker.value;
+            if (!id) return;
+            var garageCar = CarGarage.get(id);
+            if (!garageCar) return;
+
+            var monitorCars = loadCars();
+            var exists = monitorCars.some(function (c) {
+                return c.brand === garageCar.brand && c.model === garageCar.model &&
+                       String(c.year) === String(garageCar.year);
+            });
+            if (exists) {
+                alert('Toto auto již je v monitoringu.');
+                return;
+            }
+
+            var newCar = {
+                id: 'car_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                brand: garageCar.brand,
+                model: garageCar.model,
+                year: parseInt(garageCar.year, 10),
+                mileage: parseInt(garageCar.mileage, 10) || 0,
+                transmission: garageCar.transmission || '',
+                fuel: garageCar.fuelType || '',
+                clientPrice: parseInt(garageCar.price, 10) || 0,
+                sourceUrl: garageCar.sourceUrl || '',
+                sourceSite: garageCar.sourceSite || '',
+                scans: []
+            };
+            monitorCars.push(newCar);
+            saveCars(monitorCars);
+            renderCars();
+            picker.value = '';
+        });
+
+        window.addEventListener('garage-changed', refreshPicker);
+        refreshPicker();
+    }
+
+    // ---------- Spuštění ----------
+    init();
+    initGaragePicker();
+
+})();
+</script>
+
+</body>
+</html>

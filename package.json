@@ -1,0 +1,14 @@
+{
+  "name": "auto-ceny-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix car-price-estimator run dev",
+    "build": "npm --prefix car-price-estimator run build",
+    "start": "npm --prefix car-price-estimator run start",
+    "install:app": "npm --prefix car-price-estimator install"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4"
+  }
+}

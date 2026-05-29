@@ -1,0 +1,53 @@
+# ── Dependencies ─────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ── Build output / cache ─────────────────────────────────────
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Secrets (CRITICAL — never commit) ────────────────────────
+.env
+.env.*
+.env*.local
+!.env.example
+
+# ── Vercel ───────────────────────────────────────────────────
+.vercel
+
+# ── Testing ──────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── OS noise ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor configs (personal — keep local) ───────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Claude Code project state ────────────────────────────────
+.claude/

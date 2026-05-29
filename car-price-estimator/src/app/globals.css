@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+/* ════════════════════════════════════════════════════════════════════
+   CARGENT design tokens (Tailwind v4 CSS-first config via @theme).
+   AutoAI brand-* tokens preserved below for legacy tool pages.
+   ════════════════════════════════════════════════════════════════════ */
+@theme {
+  /* ── Fonts ─────────────────────────────────────────────────────── */
+  /* Cargent typography (set as CSS vars by next/font in layout.tsx) */
+  --font-display: var(--font-fraunces),  Georgia, "Times New Roman", serif;
+  --font-body:    var(--font-hanken),    system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    var(--font-spline-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Legacy default sans — used by existing AutoAI tool pages */
+  --font-sans:    var(--font-inter),     system-ui, sans-serif;
+
+  /* ── Cargent palette (light theme) ─────────────────────────────── */
+  --color-paper:    #F6F4EE;
+  --color-paper-2:  #EFEDE4;
+  --color-surface:  #FFFFFF;
+  --color-ink:      #14171C;
+  --color-ink-soft: #3B4047;
+  --color-dim:      #676C74;
+  --color-faint:    #9CA1A8;
+  --color-brass:    #B0791D;
+  --color-brass-2:  #946315;
+  --color-emerald:  #1C6B57;
+  --color-line:     rgba(20, 23, 28, 0.10);
+  --color-line-2:   rgba(20, 23, 28, 0.16);
+
+  /* ── Legacy AutoAI brand palette (preserved for existing pages) ── */
+  --color-brand-50:  #e6f1fb;
+  --color-brand-100: #b5d4f4;
+  --color-brand-200: #85b7eb;
+  --color-brand-400: #378add;
+  --color-brand-600: #185fa5;
+  --color-brand-800: #0c447c;
+  --color-brand-900: #042c53;
+  --color-neutral-500: #5f5e5a;
+
+  /* ── Shadows (Cargent — soft and low) ──────────────────────────── */
+  --shadow-card:      0 1px 0 rgba(24, 95, 165, 0.04);   /* legacy */
+  --shadow-cargent:   0 30px 70px -34px rgba(20, 23, 28, 0.30);
+  --shadow-cargent-2: 0 18px 40px -22px rgba(20, 23, 28, 0.22);
+  --shadow-cargent-card: 0 1px 0 rgba(20, 23, 28, 0.04), 0 18px 44px -28px rgba(20, 23, 28, 0.20);
+}
+
+:root {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* Cargent default — warm paper background, ink text, Hanken body font */
+  background: #F6F4EE;
+  color: #14171C;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Keyframe animations
+   ════════════════════════════════════════════════════════════════════ */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(22px, -18px) scale(1.07); }
+  66%      { transform: translate(-16px, 12px) scale(0.93); }
+}
+
+@keyframes search-slide-down {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Cargent-specific */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.92); }
+}
+
+@keyframes range-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(var(--fill, 1)); }
+}
+
+@keyframes range-marker-slide {
+  from { left: 0%; }
+  to   { left: var(--marker-pos, 50%); }
+}
+
+@keyframes gauge-needle {
+  from { transform: rotate(-45deg); }
+  to   { transform: rotate(var(--needle-deg, 18deg)); }
+}
+
+/* Generic entrance — staggered via inline animation-delay */
+.animate-fade-up {
+  animation: fade-up 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-blob {
+  animation: blob 13s ease-in-out infinite;
+}
+.animation-delay-2s { animation-delay: 2s; }
+.animation-delay-4s { animation-delay: 4s; }
+
+.search-dropdown {
+  animation: search-slide-down 0.16s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Cargent ticker — duplicated content shifts by 50% for a seamless loop */
+.cargent-ticker-track {
+  animation: ticker-scroll 38s linear infinite;
+}
+.cargent-ticker:hover .cargent-ticker-track {
+  animation-play-state: paused;
+}
+
+/* Live indicator dot */
+.cargent-pulse {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+/* Range bar fill + marker — kicked off when parent is in view */
+.cargent-range-fill {
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: range-fill 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+.cargent-range-marker {
+  left: 0%;
+  animation: range-marker-slide 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+/* Gauge needle — gentle settle into position */
+.cargent-gauge-needle {
+  transform-origin: center;
+  transform: rotate(-45deg);
+  animation: gauge-needle 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+}
+
+/* ── Scroll-reveal (toggled by JS via .in-view class) ────────────── */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scroll-reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Cargent typographic helpers
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Display headlines — Fraunces, tight tracking, gold italic accent span */
+.cargent-h1,
+.cargent-h2,
+.cargent-h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  color: var(--color-ink);
+}
+.cargent-h1 i,
+.cargent-h2 i,
+.cargent-h3 i {
+  font-style: italic;
+  color: var(--color-brass);
+}
+
+/* Mono numerics — used for prices, metrics, code, table values */
+.cargent-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: -0.01em;
+}
+
+/* Subtle film-grain overlay (paired with feTurbulence SVG) */
+.cargent-grain {
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.04;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Reduced motion — skip all decorative animation, freeze at end state
+   ════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-blob,
+  .cargent-ticker-track,
+  .cargent-pulse,
+  .cargent-range-fill,
+  .cargent-range-marker,
+  .cargent-gauge-needle {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .cargent-range-fill { transform: scaleX(var(--fill, 1)); }
+  .cargent-range-marker { left: var(--marker-pos, 50%); }
+  .cargent-gauge-needle { transform: rotate(var(--needle-deg, 18deg)); }
+
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

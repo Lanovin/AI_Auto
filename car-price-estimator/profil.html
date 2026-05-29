@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muj profil prodejce - AutoAI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --profile-accent: #1F6E5A;
+            --profile-soft: #EAF7F2;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 16px;
+        }
+
+        .profile-card {
+            background: var(--warm-white);
+            border: 1px solid var(--stone-200);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .profile-title {
+            margin: 0 0 8px;
+            font-size: 1.2rem;
+            color: var(--profile-accent);
+        }
+
+        .profile-sub {
+            margin: 0 0 14px;
+            color: var(--stone-400);
+            font-size: 0.86rem;
+        }
+
+        .profile-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn-profile {
+            border: 1px solid var(--profile-accent);
+            background: var(--profile-accent);
+            color: #fff;
+            border-radius: 9px;
+            padding: 9px 14px;
+            font-size: 0.84rem;
+            cursor: pointer;
+        }
+
+        .btn-profile.secondary {
+            background: transparent;
+            color: var(--profile-accent);
+        }
+
+        .profile-kpis {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .kpi {
+            background: var(--profile-soft);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .kpi-val {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--stone-900);
+            display: block;
+        }
+
+        .kpi-lbl {
+            font-size: 0.72rem;
+            color: var(--stone-400);
+            display: block;
+            margin-top: 3px;
+        }
+
+        .car-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .car-card {
+            border: 1px solid var(--stone-200);
+            border-radius: 12px;
+            padding: 12px;
+            background: #fff;
+        }
+
+        .car-card h4 {
+            margin: 0;
+            font-size: 0.98rem;
+            color: var(--stone-900);
+        }
+
+        .car-meta {
+            font-size: 0.8rem;
+            color: var(--stone-500);
+            margin-top: 4px;
+        }
+
+        .car-price {
+            margin-top: 8px;
+            font-weight: 500;
+            color: var(--profile-accent);
+        }
+
+        .car-link {
+            margin-top: 6px;
+            display: inline-block;
+            font-size: 0.75rem;
+            color: var(--stone-500);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            background: var(--profile-soft);
+            color: var(--profile-accent);
+            font-size: 0.72rem;
+            font-weight: 500;
+            padding: 4px 8px;
+            margin-top: 7px;
+        }
+
+        .email-box {
+            border: 1px dashed var(--stone-300);
+            border-radius: 12px;
+            padding: 12px;
+            background: #fff;
+            margin-top: 10px;
+        }
+
+        .hint {
+            color: var(--stone-400);
+            font-size: 0.78rem;
+            margin-top: 8px;
+        }
+
+        .empty {
+            color: var(--stone-400);
+            text-align: center;
+            font-style: italic;
+            padding: 20px 6px;
+        }
+
+        @media (max-width: 860px) {
+            .profile-grid { grid-template-columns: 1fr; }
+            .car-grid { grid-template-columns: 1fr; }
+            .profile-kpis { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+            <span class="nav-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>
+            <span class="nav-logo-text">AutoAI</span>
+        </a>
+        <div class="nav-links">
+            <a href="profil.html" class="active">Profil</a>
+            <a href="ceny.html">Odhad ceny</a>
+            <a href="popisky.html">Popisky</a>
+            <a href="market-monitor.html">Monitoring</a>
+            <a href="skaut.html">Skaut</a>
+            <a href="ceny.html" class="nav-cta">Zacit -&gt;</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header fade-up">
+        <h1>Profil prodejce</h1>
+        <p>Jedno misto pro vase weby, karty aut a AI import nabidek</p>
+    </div>
+
+    <section class="tool-hero fade-up fade-up-d1">
+        <div class="tool-hero-grid">
+            <div class="tool-hero-copy">
+                <span class="tool-pill">B2B profil</span>
+                <h2>Weby, import aut a synchronizace do garáže v jedné kartě.</h2>
+                <p>Profil spojuje firemní identitu, zdrojové URL a přehled importovaných vozů. Odtud se buduje společná datová základna pro monitoring i další B2B moduly.</p>
+            </div>
+            <div class="tool-kpi-grid">
+                <article class="tool-kpi">
+                    <strong>Více URL zdrojů</strong>
+                    <span>Každý řádek může přivést další zdroj nabídek klienta.</span>
+                </article>
+                <article class="tool-kpi">
+                    <strong>Karty aut</strong>
+                    <span>Importované vozy zůstávají přehledně v jednom gridu.</span>
+                </article>
+                <article class="tool-kpi">
+                    <strong>Email centrum</strong>
+                    <span>Demo přepínače pro frekvenci reportingu a notifikace.</span>
+                </article>
+            </div>
+        </div>
+    </section>
+</div>
+
+<main class="container">
+    <div class="profile-grid">
+        <section class="form-section fade-up">
+            <h2>Firemni profil</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="companyName">Nazev firmy</label>
+                    <input type="text" id="companyName" placeholder="napr. Auto Novak">
+                </div>
+                <div class="form-group">
+                    <label for="contactEmail">Kontaktni email</label>
+                    <input type="email" id="contactEmail" placeholder="napr. prodej@firma.cz">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="websiteList">Webove stranky klienta (1 URL na radek)</label>
+                    <textarea id="websiteList" rows="5" placeholder="https://www.vaseautobazar.cz\nhttps://www.vaseautobazar.cz/nabidka"></textarea>
+                    <small>AI z techto stranek vytahne seznam aut, ceny a zakladni informace (bez fotek).</small>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="btn-profile" id="saveProfileBtn" type="button">Ulozit profil</button>
+                <button class="btn-profile secondary" id="importCarsBtn" type="button">Stahnout vozy z webu</button>
+                <button class="btn-profile secondary" id="syncGarageBtn" type="button">Pridat vozy do garaze</button>
+            </div>
+            <p class="hint" id="profileStatus">Profil zatim nebyl ulozen.</p>
+        </section>
+
+        <section class="form-section fade-up fade-up-d1">
+            <h2>Email centrum</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="emailEnabled">Notifikace emailem</label>
+                    <select id="emailEnabled">
+                        <option value="0">Vypnuto</option>
+                        <option value="1">Zapnuto (demo)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="emailFrequency">Frekvence reportu</label>
+                    <select id="emailFrequency">
+                        <option value="daily">Denne</option>
+                        <option value="twice-weekly">2x tydne</option>
+                        <option value="weekly" selected>1x tydne</option>
+                    </select>
+                </div>
+            </div>
+            <div class="email-box">
+                <strong>Nahled emailu</strong>
+                <p id="digestPreview" style="margin:8px 0 0;color:var(--stone-700);font-size:0.85rem;">Zde se zobrazi souhrn monitoringu a skauta pro uzivatele.</p>
+            </div>
+            <div class="profile-actions">
+                <button class="btn-profile secondary" id="emailTestBtn" type="button">Vytvorit test email (mailto)</button>
+            </div>
+            <p class="hint">Jde o pripravenou demo vrstvu. Odesilani bude funkcni po napojeni backendu.</p>
+        </section>
+    </div>
+
+    <section class="form-section fade-up fade-up-d2">
+        <h2>Karty aut v profilu</h2>
+        <div class="profile-kpis">
+            <div class="kpi"><span class="kpi-val" id="kpiCars">0</span><span class="kpi-lbl">Auta v profilu</span></div>
+            <div class="kpi"><span class="kpi-val" id="kpiAvg">0 Kc</span><span class="kpi-lbl">Prumerna cena</span></div>
+            <div class="kpi"><span class="kpi-val" id="kpiImport">nikdy</span><span class="kpi-lbl">Posledni import</span></div>
+        </div>
+        <div id="profileCarsGrid" class="car-grid"></div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <span>Vytvoreno s Claude AI</span>
+    </div>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var profileStatus = document.getElementById('profileStatus');
+    var companyNameEl = document.getElementById('companyName');
+    var contactEmailEl = document.getElementById('contactEmail');
+    var websiteListEl = document.getElementById('websiteList');
+    var saveProfileBtn = document.getElementById('saveProfileBtn');
+    var importCarsBtn = document.getElementById('importCarsBtn');
+    var syncGarageBtn = document.getElementById('syncGarageBtn');
+    var emailEnabledEl = document.getElementById('emailEnabled');
+    var emailFrequencyEl = document.getElementById('emailFrequency');
+    var emailTestBtn = document.getElementById('emailTestBtn');
+    var digestPreviewEl = document.getElementById('digestPreview');
+    var carsGrid = document.getElementById('profileCarsGrid');
+
+    function formatPrice(n) {
+        if (!n) return '0 Kc';
+        return Math.round(n).toLocaleString('cs-CZ') + ' Kc';
+    }
+
+    function formatDate(ts) {
+        if (!ts) return 'nikdy';
+        return new Date(ts).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function readWebsites() {
+        return websiteListEl.value.split('\n').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+    }
+
+    function saveProfile() {
+        if (typeof ProfileHub === 'undefined') return;
+
+        var profile = ProfileHub.save({
+            companyName: companyNameEl.value.trim(),
+            contactEmail: contactEmailEl.value.trim(),
+            websites: readWebsites(),
+            emailEnabled: emailEnabledEl.value === '1',
+            emailFrequency: emailFrequencyEl.value
+        });
+
+        profileStatus.textContent = 'Profil ulozen. Webu: ' + profile.websites.length + '.';
+        renderProfile();
+    }
+
+    function extractText(resp) {
+        var out = '';
+        var content = resp && resp.content ? resp.content : [];
+        for (var i = 0; i < content.length; i++) {
+            if (content[i].type === 'text') out += content[i].text;
+        }
+        return out;
+    }
+
+    function parseArray(text) {
+        try { return JSON.parse(text.trim()); } catch (e) {}
+        var block = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (block) {
+            try { return JSON.parse(block[1]); } catch (e2) {}
+        }
+        var arr = text.match(/\[[\s\S]*\]/);
+        if (arr) {
+            try { return JSON.parse(arr[0]); } catch (e3) {}
+        }
+        throw new Error('Nepodarilo se parsovat seznam aut z odpovedi AI.');
+    }
+
+    async function importCarsFromUrl(url) {
+        var requestBody = {
+            model: 'claude-opus-4-6',
+            max_tokens: 3000,
+            system: 'Jsi parser nabidek aut. Vystupuj jen jako validni JSON pole bez dalsiho textu.',
+            tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
+            messages: [{
+                role: 'user',
+                content: 'Projdi web ' + url + ' a vrat POUZE JSON pole aut bez markdownu. Kazda polozka musi mit: brand, model, year, price, mileage, fuel, transmission, url, note, sourceSite. Pokud hodnota chybi, dej prazdny retezec. Rok a cena dej jako cisla, pokud lze. Maximalne 40 aut.'
+            }]
+        };
+
+        if (!window.AutoAIAnthropic) {
+            throw new Error('Centrální Anthropic vrstva není načtená.');
+        }
+
+        var data = await window.AutoAIAnthropic.call(requestBody);
+
+        if (typeof TokenTracker !== 'undefined') TokenTracker.record('profile-import', data);
+        return parseArray(extractText(data));
+    }
+
+    function dedupeCars(cars) {
+        var map = {};
+        var out = [];
+        cars.forEach(function (car) {
+            var key = [car.brand || '', car.model || '', String(car.year || ''), String(car.price || '')].join('|').toLowerCase();
+            if (!key.replace(/\|/g, '')) return;
+            if (map[key]) return;
+            map[key] = true;
+            out.push(car);
+        });
+        return out;
+    }
+
+    async function runImport() {
+        if (typeof ProfileHub === 'undefined') return;
+        var websites = readWebsites();
+        if (websites.length === 0) {
+            alert('Zadejte aspon jednu URL webu.');
+            return;
+        }
+
+        importCarsBtn.disabled = true;
+        importCarsBtn.textContent = 'Importuji...';
+
+        try {
+            var allCars = [];
+            for (var i = 0; i < websites.length; i++) {
+                var cars = await importCarsFromUrl(websites[i]);
+                allCars = allCars.concat(cars || []);
+            }
+
+            allCars = dedupeCars(allCars);
+            ProfileHub.save({
+                companyName: companyNameEl.value.trim(),
+                contactEmail: contactEmailEl.value.trim(),
+                websites: websites,
+                importedCars: allCars,
+                lastImportAt: Date.now(),
+                emailEnabled: emailEnabledEl.value === '1',
+                emailFrequency: emailFrequencyEl.value
+            });
+            profileStatus.textContent = 'Hotovo. Importovano ' + allCars.length + ' aut z ' + websites.length + ' webu.';
+            renderProfile();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            importCarsBtn.disabled = false;
+            importCarsBtn.textContent = 'Stahnout vozy z webu';
+        }
+    }
+
+    function updateDigestPreview(profile) {
+        var count = (profile.importedCars || []).length;
+        var monthlyMonitor = typeof TokenTracker !== 'undefined' ? TokenTracker.getMonthlyBySource('monitor') : { requests: 0 };
+        var monthlyScout = typeof TokenTracker !== 'undefined' ? TokenTracker.getMonthlyBySource('skaut') : { requests: 0 };
+        var monitorSnapshot = null;
+        var skautSnippet = '';
+        try { monitorSnapshot = JSON.parse(localStorage.getItem('autoai_monitor_last_snapshot') || 'null'); } catch (e) {}
+        try { skautSnippet = (localStorage.getItem('autoai_skaut_last_result') || '').slice(0, 230); } catch (e2) {}
+
+        var monitorLine = 'Monitoring: zatim bez ulozeneho scanu.';
+        if (monitorSnapshot && Array.isArray(monitorSnapshot.cars) && monitorSnapshot.cars.length > 0) {
+            var sample = monitorSnapshot.cars.slice(0, 2).map(function (c) {
+                var delta = (c.clientPrice && c.marketAvg) ? (' | rozdil: ' + formatPrice(c.clientPrice - c.marketAvg)) : '';
+                return c.brand + ' ' + c.model + ' (trh ' + formatPrice(c.marketAvg || 0) + ', klient ' + formatPrice(c.clientPrice || 0) + delta + ')';
+            }).join('; ');
+            monitorLine = 'Monitoring: ' + sample;
+        }
+
+        var skautLine = skautSnippet ? ('Skaut: ' + skautSnippet + '...') : 'Skaut: zatim bez posledniho vystupu.';
+
+        digestPreviewEl.textContent =
+            'Firma ' + (profile.companyName || '-') + ' ma v profilu ' + count + ' aut. Tento mesic probehlo '
+            + monthlyMonitor.requests + ' monitorovacich scanu a ' + monthlyScout.requests + ' skaut hledani. '
+            + 'Frekvence reportu: ' + (profile.emailFrequency || 'weekly') + '. '
+            + monitorLine + ' ' + skautLine;
+    }
+
+    function renderCars(cars) {
+        if (!cars || cars.length === 0) {
+            carsGrid.innerHTML = '<div class="empty">Zatim bez aut. Pouzijte import z webu klienta.</div>';
+            return;
+        }
+
+        carsGrid.innerHTML = cars.map(function (car) {
+            return '<article class="car-card">'
+                + '<h4>' + esc(car.brand || 'Neznama znacka') + ' ' + esc(car.model || '') + ' (' + esc(String(car.year || '-')) + ')</h4>'
+                + '<div class="car-meta">'
+                + esc(car.mileage ? String(car.mileage) + ' km' : 'km neuvedeno') + ' · '
+                + esc(car.fuel || 'palivo ?') + ' · '
+                + esc(car.transmission || 'prevodovka ?')
+                + '</div>'
+                + '<div class="car-price">Cena: ' + formatPrice(car.price || 0) + '</div>'
+                + (car.sourceSite ? '<span class="badge">Zdroj: ' + esc(car.sourceSite) + '</span>' : '')
+                + (car.url ? '<a class="car-link" href="' + esc(car.url) + '" target="_blank" rel="noopener">otevrit inzerat</a>' : '')
+                + '</article>';
+        }).join('');
+    }
+
+    function renderKpis(profile) {
+        var cars = profile.importedCars || [];
+        var prices = cars.map(function (c) { return Number(c.price) || 0; }).filter(function (p) { return p > 0; });
+        var avg = prices.length ? (prices.reduce(function (a, b) { return a + b; }, 0) / prices.length) : 0;
+
+        document.getElementById('kpiCars').textContent = String(cars.length);
+        document.getElementById('kpiAvg').textContent = formatPrice(avg);
+        document.getElementById('kpiImport').textContent = formatDate(profile.lastImportAt);
+    }
+
+    function renderProfile() {
+        if (typeof ProfileHub === 'undefined') return;
+        var profile = ProfileHub.get();
+        companyNameEl.value = profile.companyName || '';
+        contactEmailEl.value = profile.contactEmail || '';
+        websiteListEl.value = (profile.websites || []).join('\n');
+        emailEnabledEl.value = profile.emailEnabled ? '1' : '0';
+        emailFrequencyEl.value = profile.emailFrequency || 'weekly';
+
+        renderKpis(profile);
+        renderCars(profile.importedCars || []);
+        updateDigestPreview(profile);
+    }
+
+    function esc(s) {
+        var d = document.createElement('div');
+        d.textContent = s || '';
+        return d.innerHTML;
+    }
+
+    saveProfileBtn.addEventListener('click', saveProfile);
+    importCarsBtn.addEventListener('click', runImport);
+    syncGarageBtn.addEventListener('click', function () {
+        if (typeof ProfileHub === 'undefined') return;
+        var added = ProfileHub.addImportedCarsToGarage();
+        alert('Do garaze bylo pridano ' + added + ' novych aut.');
+    });
+
+    emailTestBtn.addEventListener('click', function () {
+        var profile = typeof ProfileHub !== 'undefined' ? ProfileHub.get() : { contactEmail: '' };
+        var to = encodeURIComponent(profile.contactEmail || '');
+        var subject = encodeURIComponent('AutoAI report - monitoring a skaut');
+        var body = encodeURIComponent(digestPreviewEl.textContent || 'AutoAI report');
+        window.location.href = 'mailto:' + to + '?subject=' + subject + '&body=' + body;
+    });
+
+    window.addEventListener('usage-changed', renderProfile);
+    window.addEventListener('profile-changed', renderProfile);
+
+    renderProfile();
+})();
+</script>
+</body>
+</html>

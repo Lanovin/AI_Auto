@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skaut výhodných nabídek – AutoAI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #8B5E3C; }
+        .form-section h2 { color: var(--accent); }
+        .nav-links a.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .submit-btn { background: var(--accent); }
+        .submit-btn:hover:not(:disabled) { background: #6E4A2E; }
+        .result-section { border-color: var(--accent); }
+        .badge-scout { background: #F5E6D3; color: var(--accent); }
+        .scout-intro {
+            background: linear-gradient(135deg, #FDF6EF 0%, #FAF0E6 100%);
+            border: 1px solid #E8D5C0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        .scout-intro-icon { font-size: 2rem; flex-shrink: 0; }
+        .scout-intro h3 { margin: 0 0 0.3rem; font-family: var(--font-heading); color: var(--accent); }
+        .scout-intro p { margin: 0; font-size: 0.9rem; color: var(--stone-700); line-height: 1.5; }
+
+        .deal-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 1rem; }
+        .price-range-row { display: flex; gap: 12px; align-items: center; }
+        .price-range-row span { color: var(--stone-400); font-size: 0.85rem; }
+
+        .tier-card-scout { border-color: var(--accent); }
+        .tier-card-scout:has(input:checked) {
+            border-color: var(--accent);
+            background: #FDF6EF;
+        }
+        .tier-card-scout .tier-name { color: var(--accent); }
+
+        /* Usage dashboard */
+        .usage-dashboard { background: var(--cream-50); border: 1px solid var(--stone-200); border-radius: 12px; padding: 16px 20px; margin-top: 16px; }
+        .usage-bar-wrap { margin-bottom: 12px; }
+        .usage-bar-label { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--stone-400); margin-bottom: 6px; }
+        .usage-bar { height: 8px; background: var(--stone-200); border-radius: 4px; overflow: hidden; }
+        .usage-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; }
+        .usage-bar-fill.over-budget { background: #dc2626; }
+        .usage-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .usage-stat { text-align: center; }
+        .usage-stat-val { display: block; font-family: 'DM Serif Display', serif; font-size: 1.15rem; color: var(--stone-800); }
+        .usage-stat-lbl { display: block; font-size: 0.72rem; color: var(--stone-400); margin-top: 2px; }
+        @media (max-width: 600px) { .usage-stats { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+
+<nav class="site-nav">
+    <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+            <span class="nav-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>
+            <span class="nav-logo-text">AutoAI</span>
+        </a>
+        <div class="nav-links">
+            <a href="profil.html">Profil</a>
+            <a href="ceny.html">Odhad ceny</a>
+            <a href="popisky.html">Popisky</a>
+            <a href="market-monitor.html">Monitoring</a>
+            <a href="skaut.html" class="active">Skaut</a>
+            <a href="ceny.html" class="nav-cta">Začít →</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header fade-up">
+        <h1>Skaut výhodných nabídek</h1>
+        <p>AI prohledá bazar a najde auta pod tržní cenou</p>
+    </div>
+
+    <section class="tool-hero fade-up fade-up-d1">
+        <div class="tool-hero-grid">
+            <div class="tool-hero-copy">
+                <span class="tool-pill">Vyhledání podhodnocených aut</span>
+                <h2>Hledejte příležitosti k nákupu a přeprodeji nad jasným filtrem trhu.</h2>
+                <p>Skaut je postavený pro rychlé prosévání nabídek. Zadáte segment, region a rozpočet, AI projde relevantní portály a vrátí vozy, které stojí za další prověření.</p>
+            </div>
+            <div class="tool-kpi-grid">
+                <article class="tool-kpi">
+                    <strong>3 hloubky hledání</strong>
+                    <span>Od rychlého přehledu až po hlubší analýzu příležitostí.</span>
+                </article>
+                <article class="tool-kpi">
+                    <strong>Filtr regionu</strong>
+                    <span>Česko, okolní trhy nebo širší EU kontext.</span>
+                </article>
+                <article class="tool-kpi">
+                    <strong>Token dashboard</strong>
+                    <span>Kontrola měsíčního rozpočtu bez ruční evidence.</span>
+                </article>
+            </div>
+        </div>
+    </section>
+</div>
+
+<main class="container">
+    <form id="scoutForm" novalidate>
+
+        <!-- Úvod -->
+        <div class="scout-intro fade-up">
+            <span class="scout-intro-icon">🔎</span>
+            <div>
+                <h3>Jak to funguje?</h3>
+                <p>Zadejte, jaké auto hledáte — značku, model, rok, rozpočet. AI prohledá aktuální inzeráty na českých bazarech a najde nabídky, které jsou výrazně pod obvyklou tržní cenou. U každé nabídky vysvětlí, proč je výhodná a na co si dát pozor.</p>
+            </div>
+        </div>
+
+        <!-- Rozsah hledání -->
+        <section class="form-section fade-up fade-up-d1">
+            <h2>Rozsah hledání</h2>
+            <div class="tier-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <label class="tier-card tier-card-scout" for="scout-quick">
+                    <input type="radio" name="scoutTier" id="scout-quick" value="quick">
+                    <span class="tier-name">Rychlý přehled</span>
+                    <span class="tier-desc">3–5 nabídek, stručný verdict a minimum textu</span>
+                    <span class="tier-model">Opus 4.6</span>
+                </label>
+                <label class="tier-card tier-card-scout" for="scout-standard">
+                    <input type="radio" name="scoutTier" id="scout-standard" value="standard" checked>
+                    <span class="tier-name">Důkladné hledání</span>
+                    <span class="tier-desc">5–10 nabídek, doporučení a rizika</span>
+                    <span class="tier-model">Opus 4.6</span>
+                </label>
+                <label class="tier-card tier-card-scout" for="scout-deep">
+                    <input type="radio" name="scoutTier" id="scout-deep" value="deep">
+                    <span class="tier-name">Hloubková analýza</span>
+                    <span class="tier-desc">10+ nabídek, detailní posouzení</span>
+                    <span class="tier-model">Opus 4.6</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- Rozpočet tokenů -->
+        <section class="form-section fade-up fade-up-d1">
+            <h2>Rozpočet spotřeby</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="monthlyBudgetSkaut">Měsíční limit tokenů</label>
+                    <select id="monthlyBudgetSkaut">
+                        <option value="0">Bez limitu</option>
+                        <option value="50000">50k tokenů</option>
+                        <option value="100000">100k tokenů</option>
+                        <option value="250000" selected>250k tokenů</option>
+                        <option value="500000">500k tokenů</option>
+                        <option value="1000000">1M tokenů</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="scoutFrequency">Doporučená frekvence hledání</label>
+                    <select id="scoutFrequency">
+                        <option value="1">Každý den</option>
+                        <option value="3" selected>Každé 3 dny</option>
+                        <option value="7">Jednou týdně</option>
+                        <option value="14">Jednou za 2 týdny</option>
+                    </select>
+                    <small>Připomínka, kdy spustit další hledání.</small>
+                </div>
+            </div>
+            <!-- Usage dashboard -->
+            <div class="usage-dashboard" id="usageDashboard">
+                <div class="usage-bar-wrap">
+                    <div class="usage-bar-label">
+                        <span>Spotřeba tento měsíc (skaut)</span>
+                        <span id="usageText">0 / 250k tokenů</span>
+                    </div>
+                    <div class="usage-bar">
+                        <div class="usage-bar-fill" id="usageBarFill" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-stat">
+                        <span class="usage-stat-val" id="usageRequests">0</span>
+                        <span class="usage-stat-lbl">Hledání tento měsíc</span>
+                    </div>
+                    <div class="usage-stat">
+                        <span class="usage-stat-val" id="usageCost">$0.00</span>
+                        <span class="usage-stat-lbl">Přibližné náklady</span>
+                    </div>
+                    <div class="usage-stat">
+                        <span class="usage-stat-val" id="usageRemaining">250k</span>
+                        <span class="usage-stat-lbl">Zbývá tokenů</span>
+                    </div>
+                </div>
+            </div>
+            <div id="nextSearchHint" style="margin-top:10px;font-size:0.82rem;color:var(--stone-400);display:none;">
+                📅 Další doporučené hledání: <strong id="nextSearchDate"></strong>
+            </div>
+        </section>
+
+        <!-- Co hledáte -->
+        <section class="form-section fade-up fade-up-d2">
+            <h2>Jaké auto hledáte?</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brand">Značka <span class="required">*</span></label>
+                    <select id="brand" required>
+                        <option value="">-- Vyberte --</option>
+                        <option value="jakákoliv">Jakákoliv značka</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="model">Model</label>
+                    <select id="model">
+                        <option value="">-- Jakýkoliv --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bodyType">Karoserie</label>
+                    <select id="bodyType">
+                        <option value="">-- Jakákoliv --</option>
+                        <option>Sedan</option>
+                        <option>Kombi</option>
+                        <option>Hatchback</option>
+                        <option>SUV / Crossover</option>
+                        <option>MPV / Van</option>
+                        <option>Kupé</option>
+                        <option>Kabrio</option>
+                        <option>Pick-up</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="yearFrom">Rok od</label>
+                    <select id="yearFrom">
+                        <option value="">-- Od --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="yearTo">Rok do</label>
+                    <select id="yearTo">
+                        <option value="">-- Do --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mileageMax">Max. najeto (km)</label>
+                    <input type="number" id="mileageMax" placeholder="např. 150000" min="0" max="9999999">
+                </div>
+            </div>
+        </section>
+
+        <!-- Rozpočet a palivo -->
+        <section class="form-section fade-up fade-up-d3">
+            <h2>Rozpočet a požadavky</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="budgetMin">Rozpočet od (Kč)</label>
+                    <input type="number" id="budgetMin" placeholder="např. 100000" min="0" step="10000">
+                </div>
+                <div class="form-group">
+                    <label for="budgetMax">Rozpočet do (Kč) <span class="required">*</span></label>
+                    <input type="number" id="budgetMax" placeholder="např. 350000" min="0" step="10000" required>
+                </div>
+                <div class="form-group">
+                    <label for="currency">Měna</label>
+                    <select id="currency">
+                        <option value="CZK" selected>CZK</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fuelType">Palivo</label>
+                    <select id="fuelType">
+                        <option value="">-- Jakékoliv --</option>
+                        <option>Benzín</option>
+                        <option>Diesel</option>
+                        <option>Hybrid</option>
+                        <option>Plug-in hybrid</option>
+                        <option>Elektro</option>
+                        <option>LPG</option>
+                        <option>CNG</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transmission">Převodovka</label>
+                    <select id="transmission">
+                        <option value="">-- Jakákoliv --</option>
+                        <option>Manuál</option>
+                        <option>Automat</option>
+                        <option>DSG/PDK</option>
+                        <option>CVT</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="powerMin">Min. výkon (kW)</label>
+                    <input type="number" id="powerMin" placeholder="např. 85" min="0" max="1000">
+                </div>
+            </div>
+        </section>
+
+        <!-- Účel a poznámky -->
+        <section class="form-section fade-up fade-up-d4">
+            <h2>Další preference</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="purpose">Účel vozidla</label>
+                    <select id="purpose">
+                        <option value="">-- Nevybráno --</option>
+                        <option>Denní dojíždění</option>
+                        <option>Rodinné auto</option>
+                        <option>Podnikání / firemní vůz</option>
+                        <option>Víkendové / volnočasové</option>
+                        <option>Investice / přeprodej</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="region">Region / portály</label>
+                    <select id="region">
+                        <option value="cz" selected>Česko (Sauto, TipCars, Bazos…)</option>
+                        <option value="cz+de">Česko + Německo</option>
+                        <option value="cz+sk">Česko + Slovensko</option>
+                        <option value="eu">Celá EU</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="notes">Poznámky / specifické požadavky</label>
+                    <textarea id="notes" rows="3" placeholder="Např.: Hledám auto s taženým zařízením, nehavarované, max 2 majitelé..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- Odeslat -->
+        <div class="form-actions fade-up fade-up-d5">
+            <button type="submit" id="submitBtn" class="submit-btn">
+                <span class="btn-text">🔎 Spustit hledání</span>
+                <span class="btn-spinner" style="display:none;">
+                    <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-linecap="round"/></svg>
+                    AI prohledává bazary…
+                </span>
+            </button>
+        </div>
+    </form>
+
+    <!-- Výsledek -->
+    <section id="resultSection" class="result-section" style="display:none;">
+        <div class="result-header">
+            <h2>Nalezené výhodné nabídky</h2>
+            <button id="copyBtn" class="copy-btn" title="Kopírovat výsledek">Kopírovat</button>
+        </div>
+        <div id="resultContent" class="result-content"></div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <span>© 2025 AutoAI</span>
+        <span>Vytvořeno s Claude AI</span>
+    </div>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+/* ===== AutoAI – Skaut výhodných nabídek ===== */
+(function () {
+    'use strict';
+
+    // ---------- DOM ----------
+    var form = document.getElementById('scoutForm');
+    var submitBtn = document.getElementById('submitBtn');
+    var btnText = submitBtn.querySelector('.btn-text');
+    var btnSpinner = submitBtn.querySelector('.btn-spinner');
+    var resultSection = document.getElementById('resultSection');
+    var resultContent = document.getElementById('resultContent');
+    var copyBtn = document.getElementById('copyBtn');
+    var brandSelect = document.getElementById('brand');
+    var modelSelect = document.getElementById('model');
+    var yearFromSelect = document.getElementById('yearFrom');
+    var yearToSelect = document.getElementById('yearTo');
+
+    // ---------- Model DB ----------
+    var MODEL_DB = {
+        'Škoda': ['Citigo', 'Fabia', 'Fabia Combi', 'Rapid', 'Rapid Spaceback', 'Scala', 'Octavia', 'Octavia Combi', 'Octavia RS', 'Superb', 'Superb Combi', 'Roomster', 'Yeti', 'Kamiq', 'Karoq', 'Kodiaq', 'Enyaq iV', 'Enyaq Coupé iV'],
+        'VW': ['Up!', 'Polo', 'Golf', 'Golf Variant', 'Passat', 'Passat Variant', 'Arteon', 'T-Roc', 'T-Cross', 'Tiguan', 'Touareg', 'Touran', 'Caddy', 'Multivan', 'ID.3', 'ID.4', 'ID.5'],
+        'BMW': ['Řada 1', 'Řada 2', 'Řada 3', 'Řada 3 Touring', 'Řada 5', 'Řada 5 Touring', 'X1', 'X3', 'X5', 'Z4', 'i4', 'iX'],
+        'Mercedes': ['A', 'B', 'C', 'CLA', 'E', 'GLA', 'GLB', 'GLC', 'GLE', 'V/Viano', 'EQA', 'EQC'],
+        'Audi': ['A1', 'A3', 'A4', 'A4 Avant', 'A5', 'A6', 'A6 Avant', 'Q2', 'Q3', 'Q5', 'Q7', 'e-tron GT', 'TT'],
+        'Toyota': ['Yaris', 'Yaris Cross', 'Corolla', 'Camry', 'C-HR', 'RAV4', 'Land Cruiser', 'Hilux', 'Prius'],
+        'Ford': ['Fiesta', 'Focus', 'Mondeo', 'Puma', 'Kuga', 'Mustang Mach-E', 'Ranger', 'Transit Custom'],
+        'Hyundai': ['i10', 'i20', 'i30', 'Kona', 'Tucson', 'Santa Fe', 'Ioniq 5'],
+        'Kia': ['Picanto', 'Rio', 'Ceed', 'Sportage', 'Sorento', 'Niro', 'EV6'],
+        'Peugeot': ['208', '308', '508', '2008', '3008', '5008', 'Rifter'],
+        'Renault': ['Clio', 'Megane', 'Captur', 'Kadjar', 'Austral', 'Arkana', 'Kangoo'],
+        'Opel': ['Corsa', 'Astra', 'Insignia', 'Crossland', 'Grandland', 'Mokka'],
+        'Seat': ['Ibiza', 'Leon', 'Arona', 'Ateca', 'Tarraco'],
+        'Volvo': ['S60', 'V60', 'V90', 'XC40', 'XC60', 'XC90'],
+        'Honda': ['Jazz', 'Civic', 'CR-V', 'HR-V', 'ZR-V'],
+        'Mazda': ['3', '6', 'CX-3', 'CX-30', 'CX-5', 'MX-5'],
+        'Nissan': ['Micra', 'Leaf', 'Juke', 'Qashqai', 'X-Trail'],
+        'Citroën': ['C3', 'C3 Aircross', 'C4', 'C5 Aircross', 'Berlingo'],
+        'Fiat': ['500', 'Panda', 'Tipo', 'Doblo', 'Ducato'],
+        'Porsche': ['911', 'Cayenne', 'Macan', 'Panamera', 'Taycan'],
+        'Land Rover': ['Defender', 'Discovery Sport', 'Range Rover Evoque', 'Range Rover Sport'],
+        'Subaru': ['Impreza', 'Outback', 'Forester', 'XV/Crosstrek'],
+    };
+
+    // ---------- Populate brand select ----------
+    Object.keys(MODEL_DB).sort().forEach(function (brand) {
+        var opt = document.createElement('option');
+        opt.value = brand; opt.textContent = brand;
+        brandSelect.appendChild(opt);
+    });
+
+    brandSelect.addEventListener('change', function () {
+        var brand = this.value;
+        modelSelect.innerHTML = '<option value="">-- Jakýkoliv --</option>';
+        if (MODEL_DB[brand]) {
+            MODEL_DB[brand].forEach(function (m) {
+                var opt = document.createElement('option');
+                opt.value = m; opt.textContent = m;
+                modelSelect.appendChild(opt);
+            });
+        }
+    });
+
+    // ---------- Populate year selects ----------
+    var currentYear = new Date().getFullYear();
+    for (var y = currentYear; y >= 1990; y--) {
+        var opt1 = document.createElement('option');
+        opt1.value = y; opt1.textContent = y;
+        yearFromSelect.appendChild(opt1);
+        var opt2 = document.createElement('option');
+        opt2.value = y; opt2.textContent = y;
+        yearToSelect.appendChild(opt2);
+    }
+
+    // ---------- Tier configs ----------
+    var TIERS = {
+        quick: {
+            model: 'claude-opus-4-6',
+            max_tokens: 3200,
+            max_search: 5,
+            system: "Jsi expert na české autobazary a hledání výhodných nabídek ojetých vozů.\n\nPOSTUP:\n1. Pomocí web_search prohledej aktuální inzeráty na relevantních portálech\n2. Najdi 3–5 nabídek, které jsou cenově pod obvyklou tržní hodnotou\n3. Vrať co nejstručnější přehled\n\nVÝSTUPNÍ FORMÁT (Markdown):\n\n## 🔎 Nalezené výhodné nabídky\n\nPro každou nabídku:\n### 🚗 [Značka Model (Rok)] — [CENA]\n- **Portál:** [zdroj]\n- **Km:** [najeto]\n- **Proč je výhodná:** [1 věta]\n\n## 📊 Shrnutí trhu\n[1–2 věty o cenové hladině segmentu]"
+        },
+        standard: {
+            model: 'claude-opus-4-6',
+            max_tokens: 8000,
+            max_search: 10,
+            system: "Jsi expert na české autobazary a hledání výhodných nabídek ojetých vozů s 15letou praxí.\n\nPOSTUP:\n1. Pomocí web_search prohledej aktuální inzeráty na: Sauto.cz, TipCars.cz, AutoScout24.cz, Bazos.cz, AAA Auto, Mobile.de\n2. Najdi 5–10 nabídek, které jsou výrazně pod obvyklou tržní cenou\n3. Porovnej ceny s tržním průměrem\n4. U každé nabídky vysvětli výhodnost a rizika\n\nVÝSTUPNÍ FORMÁT (Markdown):\n\n## 🏷️ Cenový kontext\n[Jaká je obvyklá tržní cena pro hledaný typ vozu, aktuální cenová hladina]\n\n## 🔎 Výhodné nabídky (seřazené od nejvýhodnější)\n\nPro každou nabídku:\n### 🚗 [Značka Model (Rok)] — [CENA] [MĚNA]\n- **Portál:** [zdroj]\n- **Najeto:** [km]\n- **Motor / palivo:** [info]\n- **Převodovka:** [info]\n- **Tržní cena srovnatelného vozu:** [CENA]\n- **Sleva oproti trhu:** [XX %]\n- **Proč je výhodná:** [vysvětlení]\n- **Rizika / na co si dát pozor:** [konkrétní body]\n\n## 📊 Souhrnná tabulka\n| # | Vůz | Cena | Trž. cena | Úspora | Portál |\n|---|-----|------|-----------|--------|--------|\n\n## 💡 Doporučení\n[Které nabídky jsou nejlepší sázka, tipy na vyjednávání, na co se ptát prodejce]"
+        },
+        deep: {
+            model: 'claude-opus-4-6',
+            max_tokens: 16000,
+            max_search: 15,
+            system: "Jsi špičkový expert na české a evropské autobazary, výkup a přeprodej ojetých vozů s 20letou praxí.\n\nPOSTUP:\n1. Pomocí web_search prohledej důkladně aktuální inzeráty na: Sauto.cz, TipCars.cz, AutoScout24.cz, Bazos.cz, AAA Auto, Mobile.de, AutoEsa, CarPlanet a dalších portálech\n2. Najdi 10+ nabídek, které jsou výrazně pod tržní cenou\n3. U každé proveď detailní analýzu — proč je levná, jaká jsou rizika, jaký je potenciál\n4. Seřaď od nejvýhodnější\n\nVÝSTUPNÍ FORMÁT (Markdown):\n\n## 🏷️ Analýza trhu\n[Detailní popis aktuální cenové hladiny pro daný segment, trendy, sezónní vlivy]\n\n## 🔎 TOP výhodné nabídky\n\nPro každou nabídku:\n### 🚗 [Značka Model Motorizace (Rok)] — [CENA] [MĚNA]\n- **Portál / zdroj:** [odkaz nebo název]\n- **Najeto:** [km]\n- **Motor:** [objem, palivo, výkon]\n- **Převodovka:** [typ]\n- **Výbava:** [klíčové prvky]\n- **Stav:** [popis stavu pokud je k dispozici]\n- **Obvyklá tržní cena:** [CENA]\n- **Úspora:** [CENA] ([XX %])\n- **Proč je výhodná:** [detailní vysvětlení]\n- **Možná rizika:** [konkrétní body ke kontrole]\n- **Hodnocení:** ⭐⭐⭐⭐⭐ / ⭐⭐⭐⭐⭐\n\n## 📊 Souhrnná tabulka\n| # | Vůz | Rok | Km | Cena | Trž. cena | Úspora | Hodnocení | Portál |\n|---|-----|-----|----|------|-----------|--------|-----------|--------|\n\n## 🎯 TOP 3 doporučení\n[Které konkrétní nabídky jsou nejlepší a proč — pro koho se hodí]\n\n## 💡 Tipy pro nákup\n[Jak vyjednávat, na co se ptát, co zkontrolovat, jak ověřit historii vozu]\n\n## ⚠️ Červené vlajky\n[Obecné varování — příliš levné nabídky, podvody, stočené km, havárie]"
+        }
+    };
+
+    // ---------- Build search prompt ----------
+    function buildPrompt() {
+        var parts = ['Prohledej aktuální nabídky ojetých vozů a najdi výhodné nabídky pod tržní cenou.\n'];
+
+        parts.push('=== KRITÉRIA HLEDÁNÍ ===');
+
+        var brand = document.getElementById('brand').value;
+        var model = document.getElementById('model').value;
+        if (brand && brand !== 'jakákoliv') {
+            parts.push('Značka: ' + brand);
+            if (model) parts.push('Model: ' + model);
+        } else {
+            parts.push('Značka: jakákoliv');
+        }
+
+        var bodyType = document.getElementById('bodyType').value;
+        if (bodyType) parts.push('Karoserie: ' + bodyType);
+
+        var yearFrom = yearFromSelect.value;
+        var yearTo = yearToSelect.value;
+        if (yearFrom && yearTo) parts.push('Rok výroby: ' + yearFrom + ' – ' + yearTo);
+        else if (yearFrom) parts.push('Rok výroby: od ' + yearFrom);
+        else if (yearTo) parts.push('Rok výroby: do ' + yearTo);
+
+        var mileageMax = document.getElementById('mileageMax').value;
+        if (mileageMax) parts.push('Max. najeto: ' + parseInt(mileageMax, 10).toLocaleString('cs-CZ') + ' km');
+
+        var currency = document.getElementById('currency').value || 'CZK';
+        var budgetMin = document.getElementById('budgetMin').value;
+        var budgetMax = document.getElementById('budgetMax').value;
+        if (budgetMin && budgetMax) parts.push('Rozpočet: ' + parseInt(budgetMin, 10).toLocaleString('cs-CZ') + ' – ' + parseInt(budgetMax, 10).toLocaleString('cs-CZ') + ' ' + currency);
+        else if (budgetMax) parts.push('Rozpočet: do ' + parseInt(budgetMax, 10).toLocaleString('cs-CZ') + ' ' + currency);
+
+        var fuelType = document.getElementById('fuelType').value;
+        if (fuelType) parts.push('Palivo: ' + fuelType);
+
+        var transmission = document.getElementById('transmission').value;
+        if (transmission) parts.push('Převodovka: ' + transmission);
+
+        var powerMin = document.getElementById('powerMin').value;
+        if (powerMin) parts.push('Min. výkon: ' + powerMin + ' kW');
+
+        var purpose = document.getElementById('purpose').value;
+        if (purpose) parts.push('Účel: ' + purpose);
+
+        var region = document.getElementById('region').value;
+        var regionMap = { 'cz': 'Česko', 'cz+de': 'Česko + Německo', 'cz+sk': 'Česko + Slovensko', 'eu': 'Celá EU' };
+        parts.push('Region: ' + (regionMap[region] || 'Česko'));
+
+        var notes = document.getElementById('notes').value.trim();
+        if (notes) parts.push('\nDalší požadavky: ' + notes);
+
+        parts.push('\nHledej KONKRÉTNÍ aktuální inzeráty, které jsou cenově pod tržní hodnotou. U každého uveď proč je výhodný.');
+
+        return parts.join('\n');
+    }
+
+    // ---------- API call ----------
+    async function callAPI(userMessage) {
+        var tier = document.querySelector('input[name="scoutTier"]:checked').value;
+        var config = TIERS[tier];
+
+        var requestBody = {
+            model: config.model,
+            max_tokens: config.max_tokens,
+            system: config.system,
+            tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: config.max_search }],
+            messages: [{ role: 'user', content: userMessage }]
+        };
+
+        if (!window.AutoAIAnthropic) {
+            throw new Error('Centrální Anthropic vrstva není načtená.');
+        }
+
+        return window.AutoAIAnthropic.call(requestBody);
+    }
+
+    // ---------- Extract text ----------
+    function extractText(response) {
+        if (!response || !response.content) return 'Žádná odpověď z API.';
+        var parts = [];
+        for (var i = 0; i < response.content.length; i++) {
+            if (response.content[i].type === 'text') parts.push(response.content[i].text);
+        }
+        return parts.join('\n\n') || 'Odpověď neobsahuje text.';
+    }
+
+    // ---------- Markdown renderer ----------
+    function renderMarkdown(md) {
+        var html = md;
+        html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        html = html.replace(/^(\|.+\|)\n\|[-| :]+\|\n((\|.+\|\n?)+)/gm, function (match, headerRow, bodyRows) {
+            var headers = headerRow.split('|').filter(function (c) { return c.trim(); }).map(function (c) { return '<th>' + c.trim() + '</th>'; }).join('');
+            var rows = bodyRows.trim().split('\n').map(function (row) {
+                var cells = row.split('|').filter(function (c) { return c.trim(); }).map(function (c) { return '<td>' + c.trim() + '</td>'; }).join('');
+                return '<tr>' + cells + '</tr>';
+            }).join('');
+            return '<table><thead><tr>' + headers + '</tr></thead><tbody>' + rows + '</tbody></table>';
+        });
+        html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+        html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+        html = html.replace(/^(?!<[hultro])((?!<).+)$/gm, '<p>$1</p>');
+        html = html.replace(/\n{2,}/g, '\n');
+        return html;
+    }
+
+    // ---------- Loading state ----------
+    function setLoading(on) {
+        submitBtn.disabled = on;
+        btnText.style.display = on ? 'none' : 'inline';
+        btnSpinner.style.display = on ? 'inline-flex' : 'none';
+    }
+
+    // ---------- Escape HTML ----------
+    function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // ---------- Budget & Token tracking ----------
+    var monthlyBudgetSelect = document.getElementById('monthlyBudgetSkaut');
+    var scoutFrequencySelect = document.getElementById('scoutFrequency');
+
+    function loadSkautSettings() {
+        if (typeof AutoAISettings !== 'undefined') {
+            monthlyBudgetSelect.value = AutoAISettings.get('skautBudget', '250000');
+            scoutFrequencySelect.value = AutoAISettings.get('skautFrequency', '3');
+        }
+        refreshUsageDashboard();
+        updateNextSearchHint();
+    }
+
+    function saveSkautSettings() {
+        if (typeof AutoAISettings !== 'undefined') {
+            AutoAISettings.set('skautBudget', monthlyBudgetSelect.value);
+            AutoAISettings.set('skautFrequency', scoutFrequencySelect.value);
+        }
+    }
+
+    monthlyBudgetSelect.addEventListener('change', function () { saveSkautSettings(); refreshUsageDashboard(); });
+    scoutFrequencySelect.addEventListener('change', function () { saveSkautSettings(); updateNextSearchHint(); });
+
+    function getMonthlyBudget() { return parseInt(monthlyBudgetSelect.value) || 0; }
+
+    function refreshUsageDashboard() {
+        if (typeof TokenTracker === 'undefined') return;
+        var monthly = TokenTracker.getMonthlyBySource('skaut');
+        var budget = getMonthlyBudget();
+        var total = monthly.input + monthly.output;
+
+        var usageText = document.getElementById('usageText');
+        var usageBarFill = document.getElementById('usageBarFill');
+        var usageRequests = document.getElementById('usageRequests');
+        var usageCost = document.getElementById('usageCost');
+        var usageRemaining = document.getElementById('usageRemaining');
+
+        if (budget > 0) {
+            var pct = Math.min(100, Math.round((total / budget) * 100));
+            usageText.textContent = TokenTracker.formatTokens(total) + ' / ' + TokenTracker.formatTokens(budget) + ' tokenů (' + pct + ' %)';
+            usageBarFill.style.width = pct + '%';
+            usageBarFill.classList.toggle('over-budget', pct >= 100);
+            usageRemaining.textContent = TokenTracker.formatTokens(Math.max(0, budget - total));
+        } else {
+            usageText.textContent = TokenTracker.formatTokens(total) + ' tokenů (bez limitu)';
+            usageBarFill.style.width = '0%';
+            usageBarFill.classList.remove('over-budget');
+            usageRemaining.textContent = '∞';
+        }
+
+        usageRequests.textContent = monthly.requests;
+        usageCost.textContent = '$' + TokenTracker.estimateCost(monthly.input, monthly.output, 'claude-opus-4-6').toFixed(2);
+    }
+
+    function checkBudget() {
+        if (typeof TokenTracker === 'undefined') return true;
+        var budget = getMonthlyBudget();
+        if (budget === 0) return true;
+        var monthly = TokenTracker.getMonthlyBySource('skaut');
+        var total = monthly.input + monthly.output;
+        if (total >= budget) {
+            alert('Měsíční limit tokenů pro Skaut byl vyčerpán (' + TokenTracker.formatTokens(total) + ' / ' + TokenTracker.formatTokens(budget) + '). Zvyšte limit nebo počkejte na nový měsíc.');
+            return false;
+        }
+        return true;
+    }
+
+    function updateNextSearchHint() {
+        var hint = document.getElementById('nextSearchHint');
+        var dateEl = document.getElementById('nextSearchDate');
+        var lastSearch = localStorage.getItem('autoai_skaut_last_search');
+        if (!lastSearch) { hint.style.display = 'none'; return; }
+        var freq = parseInt(scoutFrequencySelect.value) || 3;
+        var next = new Date(parseInt(lastSearch) + freq * 24 * 60 * 60 * 1000);
+        dateEl.textContent = next.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
+        hint.style.display = 'block';
+    }
+
+    // Init settings
+    loadSkautSettings();
+
+    // ---------- Submit ----------
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var budgetMax = document.getElementById('budgetMax').value;
+
+        if (!budgetMax) { alert('Zadejte maximální rozpočet.'); return; }
+        if (!checkBudget()) return;
+
+        setLoading(true);
+        resultSection.style.display = 'none';
+
+        try {
+            var prompt = buildPrompt();
+            var response = await callAPI(prompt);
+
+            // Zaznamenat spotřebu tokenů
+            if (typeof TokenTracker !== 'undefined') {
+                TokenTracker.record('skaut', response);
+            }
+
+            // Uložit čas posledního hledání
+            localStorage.setItem('autoai_skaut_last_search', Date.now().toString());
+            updateNextSearchHint();
+            refreshUsageDashboard();
+
+            var text = extractText(response);
+            try {
+                localStorage.setItem('autoai_skaut_last_result', text.slice(0, 5000));
+                localStorage.setItem('autoai_skaut_last_search', Date.now().toString());
+            } catch (e) { /* ignore */ }
+            resultContent.innerHTML = renderMarkdown(text);
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (err) {
+            resultContent.innerHTML = '<div style="color:var(--danger);font-weight:600;">❌ Chyba: ' + escapeHtml(err.message) + '</div>';
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // ---------- Copy ----------
+    copyBtn.addEventListener('click', function () {
+        var text = resultContent.innerText;
+        navigator.clipboard.writeText(text).then(function () {
+            copyBtn.textContent = '✅ Zkopírováno!';
+            copyBtn.classList.add('copied');
+            setTimeout(function () { copyBtn.textContent = '📋 Kopírovat'; copyBtn.classList.remove('copied'); }, 2000);
+        });
+    });
+
+    // ---------- FadeUp observer ----------
+    var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                obs.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fade-up').forEach(function (el) { obs.observe(el); });
+
+})();
+</script>
+</body>
+</html>

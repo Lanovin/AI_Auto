@@ -17,139 +17,143 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedNext = searchParams.get('next');
-  const destination = requestedNext && requestedNext !== '/' && requestedNext !== '/prihlaseni' && requestedNext !== '/registrace'
-    ? requestedNext
-    : '/dashboard';
+  const destination =
+    requestedNext &&
+    requestedNext !== '/' &&
+    requestedNext !== '/prihlaseni' &&
+    requestedNext !== '/registrace'
+      ? requestedNext
+      : '/dashboard';
   const confirmationError = searchParams.get('error') === 'confirmation';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(
-    confirmationError ? 'Potvrzení e-mailu se nezdařilo. Zkuste se přihlásit nebo požádat o nový odkaz.' : null
+    confirmationError
+      ? 'Potvrzení e-mailu se nezdařilo. Zkuste se přihlásit nebo požádat o nový odkaz.'
+      : null,
   );
   const [loading, setLoading] = useState(false);
 
-  // Redirect away if already logged in
   useEffect(() => {
     let active = true;
-
     async function redirectIfAuthenticated() {
       const response = await fetch('/api/auth/status', { cache: 'no-store' });
-      if (!active || !response.ok) {
-        return;
-      }
-
-      const { authenticated } = await response.json() as { authenticated: boolean };
-      if (!authenticated) {
-        return;
-      }
-
-      window.location.replace(destination);
+      if (!active || !response.ok) return;
+      const { authenticated } = (await response.json()) as { authenticated: boolean };
+      if (authenticated) window.location.replace(destination);
     }
-
     void redirectIfAuthenticated();
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [destination]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
     if (error) {
       setError(mapAuthError(error.message));
       setLoading(false);
       return;
     }
-
-    // Full page navigation so middleware picks up the new session cookie reliably.
-    // router.push() can skip the server round-trip via Next.js cache.
     window.location.replace(destination);
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-12">
-      <div className="w-full max-w-100">
+    <main className="flex min-h-screen items-center justify-center bg-paper px-5 py-12">
+      <div className="w-full max-w-[400px]">
+
         {/* Logo */}
-        <div className="mb-8 text-center">
+        <div className="mb-10 text-center">
           <Link
-            className="inline-block text-[22px] font-medium tracking-[-0.02em] text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-4"
             href="/"
+            className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
           >
-            AutoAI
+            <LogoGauge />
+            <span className="font-display text-[22px] font-semibold tracking-tight text-ink">
+              Car<span className="italic" style={{ color: '#B0791D' }}>gent</span>
+            </span>
           </Link>
-          <h1 className="mt-4 text-[28px] font-medium tracking-tight text-brand-900">
+          <h1 className="mt-5 font-display text-[30px] font-medium tracking-tight text-ink" style={{ letterSpacing: '-0.02em' }}>
             Přihlásit se
           </h1>
-          <p className="mt-2 text-[15px] text-neutral-500">
+          <p className="mt-2 text-[14px] text-dim">
             Nemáte účet?{' '}
             <Link
-              className="font-medium text-brand-600 hover:text-brand-800"
               href={`/registrace${destination !== '/dashboard' ? `?next=${encodeURIComponent(destination)}` : ''}`}
+              className="font-medium text-brass transition-colors hover:text-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               Zaregistrujte se
             </Link>
           </p>
         </div>
 
-        {/* Form */}
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-brand-900" htmlFor="email">
-              E-mail
-            </label>
-            <input
-              autoComplete="email"
-              autoFocus
-              className="rounded-xl border border-brand-100 bg-white px-4 py-3 text-[15px] text-brand-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-              id="email"
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="vas@email.cz"
-              required
-              type="email"
-              value={email}
-            />
-          </div>
+        {/* Card */}
+        <div
+          className="rounded-[22px] border border-line bg-surface p-7"
+          style={{ boxShadow: '0 30px 70px -34px rgba(20,23,28,0.22)' }}
+        >
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-medium text-ink-soft" htmlFor="email">
+                E-mail
+              </label>
+              <input
+                autoComplete="email"
+                autoFocus
+                id="email"
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="vas@email.cz"
+                required
+                type="email"
+                value={email}
+                className="rounded-[10px] border border-line bg-paper-2/50 px-4 py-3 text-[15px] text-ink outline-none transition-colors placeholder:text-faint focus:border-brass focus:bg-surface focus:ring-2 focus:ring-brass/20"
+              />
+            </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-brand-900" htmlFor="password">
-              Heslo
-            </label>
-            <input
-              autoComplete="current-password"
-              className="rounded-xl border border-brand-100 bg-white px-4 py-3 text-[15px] text-brand-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-              id="password"
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Vaše heslo"
-              required
-              type="password"
-              value={password}
-            />
-          </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-medium text-ink-soft" htmlFor="password">
+                Heslo
+              </label>
+              <input
+                autoComplete="current-password"
+                id="password"
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Vaše heslo"
+                required
+                type="password"
+                value={password}
+                className="rounded-[10px] border border-line bg-paper-2/50 px-4 py-3 text-[15px] text-ink outline-none transition-colors placeholder:text-faint focus:border-brass focus:bg-surface focus:ring-2 focus:ring-brass/20"
+              />
+            </div>
 
-          {error && (
-            <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[14px] leading-normal text-red-700">
-              {error}
-            </p>
-          )}
+            {error && (
+              <p
+                role="alert"
+                className="rounded-[10px] border border-[#9C3A2A]/20 bg-[#9C3A2A]/8 px-4 py-3 text-[13px] leading-normal text-[#9C3A2A]"
+              >
+                {error}
+              </p>
+            )}
 
-          <button
-            className="mt-2 rounded-full bg-brand-600 px-6 py-3 text-[15px] font-medium text-white transition-colors hover:bg-brand-800 disabled:opacity-60"
-            disabled={loading}
-            type="submit"
+            <button
+              disabled={loading}
+              type="submit"
+              className="mt-1 rounded-[10px] px-6 py-3 text-[15px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50"
+              style={{ backgroundColor: '#14171C', color: '#FFFFFF' }}
+            >
+              {loading ? 'Přihlašuji…' : 'Přihlásit se'}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-6 text-center text-[13px] text-faint">
+          <Link
+            href="/"
+            className="transition-colors hover:text-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
           >
-            {loading ? 'Přihlašuji…' : 'Přihlásit se'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-[13px] text-neutral-400">
-          <Link className="hover:text-neutral-600" href="/">
             ← Zpět na hlavní stránku
           </Link>
         </p>
@@ -159,14 +163,19 @@ function LoginForm() {
 }
 
 function mapAuthError(message: string): string {
-  if (message.includes('Invalid login credentials')) {
-    return 'Nesprávný e-mail nebo heslo.';
-  }
-  if (message.includes('Email not confirmed')) {
-    return 'Nejdříve potvrďte e-mail. Zkontrolujte doručenou poštu (i spam).';
-  }
-  if (message.includes('Too many requests')) {
-    return 'Příliš mnoho pokusů. Zkuste to za chvíli.';
-  }
+  if (message.includes('Invalid login credentials')) return 'Nesprávný e-mail nebo heslo.';
+  if (message.includes('Email not confirmed')) return 'Nejdříve potvrďte e-mail. Zkontrolujte doručenou poštu (i spam).';
+  if (message.includes('Too many requests')) return 'Příliš mnoho pokusů. Zkuste to za chvíli.';
   return 'Přihlášení se nezdařilo. Zkuste to prosím znovu.';
+}
+
+function LogoGauge() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="14" stroke="#14171C" strokeWidth="1.4" />
+      <circle cx="16" cy="16" r="10" stroke="#B0791D" strokeWidth="1" strokeDasharray="1 3" />
+      <line x1="16" y1="16" x2="22" y2="10" stroke="#B0791D" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="16" cy="16" r="1.6" fill="#B0791D" />
+    </svg>
+  );
 }

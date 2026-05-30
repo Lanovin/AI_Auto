@@ -235,18 +235,81 @@
     });
 
     // ---------- Call Price Estimator API (server-side, with DB cache) ----------
+    // Helper: read a value if the element exists and has a non-empty trimmed value.
+    function readField(id) {
+        var el = document.getElementById(id);
+        if (!el) return '';
+        var v = (el.value || '').trim();
+        return v;
+    }
+    function readNumberField(id) {
+        var raw = readField(id);
+        if (!raw) return null;
+        var n = parseFloat(raw.replace(',', '.'));
+        return Number.isFinite(n) ? n : null;
+    }
+    function readEquipmentCheckboxes() {
+        var checked = document.querySelectorAll('input[name="equipment"]:checked');
+        var values = [];
+        checked.forEach(function (el) { if (el.value) values.push(el.value); });
+        return values;
+    }
+
     async function callPriceEstimatorAPI() {
         var tier = document.querySelector('input[name="analysisTier"]:checked').value;
         var scopeEl = document.querySelector('input[name="searchScope"]:checked');
         var scope = scopeEl ? scopeEl.value : 'czech';
+
+        // Base car data sent for ALL tiers.
         var car = {
-            brand:        document.getElementById('brand').value.trim(),
-            model:        document.getElementById('model').value.trim(),
-            year:         parseInt(document.getElementById('year').value, 10),
-            mileage:      parseInt(document.getElementById('mileage').value || '0', 10) || 0,
-            transmission: document.getElementById('transmission').value.trim(),
-            fuel:         document.getElementById('fuelType').value.trim()
+            brand:        readField('brand'),
+            model:        readField('model'),
+            year:         parseInt(readField('year'), 10),
+            mileage:      parseInt(readField('mileage') || '0', 10) || 0,
+            transmission: readField('transmission'),
+            fuel:         readField('fuelType')
         };
+
+        // For DETAILED and EXPERT tiers, enrich payload with every form field
+        // the user filled. These extras feed deeper prompts on the server side
+        // (see src/lib/run-scan.ts buildCarBlock) and significantly improve
+        // valuation accuracy. Quick/standard intentionally stay lean.
+        var enrichTiers = ['detailed', 'expert'];
+        if (enrichTiers.indexOf(tier) !== -1) {
+            var trim          = readField('trim');
+            var vin           = readField('vin');
+            var engineCapacity= readNumberField('engineCapacity');
+            var powerKw       = readNumberField('powerKw');
+            var drivetrain    = readField('drivetrain');
+            var bodyType      = readField('bodyType');
+            var color         = readField('color');
+            var techCondition = readField('techCondition');
+            var paintCondition= readField('paintCondition');
+            var accidents     = readField('accidents');
+            var serviceHistory= readField('serviceHistory');
+            var owners        = readField('owners');
+            var consumption   = readField('consumption');
+            var originCountry = readField('originCountry');
+            var notes         = readField('notes');
+            var equipment     = readEquipmentCheckboxes();
+
+            if (trim)           car.trim = trim;
+            if (vin)            car.vin = vin;
+            if (engineCapacity !== null) car.engineCapacity = engineCapacity;
+            if (powerKw !== null)        car.powerKw = powerKw;
+            if (drivetrain)     car.drivetrain = drivetrain;
+            if (bodyType)       car.bodyType = bodyType;
+            if (color)          car.color = color;
+            if (techCondition)  car.techCondition = techCondition;
+            if (paintCondition) car.paintCondition = paintCondition;
+            if (accidents)      car.accidents = accidents;
+            if (serviceHistory) car.serviceHistory = serviceHistory;
+            if (owners)         car.owners = owners;
+            if (consumption)    car.consumption = consumption;
+            if (originCountry)  car.originCountry = originCountry;
+            if (notes)          car.notes = notes;
+            if (equipment.length > 0) car.equipment = equipment;
+        }
 
         var response = await fetch('/api/price-estimator', {
             method: 'POST',

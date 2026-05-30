@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getScanOrFetch } from '@/lib/market-cache';
+import { getScanOrFetch, saveScan } from '@/lib/market-cache';
 import { runScan } from '@/lib/run-scan';
-import { generateSignature } from '@/lib/car-signature';
+import { generateSignature, type CarInput } from '@/lib/car-signature';
 import { deductTokens } from '@/lib/tokens-server';
 import { TOKEN_COSTS, type TokenFeature } from '@/lib/tokens';
 import { saveScanHistory } from '@/lib/supabase/user-data';
@@ -12,6 +12,10 @@ const TIER_FEATURE: Record<string, TokenFeature> = {
   detailed: 'estimator:detailed',
   expert:   'estimator:expert',
 };
+
+/** Tiers that bypass the shared cache. Their rich, user-specific inputs
+ *  (condition, equipment, accidents, ...) make cache reuse misleading. */
+const NO_CACHE_TIERS = new Set(['detailed', 'expert']);
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -62,6 +66,51 @@ function mapApiError(err: unknown): { status: number; error: string } {
   return { status: 500, error: message };
 }
 
+/** Extracts the rich CarInput fields from the request body, coercing types. */
+function parseRichCarInput(raw: Record<string, unknown>): CarInput {
+  const toStr = (v: unknown): string | undefined => {
+    if (v == null) return undefined;
+    const s = String(v).trim();
+    return s === '' ? undefined : s;
+  };
+  const toNum = (v: unknown): number | undefined => {
+    if (v == null || v === '') return undefined;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const toArr = (v: unknown): string[] | undefined => {
+    if (!Array.isArray(v)) return undefined;
+    const cleaned = v.map((x) => String(x).trim()).filter(Boolean);
+    return cleaned.length > 0 ? cleaned : undefined;
+  };
+
+  return {
+    brand:          String(raw.brand),
+    model:          String(raw.model),
+    year:           Number(raw.year),
+    mileage:        raw.mileage != null ? Number(raw.mileage) : 0,
+    transmission:   toStr(raw.transmission),
+    fuel:           toStr(raw.fuel) ?? toStr(raw.fuelType),
+    // — rich fields (only set if user supplied them) —
+    trim:           toStr(raw.trim),
+    vin:            toStr(raw.vin),
+    engineCapacity: toNum(raw.engineCapacity),
+    powerKw:        toNum(raw.powerKw),
+    drivetrain:     toStr(raw.drivetrain),
+    bodyType:       toStr(raw.bodyType),
+    color:          toStr(raw.color),
+    techCondition:  toStr(raw.techCondition),
+    paintCondition: toStr(raw.paintCondition),
+    accidents:      toStr(raw.accidents),
+    serviceHistory: toStr(raw.serviceHistory),
+    owners:         toStr(raw.owners),
+    consumption:    toStr(raw.consumption),
+    originCountry:  toStr(raw.originCountry),
+    equipment:      toArr(raw.equipment),
+    notes:          toStr(raw.notes),
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json() as { car?: Record<string, unknown>; tier?: string; scope?: string };
@@ -89,24 +138,33 @@ export async function POST(request: Request) {
     const actualScope = scope === 'international' ? 'international' : 'czech';
     const feature = TIER_FEATURE[actualTier];
 
-    const carInput = {
-      brand:        String(car.brand),
-      model:        String(car.model),
-      year:         Number(car.year),
-      mileage:      car.mileage != null ? Number(car.mileage) : 0,
-      transmission: car.transmission ? String(car.transmission) : undefined,
-      fuel:         car.fuel         ? String(car.fuel)         : undefined,
-    };
+    const carInput = parseRichCarInput(car);
 
-    // Cache key includes tier + scope so Czech and international results are stored separately.
-    // Czech scope uses just the tier for backward compatibility with existing cache rows.
+    // For detailed/expert we ALWAYS run fresh — rich inputs vary per user and
+    // a cached result for a different condition/equipment would be misleading.
+    // We still write the result to cache for analytics/future generic queries.
     const cacheSuffix = actualScope === 'international' ? `${actualTier}:intl` : actualTier;
-    const result = await getScanOrFetch(
-      carInput,
-      (c) => runScan(c, actualTier, actualScope),
-      7,
-      cacheSuffix
-    );
+    const shouldBypassCache = NO_CACHE_TIERS.has(actualTier);
+
+    let result: { data: Awaited<ReturnType<typeof runScan>>; cached: boolean; ageHours: number | null };
+
+    if (shouldBypassCache) {
+      const freshData = await runScan(carInput, actualTier, actualScope);
+      // fire-and-forget save (best-effort; never blocks)
+      const base = generateSignature(carInput);
+      saveScan(`${base}:${cacheSuffix}`, freshData).catch((err) =>
+        console.error('[price-estimator] background saveScan failed:', err)
+      );
+      result = { data: freshData, cached: false, ageHours: null };
+    } else {
+      const cached = await getScanOrFetch(
+        carInput,
+        (c) => runScan(c, actualTier, actualScope),
+        7,
+        cacheSuffix
+      );
+      result = { data: cached.data, cached: cached.cached, ageHours: cached.ageHours ?? null };
+    }
 
     // Deduct tokens for Supabase-authenticated users.
     // localStorage users are billed client-side when tokensDeducted === 0.
@@ -129,7 +187,7 @@ export async function POST(request: Request) {
 
     // Persist scan to user history (fire-and-forget — never blocks the response)
     saveScanHistory({
-      car_data: carInput as Record<string, unknown>,
+      car_data: carInput as unknown as Record<string, unknown>,
       tier: actualTier,
       average_price: result.data.averagePrice,
       min_price: result.data.minPrice,
@@ -149,7 +207,7 @@ export async function POST(request: Request) {
       sources:        result.data.sources,
       summary:        result.data.summary,
       cached:         result.cached,
-      ageHours:       result.ageHours ?? null,
+      ageHours:       result.ageHours,
       tokensDeducted,
       tier:           actualTier,
     });

@@ -1,10 +1,32 @@
 export interface CarInput {
+  // ── Core (used by generateSignature → cache key) ──
   brand: string;
   model: string;
   year: number | string;
   mileage?: number | string;
   transmission?: string;
   fuel?: string;
+
+  // ── Rich fields (used ONLY by detailed/expert tier prompts) ──
+  // These do NOT participate in the cache signature — they're variable per
+  // user. The route bypasses the shared cache for detailed/expert so each
+  // request gets a fresh analysis with these inputs.
+  trim?: string;
+  vin?: string;
+  engineCapacity?: number | string;
+  powerKw?: number | string;
+  drivetrain?: string;
+  bodyType?: string;
+  color?: string;
+  techCondition?: string;
+  paintCondition?: string;
+  accidents?: string;
+  serviceHistory?: string;
+  owners?: number | string;
+  consumption?: string;
+  originCountry?: string;
+  equipment?: string[];
+  notes?: string;
 }
 
 function removeDiacritics(str: string): string {

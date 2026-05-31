@@ -8,11 +8,20 @@
  * `Ticker`, `B2B`. Když měníš číslo, měň ho tady.
  */
 
-// ── Hero metrics (pod CTA) ──────────────────────────────────────────
+// ── Hero metrics — human-readable (pod CTA) ─────────────────────────
+// Záměrně v lidském jazyce, ne akademické zkratky (MAPE, R²).
 export const HERO_METRICS = [
-  { label: 'MAPE', value: '± 4,3 %' }, // TODO: nahradit reálnými daty z API
-  { label: 'R²',    value: '0,94' },    // TODO: nahradit reálnými daty z API
-  { label: 'Vozů v DB', value: '180k+' }, // TODO: nahradit reálnými daty z API
+  { label: 'Vozů v databázi', value: '180 000+' }, // TODO: nahradit reálnými daty z API
+  { label: 'Přesnost odhadu',  value: '± 4 %' },   // TODO: nahradit reálnými daty z API
+  { label: 'Zdrojů dat',       value: '10+' },      // TODO: nahradit reálnými daty z API
+] as const;
+
+// ── Trust strip (pod heroem) ─────────────────────────────────────────
+export const TRUST_ITEMS = [
+  { stat: '180 000+', label: 'vozidel v databázi' },
+  { stat: '± 4 %',    label: 'průměrná odchylka odhadu' },
+  { stat: '30 s',     label: 'a máte výsledek' },
+  { stat: '10+',      label: 'datových zdrojů' },
 ] as const;
 
 // ── Instrument: aktuální oceňovaný vůz ──────────────────────────────

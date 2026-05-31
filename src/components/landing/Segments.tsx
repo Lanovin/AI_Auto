@@ -1,110 +1,170 @@
-import { SectionHead } from './HowItWorks';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 /**
- * "Pro koho" — 4 audience cards. White cards with subtle hover lift +
- * brass icon square. Icons are thin linear SVGs (no rounded gradient
- * shtick), one motif per audience: person, car-shop, bank, shield.
+ * Segments — dvě jasně oddělené cesty pro B2C a B2B.
+ *
+ * UX princip: uživatel si musí okamžitě poznat, kde je.
+ * Místo 4 nástrojů prezentovaných stejnou vahou ukazujeme
+ * 2 různé role s vlastním copywritingem a vlastní cestou.
+ *
+ * B2C karta: vizuálně dominantnější (prodávám / kupuji auto)
+ * B2B karta: jasný signál pro firemní zákazníky (autobazar, dealer)
+ *
+ * Pod kartami: sekundární přehled konkrétních nástrojů
+ * pro ty, kteří se chtějí proklikat přímo.
  */
-const segments = [
-  {
-    title: 'Spotřebitelé',
-    body: 'Ověřte si nabídku před koupí nebo si ujasněte cenu před prodejem. Bez registrace.',
-    Icon: IconPerson,
-  },
-  {
-    title: 'Bazary & dealeři',
-    body: 'Konzistentní ocenění napříč týmem, kontrola výkupu i navrhované prodejní ceny.',
-    Icon: IconShop,
-  },
-  {
-    title: 'Banky & leasing',
-    body: 'Reziduální hodnota a oceňovací API pro úvěrové a leasingové scénáře.',
-    Icon: IconBank,
-  },
-  {
-    title: 'Pojišťovny',
-    body: 'Aktuální tržní hodnota při likvidacích, podpora pro znalce i call-centra.',
-    Icon: IconShield,
-  },
+
+const consumerBenefits = [
+  'Zjistím, za kolik se moje auto prodá',
+  'Ověřím, jestli je nabídka výhodná',
+  'Nemusím se přihlašovat',
+];
+
+const dealerBenefits = [
+  'Monitoring cen konkurence',
+  'Generátor prodejních popisků',
+  'API pro vlastní systémy',
+];
+
+const allTools = [
+  { label: 'Odhad ceny',         href: '/odhad-ceny',  audience: 'Zdarma'      },
+  { label: 'Skaut nabídek',      href: '/skaut',        audience: 'Přihlásit se' },
+  { label: 'Monitoring trhu',    href: '/monitoring',   audience: 'Autobazary'  },
+  { label: 'Generátor popisků',  href: '/popisky',      audience: 'Autobazary'  },
 ];
 
 export default function Segments() {
   return (
-    <section id="who" className="px-[22px] py-24 md:px-8 md:py-32">
+    <section id="who" className="px-[22px] py-20 md:px-8 md:py-28">
       <div className="mx-auto max-w-[1240px]">
-        <SectionHead
-          eyebrow="Pro koho"
-          title={
-            <>
-              Jedna cena. <i>Čtyři důvody</i>
-              <br />
-              jí věřit.
-            </>
-          }
-        />
+        {/* Section label */}
+        <p className="cargent-mono mb-8 text-center text-[11px] uppercase tracking-[0.14em] text-brass">
+          — Pro koho je Cargent
+        </p>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {segments.map((s) => (
-            <article
-              key={s.title}
-              className="group flex flex-col gap-5 rounded-[22px] border border-[color:var(--color-line)] bg-surface p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[color:var(--color-line-2)]"
-              style={{ boxShadow: 'var(--shadow-cargent-card)' }}
+        {/* Two-path grid */}
+        <div className="grid gap-5 md:grid-cols-2">
+
+          {/* ── B2C card — dominant ───────────────────────────────── */}
+          <article
+            className="flex flex-col rounded-[22px] border border-line bg-surface p-7 md:p-9"
+            style={{ boxShadow: 'var(--shadow-cargent)' }}
+          >
+            <span
+              className="inline-flex self-start rounded-[8px] border border-emerald/30 px-3 py-1 text-[12px] font-medium text-emerald"
+              style={{ backgroundColor: 'rgba(28,107,87,0.08)' }}
             >
-              <span
-                className="flex h-11 w-11 items-center justify-center rounded-[10px] border border-brass/20 bg-brass/10 text-brass transition-colors duration-200 group-hover:bg-brass/15"
-                aria-hidden="true"
+              Pro každého
+            </span>
+
+            <h2 className="cargent-h2 mt-5 text-[32px] md:text-[38px]">
+              Prodáváte nebo
+              <br />
+              <i>kupujete auto?</i>
+            </h2>
+
+            <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
+              Zadejte značku, rok a najeto. Do 30 sekund uvidíte, za kolik se
+              srovnatelná auta prodávají právě teď — a co ovlivňuje cenu
+              vašeho konkrétního vozu.
+            </p>
+
+            <ul className="mt-6 flex flex-col gap-2.5">
+              {consumerBenefits.map((b) => (
+                <li key={b} className="flex items-start gap-3 text-[14px] text-ink-soft">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald" aria-hidden="true" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8">
+              <Link
+                href="/odhad-ceny"
+                style={{ color: '#FFFFFF' }}
+                className="group inline-flex items-center gap-2 rounded-[10px] bg-ink px-5 py-3 text-[14px] font-medium text-white transition-colors hover:bg-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
               >
-                <s.Icon className="h-5 w-5" />
-              </span>
-              <div>
-                <h3 className="cargent-h3 text-[20px]">{s.title}</h3>
-                <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">{s.body}</p>
-              </div>
-            </article>
-          ))}
+                Ocenit auto zdarma
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </Link>
+            </div>
+          </article>
+
+          {/* ── B2B card ──────────────────────────────────────────── */}
+          <article
+            id="dealers"
+            className="flex flex-col rounded-[22px] border border-line bg-paper-2 p-7 md:p-9"
+            style={{ boxShadow: 'var(--shadow-cargent-card)' }}
+          >
+            <span
+              className="inline-flex self-start rounded-[8px] border border-brass/30 px-3 py-1 text-[12px] font-medium text-brass"
+              style={{ backgroundColor: 'rgba(176,121,29,0.08)' }}
+            >
+              Pro autobazary
+            </span>
+
+            <h2 className="cargent-h2 mt-5 text-[32px] md:text-[38px]">
+              Vedete bazar
+              <br />
+              <i>nebo flotilu?</i>
+            </h2>
+
+            <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
+              Monitoring cen konkurence, hromadné oceňování i generátor
+              prodejních popisků. Nebo napojte Cargent přímo do svého
+              systému přes API.
+            </p>
+
+            <ul className="mt-6 flex flex-col gap-2.5">
+              {dealerBenefits.map((b) => (
+                <li key={b} className="flex items-start gap-3 text-[14px] text-ink-soft">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brass" aria-hidden="true" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="#api"
+                style={{ backgroundColor: 'rgba(176,121,29,0.10)' }}
+                className="group inline-flex items-center gap-2 rounded-[10px] border border-brass/40 px-5 py-3 text-[14px] font-medium text-brass transition-colors hover:bg-brass/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
+              >
+                Zjistit více pro firmy
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/monitoring"
+                className="rounded-[10px] border border-line px-5 py-3 text-[14px] font-medium text-ink-soft transition-colors hover:border-line-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
+              >
+                Vyzkoušet monitoring
+              </Link>
+            </div>
+          </article>
+        </div>
+
+        {/* ── All tools — secondary, compact ────────────────────── */}
+        <div className="mt-6 rounded-[18px] border border-line bg-paper-2/60 p-4 md:p-5">
+          <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.10em] text-faint">
+            Všechny nástroje
+          </p>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {allTools.map((tool) => (
+              <Link
+                key={tool.href}
+                href={tool.href}
+                className="group flex flex-col gap-1 rounded-[12px] border border-line bg-surface px-4 py-3 transition-colors hover:border-brass/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
+              >
+                <span className="text-[14px] font-medium text-ink transition-colors group-hover:text-brass">
+                  {tool.label}
+                </span>
+                <span className="text-[11px] text-faint">{tool.audience}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </section>
-  );
-}
-
-// ── Inline icons ────────────────────────────────────────────────────
-type IconProps = { className?: string };
-
-function IconPerson({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M4.5 19.5c1.5-3.5 4.5-5.5 7.5-5.5s6 2 7.5 5.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-function IconShop({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <path d="M3 10l1.5-4.5h15L21 10" />
-      <path d="M4 10v9h16v-9" />
-      <path d="M9 14h6" />
-      <path d="M3 10c0 2 1.5 3 3 3s3-1 3-3" />
-      <path d="M9 10c0 2 1.5 3 3 3s3-1 3-3" />
-      <path d="M15 10c0 2 1.5 3 3 3s3-1 3-3" />
-    </svg>
-  );
-}
-function IconBank({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <path d="M3 10l9-5 9 5" strokeLinecap="round" />
-      <path d="M4 10v8M9 10v8M15 10v8M20 10v8" />
-      <path d="M3 19h18" strokeLinecap="round" />
-    </svg>
-  );
-}
-function IconShield({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <path d="M12 3l8 3v6c0 4-3.5 7.5-8 9-4.5-1.5-8-5-8-9V6l8-3z" strokeLinejoin="round" />
-      <path d="M9 12l2.2 2.2L15 10" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

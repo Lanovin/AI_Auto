@@ -14,10 +14,12 @@ const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
  *      pre-sale checklist, regional pricing, etc.
  */
 const TIER_CONFIGS: Record<string, { max_tokens: number; max_search: number }> = {
-  quick:    { max_tokens:  2500, max_search:  3 },
-  standard: { max_tokens:  4500, max_search:  6 },
-  detailed: { max_tokens: 10000, max_search: 10 },
-  expert:   { max_tokens: 15000, max_search: 14 },
+  quick:    { max_tokens: 2500, max_search: 3 },
+  standard: { max_tokens: 4500, max_search: 6 },
+  // Detailed a expert jsou sníženy tak, aby se vešly na Vercel Pro (60s limit).
+  // Vercel Free (10s) nestačí — zobrazí se srozumitelná chyba místo 504.
+  detailed: { max_tokens: 7000, max_search: 7 },
+  expert:   { max_tokens: 9000, max_search: 9 },
 };
 
 interface AnthropicContent {
@@ -54,20 +56,51 @@ function parseJsonFromText(text: string): Record<string, unknown> {
   throw new Error('Nepodařilo se parsovat JSON z odpovědi Claude. Surový text: ' + t.slice(0, 300));
 }
 
+/**
+ * Timeout pro Anthropic API volání.
+ *
+ * Vercel Free:  10 s max → quick/standard by se vešly, detailed/expert NE.
+ * Vercel Pro:   60 s max → detailed/expert (7–9 searchů) by se vešly.
+ * Lokální dev:  bez limitu.
+ *
+ * Nastavíme timeout na 55 s — těsně pod Vercel Pro limitem. Pokud volání
+ * překročí tento čas, vyhodíme chybu s čitelnou zprávou dřív než Vercel
+ * vrátí anonymní 504, kde uživatel neví proč se mu strhly peníze.
+ */
+const CLAUDE_TIMEOUT_MS = 55_000;
+
 async function callClaude(body: object): Promise<AnthropicResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY není nastaven na serveru.');
 
-  const res = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), CLAUDE_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+  } catch (err) {
+    // AbortError = náš vlastní timeout, ne Vercel 504
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(
+        'TIMEOUT: Posudek trval příliš dlouho. ' +
+        'Zkuste tier Standardní nebo Rychlý — nebo kontaktujte podporu pro přístup k detailním posudkům.'
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({})) as { error?: { message?: string } };

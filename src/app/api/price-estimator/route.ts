@@ -28,6 +28,16 @@ function mapApiError(err: unknown): { status: number; error: string } {
 
   const message = err.message;
 
+  if (message.startsWith('TIMEOUT:')) {
+    return {
+      status: 504,
+      error:
+        'Posudek trval příliš dlouho a byl přerušen (server timeout). ' +
+        'Zkuste tier Standardní nebo Rychlý. Detailní a expertní posudky vyžadují Vercel Pro plán (60s limit). ' +
+        'Peníze za Anthropic API nebyly strhnuty — volání bylo přerušeno před dokončením.',
+    };
+  }
+
   if (message.includes('ANTHROPIC_API_KEY není nastaven na serveru.')) {
     return {
       status: 500,

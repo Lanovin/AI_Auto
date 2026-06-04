@@ -12,10 +12,10 @@ import { useEffect, useState } from 'react';
  *   • Logo: small gauge mark SVG + wordmark "Car" + gold italic "gent".
  */
 const navItems = [
-  { label: 'Nástroje', href: '#services' },
-  { label: 'Jak to funguje', href: '#how' },
-  { label: 'Engine', href: '#engine' },
-  { label: 'Pro firmy', href: '#api' },
+  { label: 'Odhad ceny', href: '/odhad-ceny' },
+  { label: 'Skaut', href: '/skaut' },
+  { label: 'Monitoring', href: '/monitoring' },
+  { label: 'Popisky', href: '/popisky' },
 ];
 
 export default function Header() {
@@ -54,13 +54,13 @@ export default function Header() {
         {/* ── Nav (desktop) ───────────────────────────────────────── */}
         <nav className="hidden md:flex md:items-center md:gap-7">
           {navItems.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className="text-[14px] text-ink-soft transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 

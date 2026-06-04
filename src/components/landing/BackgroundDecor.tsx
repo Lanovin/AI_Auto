@@ -34,69 +34,58 @@ export default function BackgroundDecor() {
       {/* ── Gauge instrument — top right corner ────────────────────── */}
       <svg
         viewBox="0 0 480 480"
-        className="absolute -top-16 right-[6%] h-[420px] w-[420px] opacity-40 md:h-[520px] md:w-[520px]"
+        className="absolute -top-16 right-[6%] h-[420px] w-[420px] opacity-70 md:h-[520px] md:w-[520px]"
         fill="none"
         stroke="currentColor"
       >
-        {/* Outer ring — solid hairline (brass) */}
+        {/* Outer ring */}
         <circle
-          cx="240"
-          cy="240"
-          r="220"
-          stroke="rgba(176, 121, 29, 0.32)"
-          strokeWidth="1"
+          cx="240" cy="240" r="220"
+          stroke="rgba(176, 121, 29, 0.55)"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
         />
         {/* Tick marks — dashed circle */}
         <circle
-          cx="240"
-          cy="240"
-          r="200"
-          stroke="rgba(176, 121, 29, 0.45)"
-          strokeWidth="1.5"
-          strokeDasharray="2 14"
+          cx="240" cy="240" r="200"
+          stroke="rgba(176, 121, 29, 0.70)"
+          strokeWidth="2"
+          strokeDasharray="3 13"
+          vectorEffect="non-scaling-stroke"
         />
         {/* Middle ring */}
         <circle
-          cx="240"
-          cy="240"
-          r="170"
-          stroke="rgba(20, 23, 28, 0.10)"
-          strokeWidth="1"
+          cx="240" cy="240" r="170"
+          stroke="rgba(20, 23, 28, 0.22)"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
         />
         {/* Inner ring — emerald accent */}
         <circle
-          cx="240"
-          cy="240"
-          r="120"
-          stroke="rgba(28, 107, 87, 0.22)"
-          strokeWidth="1"
+          cx="240" cy="240" r="120"
+          stroke="rgba(28, 107, 87, 0.38)"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
         />
 
-        {/* Needle — animated rotation (CSS) */}
-        <g
-          className="cargent-gauge-needle"
-          style={{ ['--needle-deg' as string]: '32deg' }}
-        >
-          <line
-            x1="240"
-            y1="240"
-            x2="240"
-            y2="60"
-            stroke="rgba(176, 121, 29, 0.7)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </g>
+        {/* Needle — 360° spin on load, settles at ~2 o'clock */}
+        <line
+          x1="240" y1="240"
+          x2="367" y2="113"
+          stroke="rgba(176, 121, 29, 0.90)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          style={{
+            transformBox: 'view-box',
+            transformOrigin: '240px 240px',
+            animation: 'needle-sweep-360 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both',
+          }}
+        />
 
         {/* Centre dot */}
-        <circle cx="240" cy="240" r="6" fill="rgba(176, 121, 29, 0.85)" />
-        <circle
-          cx="240"
-          cy="240"
-          r="14"
-          stroke="rgba(176, 121, 29, 0.4)"
-          strokeWidth="1"
-        />
+        <circle cx="240" cy="240" r="6"  fill="rgba(176, 121, 29, 0.90)" />
+        <circle cx="240" cy="240" r="14" stroke="rgba(176, 121, 29, 0.55)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
       </svg>
 
       {/* ── Film grain — SVG feTurbulence overlay ──────────────────── */}

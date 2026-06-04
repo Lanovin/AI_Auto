@@ -130,6 +130,11 @@ textarea {
   to   { transform: rotate(var(--needle-deg, 18deg)); }
 }
 
+@keyframes needle-sweep-360 {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* Generic entrance — staggered via inline animation-delay */
 .animate-fade-up {
   animation: fade-up 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;

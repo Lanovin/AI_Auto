@@ -61,13 +61,12 @@ function parseJsonFromText(text: string): Record<string, unknown> {
  *
  * Vercel Free:  10 s max → quick/standard by se vešly, detailed/expert NE.
  * Vercel Pro:   60 s max → detailed/expert (7–9 searchů) by se vešly.
- * Lokální dev:  bez limitu.
+ * Lokální dev:  300 s — žádný serverový limit, dáme dostatek prostoru.
  *
- * Nastavíme timeout na 55 s — těsně pod Vercel Pro limitem. Pokud volání
- * překročí tento čas, vyhodíme chybu s čitelnou zprávou dřív než Vercel
- * vrátí anonymní 504, kde uživatel neví proč se mu strhly peníze.
+ * Na Vercelu nastavíme 55 s (těsně pod 60s limitem) a při překročení
+ * vyhodíme čitelnou chybu dřív než Vercel vrátí anonymní 504.
  */
-const CLAUDE_TIMEOUT_MS = 55_000;
+const CLAUDE_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 300_000;
 
 async function callClaude(body: object): Promise<AnthropicResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -304,7 +303,7 @@ export async function runScan(car: CarInput, tier = 'standard', scope = 'czech')
           : 'Buď stručný a rychlý — uživatel chce orientační cenu, ne posudek.';
 
   const requestBody = {
-    model: 'claude-opus-4-6',
+    model: 'claude-opus-4-8',
     max_tokens: config.max_tokens,
     system: systemBase + systemTierSuffix,
     tools: [

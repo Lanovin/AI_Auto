@@ -758,6 +758,58 @@ textarea {
     to { transform: rotate(360deg); }
 }
 
+/* ===== Live scan progress (long detailed/expert scans) ===== */
+.scan-progress {
+    padding: 0.5rem 0.25rem;
+}
+.scan-progress-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.scan-progress .spinner {
+    border: 2px solid var(--accent-light);
+    border-top-color: var(--accent);
+    width: 20px;
+    height: 20px;
+}
+.scan-progress-title {
+    font-weight: 600;
+    color: var(--blue-dark);
+    font-size: 1.02rem;
+}
+.scan-progress-time {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-mid);
+}
+.scan-progress-bar {
+    margin-top: 1rem;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--accent-light);
+    overflow: hidden;
+}
+.scan-progress-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-mid), var(--accent));
+    transition: width 0.3s ease;
+}
+.scan-progress-stage {
+    margin-top: 0.85rem;
+    color: var(--blue-dark);
+    font-size: 0.95rem;
+}
+.scan-progress-hint {
+    margin-top: 0.35rem;
+    color: var(--neutral-500, #5f5e5a);
+    font-size: 0.85rem;
+}
+
 /* ===== Result Section ===== */
 .result-section {
     background: rgba(255, 255, 255, 0.9);

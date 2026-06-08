@@ -12,10 +12,9 @@ import { useEffect, useState } from 'react';
  *   • Logo: small gauge mark SVG + wordmark "Car" + gold italic "gent".
  */
 const navItems = [
-  { label: 'Odhad ceny', href: '/odhad-ceny' },
-  { label: 'Skaut', href: '/skaut' },
-  { label: 'Monitoring', href: '/monitoring' },
-  { label: 'Popisky', href: '/popisky' },
+  { label: 'Jak to funguje', href: '/#how' },
+  { label: 'Proč věřit ceně', href: '/#engine' },
+  { label: 'Předplatné', href: '/predplatne' },
 ];
 
 export default function Header() {

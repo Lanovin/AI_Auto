@@ -5,18 +5,9 @@ const columns = [
     heading: 'Produkt',
     links: [
       { label: 'Ocenit vůz', href: '/odhad-ceny' },
-      { label: 'Oceňovací engine', href: '#engine' },
-      { label: 'Pro firmy & API', href: '#api' },
+      { label: 'Jak to funguje', href: '/#how' },
+      { label: 'Proč věřit ceně', href: '/#engine' },
       { label: 'Předplatné', href: '/predplatne' },
-    ],
-  },
-  {
-    heading: 'Nástroje',
-    links: [
-      { label: 'Odhad ceny', href: '/odhad-ceny' },
-      { label: 'Skaut nabídek', href: '/skaut' },
-      { label: 'Monitoring trhu', href: '/monitoring' },
-      { label: 'Generátor popisků', href: '/popisky' },
     ],
   },
   {
@@ -34,7 +25,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-[color:var(--color-line)] bg-paper-2 px-[22px] py-16 md:px-8 md:py-20">
       <div className="mx-auto max-w-[1240px]">
-        <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr_1fr] md:gap-8">
+        <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr] md:gap-8">
           {/* ── Brand column ────────────────────────────────────── */}
           <div>
             <Link

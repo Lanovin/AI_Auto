@@ -388,14 +388,89 @@
         btnSpinner.style.display = loading ? 'inline-flex' : 'none';
     }
 
+    // ---------- Live progress panel (long-running detailed/expert scans) ----------
+    // Detailní a expertní posudky běží 60–90 s. Samotný spinner působí jako
+    // zamrznutí — proto během čekání zobrazíme odpočet + fáze analýzy.
+    var TIER_PROGRESS = {
+        quick:    { est: 22, label: 'Rychlý odhad' },
+        standard: { est: 35, label: 'Standardní analýza' },
+        detailed: { est: 75, label: 'Detailní posudek' },
+        expert:   { est: 95, label: 'Expertní posudek' }
+    };
+
+    function startProgress(tier, scope) {
+        var cfg = TIER_PROGRESS[tier] || TIER_PROGRESS.standard;
+        var portals = scope === 'international'
+            ? 'Sauto.cz · TipCars.cz · mobile.de · otomoto.pl · willhaben.at'
+            : 'Sauto.cz · TipCars.cz · AutoScout24.cz';
+
+        // Fáze se odvíjejí od podílu uplynulého času vůči odhadu (0–1).
+        var stages = [
+            { at: 0.00, text: 'Odesílám zadání a sestavuji dotaz…' },
+            { at: 0.10, text: 'Prohledávám aktuální inzeráty (' + portals + ')…' },
+            { at: 0.40, text: 'Porovnávám nalezené ceny a čistím odlehlé hodnoty…' },
+            { at: 0.65, text: 'Vyhodnocuji výbavu, stav a nájezd vozu…' },
+            { at: 0.85, text: 'Sestavuji finální posudek a doporučení…' }
+        ];
+
+        var slow = (tier === 'detailed' || tier === 'expert');
+        var hint = slow
+            ? 'Hloubková analýza obvykle trvá ' + cfg.est + ' s. Nechte prosím okno otevřené.'
+            : 'Obvykle do ' + cfg.est + ' s.';
+
+        resultContent.innerHTML =
+            '<div class="scan-progress">' +
+              '<div class="scan-progress-head">' +
+                '<span class="spinner"></span>' +
+                '<span class="scan-progress-title">' + cfg.label + ' probíhá…</span>' +
+                '<span class="scan-progress-time" id="scanElapsed">0&nbsp;s</span>' +
+              '</div>' +
+              '<div class="scan-progress-bar"><div class="scan-progress-fill" id="scanFill"></div></div>' +
+              '<div class="scan-progress-stage" id="scanStage">' + stages[0].text + '</div>' +
+              '<div class="scan-progress-hint">' + hint + '</div>' +
+            '</div>';
+        resultSection.style.display = 'block';
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        var startedAt = Date.now();
+        var fillEl = document.getElementById('scanFill');
+        var stageEl = document.getElementById('scanStage');
+        var elapsedEl = document.getElementById('scanElapsed');
+
+        var timer = setInterval(function () {
+            var elapsed = (Date.now() - startedAt) / 1000;
+            var ratio = Math.min(elapsed / cfg.est, 1);
+            // Bar plyne k 95 %, posledních 5 % se dorovná až po dokončení.
+            if (fillEl) fillEl.style.width = Math.min(95, ratio * 95).toFixed(1) + '%';
+            if (elapsedEl) elapsedEl.innerHTML = Math.round(elapsed) + '&nbsp;s';
+            if (stageEl) {
+                var current = stages[0].text;
+                for (var i = 0; i < stages.length; i++) {
+                    if (ratio >= stages[i].at) current = stages[i].text;
+                }
+                if (stageEl.textContent !== current) stageEl.textContent = current;
+            }
+        }, 250);
+
+        return function stop() {
+            clearInterval(timer);
+            if (fillEl) fillEl.style.width = '100%';
+        };
+    }
+
     // ---------- Form submit handler ----------
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         if (!validateForm()) return;
 
+        var tierEl = document.querySelector('input[name="analysisTier"]:checked');
+        var scopeEl = document.querySelector('input[name="searchScope"]:checked');
+        var activeTier = tierEl ? tierEl.value : 'standard';
+        var activeScope = scopeEl ? scopeEl.value : 'czech';
+
         setLoading(true);
-        resultSection.style.display = 'none';
+        var stopProgress = startProgress(activeTier, activeScope);
 
         try {
             var result = await callPriceEstimatorAPI();
@@ -427,6 +502,7 @@
             resultSection.style.display = 'block';
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } finally {
+            stopProgress();
             setLoading(false);
         }
     });

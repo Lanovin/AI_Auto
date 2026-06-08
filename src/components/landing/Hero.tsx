@@ -1,33 +1,8 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import BackgroundDecor from './BackgroundDecor';
-
-const tools = [
-  {
-    title: 'Odhad ceny',
-    description: 'Reálná tržní cena vašeho auta za 30 sekund.',
-    href: '/odhad-ceny',
-    Icon: IconCar,
-  },
-  {
-    title: 'Skaut nabídek',
-    description: 'Najděte podhodnocená auta dřív než ostatní.',
-    href: '/skaut',
-    Icon: IconSearch,
-  },
-  {
-    title: 'Monitoring trhu',
-    description: 'Sledujte ceny konkurence v reálném čase.',
-    href: '/monitoring',
-    Icon: IconChart,
-  },
-  {
-    title: 'Generátor popisků',
-    description: 'Prodejní popis auta za pár vteřin.',
-    href: '/popisky',
-    Icon: IconPen,
-  },
-];
+import Instrument from './Instrument';
+import { HERO_METRICS } from '@/data/demo';
 
 export default function Hero() {
   return (
@@ -37,8 +12,8 @@ export default function Hero() {
     >
       <BackgroundDecor />
 
-      {/* ── Gauge + wordmark + tools — max-w container ─────────── */}
       <div className="mx-auto max-w-[1240px] px-[22px] md:px-8">
+        {/* ── Gauge mark ───────────────────────────────────────────── */}
         <div
           className="animate-fade-up"
           style={{ animationDelay: '0ms' }}
@@ -46,55 +21,89 @@ export default function Hero() {
         >
           <HeroGauge />
         </div>
-      </div>
 
-      {/* ── Headline — full viewport width, centered ────────────── */}
-      <div
-        className="animate-fade-up mt-10 overflow-hidden px-[22px] md:px-8"
-        style={{ animationDelay: '100ms' }}
-      >
-        <h1
-          className="cargent-h1 text-center leading-[1.02] md:whitespace-nowrap"
-          style={{ fontSize: 'clamp(36px, 5.5vw, 88px)' }}
-        >
-          Oceňte svá auta jako <i>člověk.</i>
-        </h1>
-      </div>
-
-      {/* ── Wordmark + tool cards — back in container ───────────── */}
-      <div className="mx-auto max-w-[1240px] px-[22px] md:px-8">
-        {/* Wordmark */}
-        <div
-          className="animate-fade-up mt-5 flex flex-wrap items-center gap-3"
-          style={{ animationDelay: '180ms' }}
-        >
-          <span className="font-display text-[26px] font-semibold tracking-tight text-ink-soft">
-            Car<span className="italic text-brass">gent</span>
-          </span>
-        </div>
-
-        {/* Tool cards */}
-        <div className="mt-14 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {tools.map((tool, i) => (
-            <Link
-              key={tool.href}
-              href={tool.href}
-              className="animate-fade-up group flex flex-col gap-4 rounded-[16px] border border-line bg-surface p-5 transition-all hover:-translate-y-0.5 hover:border-brass/20 hover:shadow-cargent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
-              style={{ animationDelay: `${320 + i * 70}ms` }}
+        {/* ── Two-column hero: copy + live result preview ──────────── */}
+        <div className="mt-10 grid items-center gap-12 lg:mt-12 lg:grid-cols-[1.04fr_0.96fr] lg:gap-16">
+          {/* Left — headline, subhead, CTA, metrics */}
+          <div>
+            <span
+              className="animate-fade-up cargent-mono inline-block text-[11px] uppercase tracking-[0.14em] text-brass"
+              style={{ animationDelay: '80ms' }}
             >
-              <tool.Icon className="h-6 w-6 text-ink-soft transition-colors duration-200 group-hover:text-brass" />
-              <div>
-                <p className="text-[15px] font-semibold text-ink">{tool.title}</p>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-ink-soft">
-                  {tool.description}
-                </p>
-              </div>
-              <ArrowRight
-                className="mt-auto h-4 w-4 text-faint transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-ink"
-                aria-hidden="true"
-              />
-            </Link>
-          ))}
+              — AI oceňovací agent
+            </span>
+
+            <h1
+              className="animate-fade-up cargent-h1 mt-5 leading-[1.04]"
+              style={{ animationDelay: '120ms', fontSize: 'clamp(34px, 4.6vw, 62px)' }}
+            >
+              Oceňte svá auta
+              <br />
+              jako <i>člověk.</i>
+            </h1>
+
+            <p
+              className="animate-fade-up mt-6 max-w-[48ch] text-[16px] leading-relaxed text-ink-soft md:text-[17px]"
+              style={{ animationDelay: '180ms' }}
+            >
+              Cargent projde živé inzeráty, výbavu i ověřenou historii vozu
+              a vrátí reálnou tržní cenu s intervalem spolehlivosti —
+              ne jen tip od oka.
+            </p>
+
+            <div
+              className="animate-fade-up mt-8 flex flex-wrap items-center gap-3"
+              style={{ animationDelay: '240ms' }}
+            >
+              <Link
+                href="/odhad-ceny"
+                style={{ color: '#FFFFFF' }}
+                className="group inline-flex items-center gap-2 rounded-[12px] bg-ink px-6 py-3.5 text-[15px] font-medium text-white transition-colors hover:bg-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+              >
+                Ocenit vůz zdarma
+                <ArrowRight
+                  className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </Link>
+              <Link
+                href="#how"
+                className="inline-flex items-center gap-2 rounded-[12px] border border-line-2 bg-surface px-6 py-3.5 text-[15px] font-medium text-ink transition-colors hover:border-brass/30 hover:bg-paper-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+              >
+                Jak to funguje
+              </Link>
+            </div>
+
+            <p
+              className="animate-fade-up mt-4 text-[13px] text-faint"
+              style={{ animationDelay: '280ms' }}
+            >
+              Bez registrace · Výsledek do 30 sekund · Neukládáme osobní data
+            </p>
+
+            {/* Metrics row */}
+            <dl
+              className="animate-fade-up mt-10 flex flex-wrap gap-x-10 gap-y-5 border-t border-line pt-7"
+              style={{ animationDelay: '340ms' }}
+            >
+              {HERO_METRICS.map((m) => (
+                <div key={m.label} className="flex flex-col gap-1">
+                  <dt className="order-2 text-[12px] text-ink-soft">{m.label}</dt>
+                  <dd className="cargent-mono order-1 text-[26px] font-medium leading-none text-ink">
+                    {m.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {/* Right — live valuation result preview */}
+          <div
+            className="animate-fade-up"
+            style={{ animationDelay: '300ms' }}
+          >
+            <Instrument />
+          </div>
         </div>
       </div>
     </section>
@@ -154,46 +163,6 @@ function HeroGauge() {
       {/* Center pivot */}
       <circle cx="44" cy="44" r="4"   fill="#B0791D" />
       <circle cx="44" cy="44" r="1.8" fill="#F6F4EE" />
-    </svg>
-  );
-}
-
-type IconProps = { className?: string };
-
-function IconCar({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <path d="M5 17H3v-5l2.5-6h13L21 12v5h-2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="7.5" cy="17" r="1.5" />
-      <circle cx="16.5" cy="17" r="1.5" />
-      <path d="M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconSearch({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m16.5 16.5 4.5 4.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconChart({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <path d="M3 18l5-5 4 4 5-7 4 4" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="3" y1="21" x2="21" y2="21" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconPen({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <path d="M12 20h9" strokeLinecap="round" />
-      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

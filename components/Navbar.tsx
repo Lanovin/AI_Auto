@@ -43,7 +43,7 @@ const searchIndex: SearchEntry[] = [
     title: 'Odhad ceny',
     description: 'Zjistěte reálnou tržní cenu auta pomocí AI za 30 sekund.',
     href: '/odhad-ceny',
-    keywords: ['cena', 'odhad', 'ocenění', 'auto', 'tržní', 'sauto', 'tipcars', 'vin', 'prodej', 'nákup', 'koupě', 'inzerát'],
+    keywords: ['cena', 'odhad', 'ocenění', 'auto', 'tržní', 'portály', 'inzeráty', 'vin', 'prodej', 'nákup', 'koupě', 'inzerát'],
     badge: 'Zdarma',
   },
   {

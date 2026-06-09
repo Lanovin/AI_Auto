@@ -32,12 +32,12 @@ const trustReasons = [
   {
     stat: '10+',
     title: 'Zdrojů dat najednou',
-    body: 'Sauto, TipCars, AutoScout24 a další. Nevidíte jen jeden portál — vidíte celý trh.',
+    body: 'Přední české i zahraniční inzertní portály najednou. Nevidíte jen jeden zdroj — vidíte celý trh.',
   },
   {
-    stat: 'Cebia',
+    stat: 'Historie',
     title: 'Ověřená historie vozidla',
-    body: 'Při ocenění zohledňujeme ověřenou historii z Cebia — nájezd, počet majitelů, havárie.',
+    body: 'Při ocenění zohledňujeme ověřenou historii vozu — nájezd, počet majitelů, havárie.',
   },
 ];
 

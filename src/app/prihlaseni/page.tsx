@@ -4,12 +4,16 @@ import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import Header from '@/components/landing/Header';
 
 export default function LoginPage() {
   return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
+    <>
+      <Header />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
+    </>
   );
 }
 
@@ -62,7 +66,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-paper px-5 py-12">
+    <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-paper px-5 py-12">
       <div className="w-full max-w-[400px]">
 
         {/* Logo */}

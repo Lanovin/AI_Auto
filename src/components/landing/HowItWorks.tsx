@@ -17,7 +17,7 @@ const steps = [
   {
     n: '2',
     title: 'Prohledáme trh',
-    body: 'Porovnáme stovky aktuálních inzerátů ze Sauto, TipCars a dalších portálů. Data jsou vždy čerstvá.',
+    body: 'Porovnáme stovky aktuálních inzerátů z předních inzertních portálů. Data jsou vždy čerstvá.',
     Icon: IconSearch,
   },
   {

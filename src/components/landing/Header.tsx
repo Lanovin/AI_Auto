@@ -1,23 +1,32 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import TokenBadge from '@/components/token-badge';
+import { useClientAuthState } from '@/lib/client-auth';
 
 /**
- * Sticky landing header.
+ * Cargent — jednotná hlavička pro CELÝ web.
  *
- *   • Transparent at top, switches to translucent paper bg + backdrop blur
- *     once the user scrolls past 20px (matches design brief).
- *   • Mobile (≤640px): nav links hidden, primary CTA stays visible.
- *   • Logo: small gauge mark SVG + wordmark "Car" + gold italic "gent".
+ * Stejné menu na úvodní straně, u nástrojů i u přihlášení:
+ *   • vlevo logo,
+ *   • jediná položka „Odhad ceny",
+ *   • vpravo přihlášení (host) nebo účet + tokeny (přihlášený).
+ *
+ * Transparentní nahoře, po odscrollování (>20px) průsvitný papírový
+ * podklad s blur efektem a hairline lemem.
+ *
+ * `brandName` se přijímá kvůli zpětné kompatibilitě se staršími call-sity,
+ * wordmark se vždy vykresluje jako „Car<i>gent</i>".
  */
-const navItems = [
-  { label: 'Jak to funguje', href: '/#how' },
-  { label: 'Proč věřit ceně', href: '/#engine' },
-  { label: 'Předplatné', href: '/predplatne' },
-];
+type HeaderProps = {
+  brandName?: string;
+};
 
-export default function Header() {
+export default function Header(_props: HeaderProps = {}) {
+  const pathname = usePathname();
+  const { role, isSupabaseAuthenticated } = useClientAuthState();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -26,6 +35,15 @@ export default function Header() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const isActive = (href: string) => pathname === href.split('?')[0];
+
+  const authRedirectSuffix =
+    pathname && pathname !== '/' && pathname !== '/prihlaseni' && pathname !== '/registrace'
+      ? `?next=${encodeURIComponent(pathname)}`
+      : '';
+  const accountHref = isSupabaseAuthenticated ? '/dashboard' : '/profil';
+  const accountLabel = isSupabaseAuthenticated ? 'Účet' : 'Profil';
 
   return (
     <header
@@ -50,34 +68,45 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* ── Nav (desktop) ───────────────────────────────────────── */}
-        <nav className="hidden md:flex md:items-center md:gap-7">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-[14px] text-ink-soft transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* ── Auth + primary CTA ──────────────────────────────────── */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/prihlaseni"
-            className="hidden text-[14px] text-ink-soft transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:inline"
-          >
-            Přihlásit
-          </Link>
+        {/* ── Nav: jediná položka „Odhad ceny" ────────────────────── */}
+        <nav aria-label="Hlavní navigace" className="flex items-center">
           <Link
             href="/odhad-ceny"
-            style={{ color: '#FFFFFF' }}
-            className="rounded-[10px] bg-ink px-4 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+            className={[
+              'rounded-[8px] px-3 py-2 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
+              isActive('/odhad-ceny')
+                ? 'font-medium text-ink'
+                : 'text-ink-soft hover:text-ink',
+            ].join(' ')}
           >
-            Ocenit vůz
+            Odhad ceny
           </Link>
+        </nav>
+
+        {/* ── Vpravo: přihlášení / účet ────────────────────────────── */}
+        <div className="flex items-center gap-2">
+          {role !== 'guest' ? (
+            <>
+              <TokenBadge />
+              <Link
+                href={accountHref}
+                className={[
+                  'rounded-[8px] px-3 py-2 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
+                  isActive(accountHref) ? 'text-ink' : 'text-ink-soft hover:text-ink',
+                ].join(' ')}
+              >
+                {accountLabel}
+              </Link>
+            </>
+          ) : (
+            <Link
+              href={`/prihlaseni${authRedirectSuffix}`}
+              className="rounded-[10px] px-4 py-2.5 text-[14px] font-medium transition-colors hover:bg-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+              style={{ color: '#FFFFFF', backgroundColor: '#14171C' }}
+            >
+              Přihlásit
+            </Link>
+          )}
         </div>
       </div>
     </header>

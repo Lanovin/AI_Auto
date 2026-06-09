@@ -7,7 +7,7 @@ export const metadata = {
 export default function PricePage() {
   return (
     <ToolShell
-      description="Zadejte auto a AI porovná aktuální inzeráty ze Sauto, TipCars a dalších portálů. Během chvíle uvidíte reálnou tržní cenu pro prodej, nákup i rychlé ověření nabídky."
+      description="Zadejte auto a AI porovná aktuální inzeráty z předních inzertních portálů. Během chvíle uvidíte reálnou tržní cenu pro prodej, nákup i rychlé ověření nabídky."
       iframeSrc="/legacy/ceny"
       title="Odhad ceny"
     />

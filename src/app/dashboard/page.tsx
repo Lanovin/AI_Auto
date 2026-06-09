@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import Navbar from '../../../components/Navbar';
+import Header from '@/components/landing/Header';
 import { createClient } from '@/lib/supabase/server';
 import { getScanHistory } from '@/lib/supabase/user-data';
 
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <Navbar brandName="AutoAI" />
+      <Header />
 
       <main className="min-h-screen bg-[linear-gradient(180deg,#F4F8FD_0%,#FFFFFF_38%,#FFFFFF_100%)]" id="main">
         <div className="mx-auto max-w-6xl px-6 py-10 md:px-10 md:py-12">

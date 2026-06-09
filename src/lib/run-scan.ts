@@ -14,12 +14,14 @@ const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
  *      pre-sale checklist, regional pricing, etc.
  */
 const TIER_CONFIGS: Record<string, { max_tokens: number; max_search: number }> = {
-  quick:    { max_tokens: 2500, max_search: 3 },
-  standard: { max_tokens: 4500, max_search: 6 },
-  // Detailed a expert jsou sníženy tak, aby se vešly na Vercel Pro (60s limit).
-  // Vercel Free (10s) nestačí — zobrazí se srozumitelná chyba místo 504.
-  detailed: { max_tokens: 7000, max_search: 7 },
-  expert:   { max_tokens: 9000, max_search: 9 },
+  quick:    { max_tokens: 2500,  max_search: 3 },
+  standard: { max_tokens: 4500,  max_search: 6 },
+  // Detailní a expertní posudek je dlouhý — dřív se ořezával na max_tokens
+  // a výsledný JSON nešel naparsovat. Díky streamingu (viz callClaude) můžeme
+  // dát štědrý strop, aby se kompletní markdown vždy vešel. Lokálně bez limitu;
+  // na Vercel Free se delší běh přeruší časovým limitem (řešeno hláškou).
+  detailed: { max_tokens: 16000, max_search: 7 },
+  expert:   { max_tokens: 24000, max_search: 9 },
 };
 
 interface AnthropicContent {
@@ -29,6 +31,7 @@ interface AnthropicContent {
 
 interface AnthropicResponse {
   content: AnthropicContent[];
+  stop_reason?: string | null;
 }
 
 function extractText(res: AnthropicResponse): string {
@@ -57,6 +60,51 @@ function parseJsonFromText(text: string): Record<string, unknown> {
 }
 
 /**
+ * Záchrana z JSON oříznutého uprostřed (typicky uprostřed markdownText při
+ * dosažení max_tokens). Vytáhne dohledatelné ceny a co nejvíc už napsaného
+ * markdownu, aby uživatel i tak dostal použitelný (byť neúplný) posudek —
+ * lepší než tvrdá chyba. Vrací null, pokud nelze zachránit vůbec nic.
+ */
+function salvageTruncatedJson(text: string): Record<string, unknown> | null {
+  const num = (key: string): number => {
+    const m = text.match(new RegExp('"' + key + '"\\s*:\\s*(\\d+)'));
+    return m ? Number(m[1]) : 0;
+  };
+
+  let markdown = '';
+  const md = text.match(/"markdownText"\s*:\s*"([\s\S]*)$/);
+  if (md) {
+    markdown = md[1]
+      .replace(/\\u[0-9a-fA-F]{4}/g, (m) => {
+        try { return JSON.parse('"' + m + '"'); } catch { return ''; }
+      })
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\')
+      // odstraň poslední neúplný řádek a případnou zbytkovou uvozovku/závorku
+      .replace(/\\?"?\s*[}\]]*\s*$/, '')
+      .replace(/\n[^\n]*$/, '\n');
+  }
+
+  const averagePrice = num('averagePrice');
+  if (!markdown.trim() && !averagePrice) return null;
+
+  return {
+    averagePrice,
+    minPrice: num('minPrice'),
+    maxPrice: num('maxPrice'),
+    listingCount: num('listingCount'),
+    sources: [],
+    summary: '',
+    markdownText:
+      (markdown.trim() || '## 💰 Odhad tržní ceny\n_Posudek se nepodařilo dokončit._') +
+      '\n\n---\n_⚠️ Posudek byl zkrácen kvůli své délce — výše je vše, co se stihlo vygenerovat. ' +
+      'Pro úplný výstup zkuste posudek zopakovat nebo zvolit nižší tier._',
+  };
+}
+
+/**
  * Timeout pro Anthropic API volání.
  *
  * Vercel Free:  10 s max → quick/standard by se vešly, detailed/expert NE.
@@ -68,6 +116,20 @@ function parseJsonFromText(text: string): Record<string, unknown> {
  */
 const CLAUDE_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 300_000;
 
+const TIMEOUT_MESSAGE =
+  'TIMEOUT: Posudek trval příliš dlouho. ' +
+  'Zkuste tier Standardní nebo Rychlý — nebo kontaktujte podporu pro přístup k detailním posudkům.';
+
+/**
+ * Volá Anthropic Messages API ve **streamovacím** režimu.
+ *
+ * Proč streaming: detailní/expertní posudek je dlouhý (vysoký max_tokens) a
+ * nestreamovaný HTTP request by u takových délek riskoval timeout spojení
+ * dřív, než se vůbec dogeneruje. Streaming drží spojení živé a my si průběžně
+ * skládáme bloky obsahu i finální stop_reason — takže velký výstup spolehlivě
+ * dojede až do konce. Bloky rekonstruujeme genericky (text / server_tool_use /
+ * web_search_tool_result), aby je šlo poslat zpět při obnově `pause_turn`.
+ */
 async function callClaude(body: object): Promise<AnthropicResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY není nastaven na serveru.');
@@ -75,38 +137,146 @@ async function callClaude(body: object): Promise<AnthropicResponse> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), CLAUDE_TIMEOUT_MS);
 
-  let res: Response;
   try {
-    res = await fetch(ANTHROPIC_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(body),
-      cache: 'no-store',
-      signal: controller.signal,
-    });
-  } catch (err) {
-    // AbortError = náš vlastní timeout, ne Vercel 504
-    if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error(
-        'TIMEOUT: Posudek trval příliš dlouho. ' +
-        'Zkuste tier Standardní nebo Rychlý — nebo kontaktujte podporu pro přístup k detailním posudkům.'
-      );
+    let res: Response;
+    try {
+      res = await fetch(ANTHROPIC_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({ ...body, stream: true }),
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') throw new Error(TIMEOUT_MESSAGE);
+      throw err;
     }
-    throw err;
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
+      throw new Error(`Anthropic API chyba ${res.status}: ${err.error?.message ?? res.statusText}`);
+    }
+    if (!res.body) throw new Error('Anthropic API nevrátila streamovanou odpověď.');
+
+    return await parseSSEStream(res.body);
   } finally {
     clearTimeout(timeoutId);
   }
+}
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
-    throw new Error(`Anthropic API chyba ${res.status}: ${err.error?.message ?? res.statusText}`);
+/** Skládá SSE stream Anthropic API do AnthropicResponse (obsah + stop_reason). */
+async function parseSSEStream(body: ReadableStream<Uint8Array>): Promise<AnthropicResponse> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  type Block = Record<string, unknown> & { type?: string; text?: string };
+  const blocks: Record<number, Block> = {};
+  const partialJson: Record<number, string> = {};
+  let stopReason: string | null = null;
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let nl: number;
+      while ((nl = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (!data || data === '[DONE]') continue;
+
+        let evt: Record<string, unknown>;
+        try { evt = JSON.parse(data); } catch { continue; }
+
+        const idx = evt.index as number;
+        switch (evt.type) {
+          case 'content_block_start':
+            blocks[idx] = { ...(evt.content_block as Block) };
+            partialJson[idx] = '';
+            break;
+          case 'content_block_delta': {
+            const d = evt.delta as { type?: string; text?: string; thinking?: string; partial_json?: string };
+            const b = (blocks[idx] ??= {});
+            if (d.type === 'text_delta') b.text = (b.text ?? '') + (d.text ?? '');
+            else if (d.type === 'thinking_delta') b.thinking = ((b.thinking as string) ?? '') + (d.thinking ?? '');
+            else if (d.type === 'input_json_delta') partialJson[idx] = (partialJson[idx] ?? '') + (d.partial_json ?? '');
+            break;
+          }
+          case 'content_block_stop': {
+            const pj = partialJson[idx];
+            if (pj) { try { blocks[idx].input = JSON.parse(pj); } catch { /* ponech bez input */ } }
+            break;
+          }
+          case 'message_delta': {
+            const sr = (evt.delta as { stop_reason?: string } | undefined)?.stop_reason;
+            if (sr) stopReason = sr;
+            break;
+          }
+          case 'error':
+            throw new Error('Anthropic stream chyba: ' + ((evt.error as { message?: string })?.message ?? 'neznámá'));
+        }
+      }
+    }
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw new Error(TIMEOUT_MESSAGE);
+    throw err;
+  } finally {
+    try { reader.releaseLock(); } catch { /* ignore */ }
   }
 
-  return res.json() as Promise<AnthropicResponse>;
+  const content = Object.keys(blocks)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((i) => blocks[i]) as unknown as AnthropicContent[];
+
+  return { content, stop_reason: stopReason };
+}
+
+/**
+ * Server-side web_search běží uvnitř vlastní sampling smyčky. Když narazí na
+ * limit serverových iterací, API vrátí stop_reason "pause_turn" s NEÚPLNOU
+ * odpovědí (často jen narativní text bez JSON). Pokud turn neobnovíme,
+ * skončíme parsováním narativu → "Nepodařilo se parsovat JSON".
+ *
+ * Řešení: po pause_turn pošleme zpět asistentův dosavadní obsah (vč. bloků
+ * server_tool_use / web_search_tool_result) a necháme model pokračovat.
+ * NEPŘIDÁVÁME nový user message — API obnoví turn samo.
+ * Viz https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons
+ *
+ * Detailní/expertní tier (7–9 searchů) na pause_turn naráží téměř vždy, proto
+ * dříve selhával — zatímco rychlý/standardní (3–6) se obvykle vešel do limitu.
+ */
+const MAX_PAUSE_CONTINUATIONS = 8;
+
+async function callClaudeUntilDone(
+  body: { messages: Array<{ role: string; content: unknown }> }
+): Promise<{ finalText: string; combinedText: string; stopReason: string | null }> {
+  const messages: Array<{ role: string; content: unknown }> = [...body.messages];
+  let combinedText = '';
+  let finalText = '';
+  let stopReason: string | null = null;
+
+  for (let attempt = 0; attempt <= MAX_PAUSE_CONTINUATIONS; attempt++) {
+    const res = await callClaude({ ...body, messages });
+    stopReason = res.stop_reason ?? null;
+    finalText = extractText(res);
+    if (finalText) combinedText += (combinedText ? '\n' : '') + finalText;
+
+    if (stopReason !== 'pause_turn') break;
+
+    // Obnov pozastavený turn — vrať asistentův dosavadní obsah a pokračuj.
+    messages.push({ role: 'assistant', content: res.content });
+  }
+
+  return { finalText, combinedText, stopReason };
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -316,9 +486,27 @@ export async function runScan(car: CarInput, tier = 'standard', scope = 'czech')
     messages: [{ role: 'user', content: userMessage }],
   };
 
-  const apiResponse = await callClaude(requestBody);
-  const text = extractText(apiResponse);
-  const parsed = parseJsonFromText(text);
+  const { finalText, combinedText } = await callClaudeUntilDone(requestBody);
+
+  // Parsuj přednostně text z dokončeného turnu (tam je kompletní JSON);
+  // při neúspěchu zkus celý přepis turnů.
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = parseJsonFromText(finalText);
+  } catch (_) {
+    try {
+      parsed = parseJsonFromText(combinedText);
+    } catch (err) {
+      // Poslední záchrana: JSON oříznutý na max_tokens — vytáhni co se dá,
+      // ať uživatel vždy dostane aspoň částečný posudek (žádná tvrdá chyba).
+      const salvaged = salvageTruncatedJson(combinedText || finalText);
+      if (salvaged) {
+        parsed = salvaged;
+      } else {
+        throw err;
+      }
+    }
+  }
 
   const averagePrice = Number(parsed.averagePrice) || 0;
   const minPrice     = Number(parsed.minPrice)     || 0;

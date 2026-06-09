@@ -227,9 +227,9 @@
             var hint = document.getElementById('scopePortalsHint');
             if (!hint) return;
             if (this.value === 'international') {
-                hint.textContent = 'Sauto.cz · TipCars.cz · mobile.de · otomoto.pl · lacentrale.fr · willhaben.at';
+                hint.textContent = 'Přední české i zahraniční inzertní portály';
             } else {
-                hint.textContent = 'Sauto.cz · TipCars.cz · AutoScout24.cz';
+                hint.textContent = 'Přední české inzertní portály';
             }
         });
     });
@@ -401,8 +401,8 @@
     function startProgress(tier, scope) {
         var cfg = TIER_PROGRESS[tier] || TIER_PROGRESS.standard;
         var portals = scope === 'international'
-            ? 'Sauto.cz · TipCars.cz · mobile.de · otomoto.pl · willhaben.at'
-            : 'Sauto.cz · TipCars.cz · AutoScout24.cz';
+            ? 'přední české i zahraniční inzertní portály'
+            : 'přední české inzertní portály';
 
         // Fáze se odvíjejí od podílu uplynulého času vůči odhadu (0–1).
         var stages = [

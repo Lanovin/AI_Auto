@@ -16,7 +16,7 @@ const services = [
   {
     title: 'Odhad ceny',
     description:
-      'Reálná tržní cena auta s intervalem spolehlivosti — projde inzeráty Sauto, TipCars i ověřenou historii.',
+      'Reálná tržní cena auta s intervalem spolehlivosti — projde přední inzertní portály i ověřenou historii vozu.',
     href: '/odhad-ceny',
     cta: 'Spustit odhad',
     audience: 'Zdarma',

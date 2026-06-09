@@ -43,7 +43,7 @@ export const DEMO_VALUATION = {
   rangeLow: 462_000,      // TODO: nahradit reálnými daty z API
   rangeHigh: 516_000,     // TODO: nahradit reálnými daty z API
   confidencePct: 90,
-  verified: true,         // Cebia
+  verified: true,         // ověřená historie vozu
 } as const;
 
 // Rozpad ceny — co cenu posunulo
@@ -60,9 +60,9 @@ export const DEMO_PRICE_BREAKDOWN: ReadonlyArray<{
 
 // Zdroje pod instrumentem
 export const DEMO_SOURCES = [
-  { label: 'AutoESA',  verified: false },
-  { label: 'TipCars',  verified: false },
-  { label: 'Cebia',    verified: true  },
+  { label: 'Inzertní portály', verified: false },
+  { label: 'Aukční data',      verified: false },
+  { label: 'Ověřená historie', verified: true  },
 ] as const;
 
 // ── Ticker: nedávná ocenění (rolují horizontálně) ───────────────────
@@ -118,7 +118,7 @@ export const API_RESPONSE_SAMPLE = `{
   "confidence": 0.90,
   "mape":     0.043,
   "verified": true,
-  "sources":  ["autoesa", "tipcars", "cebia"]
+  "sources":  ["listings", "auctions", "history"]
 }`;
 
 // ── Helpers ─────────────────────────────────────────────────────────

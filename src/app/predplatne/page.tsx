@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Navbar from '../../../components/Navbar';
+import Header from '@/components/landing/Header';
 import PricingPlans from '@/components/pricing-plans';
 import { createClient } from '@/lib/supabase/server';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
@@ -76,7 +76,7 @@ export default async function PricingPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <Navbar brandName="AutoAI" />
+      <Header />
 
       <main className="min-h-screen bg-[linear-gradient(180deg,#F4F8FD_0%,#FFFFFF_38%,#FFFFFF_100%)]">
         <div className="mx-auto max-w-5xl px-6 py-10 md:px-10 md:py-12">

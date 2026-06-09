@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import Navbar from '../../../components/Navbar';
+import Header from '@/components/landing/Header';
 
 type AccountType = 'person' | 'dealer';
 
@@ -46,7 +46,7 @@ const ACCOUNT_CONFIG = {
 export default function SignupPage() {
   return (
     <>
-      <Navbar />
+      <Header />
       <Suspense fallback={<div className="min-h-screen bg-paper" />}>
         <SignupForm />
       </Suspense>

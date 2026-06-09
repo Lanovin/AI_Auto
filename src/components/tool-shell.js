@@ -1,6 +1,6 @@
 import DealerAccessGate from '@/components/dealer-access-gate';
 import LegacyToolFrame from '@/components/legacy-tool-frame';
-import Navbar from '../../components/Navbar';
+import Header from '@/components/landing/Header';
 import PageIntro from '../../components/PageIntro';
 
 export default function ToolShell({ description, iframeSrc, title, accessLevel = 'public' }) {
@@ -20,7 +20,7 @@ export default function ToolShell({ description, iframeSrc, title, accessLevel =
 
   return (
     <main className="shell">
-      <Navbar brandName="AutoAI" />
+      <Header />
 
       <PageIntro
         actions={actions}

@@ -1,4 +1,4 @@
-import Navbar from '../../../components/Navbar';
+import Header from '@/components/landing/Header';
 import ProfileHub from '@/components/profile-hub';
 
 export const metadata = {
@@ -11,7 +11,7 @@ export default async function ProfilePage({ searchParams }) {
 
   return (
     <>
-      <Navbar brandName="AutoAI" />
+      <Header />
       <main className="shell" id="main">
         <ProfileHub preferredMode={preferredMode} />
       </main>

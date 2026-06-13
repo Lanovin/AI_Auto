@@ -58,6 +58,19 @@ export async function getCachedScan(
 }
 
 /**
+ * Maximální stáří záznamů ve sdílené cache market_scans.
+ *
+ * Právní odůvodnění: cache obsahuje malé výňatky z cizích inzerátů (portál,
+ * URL, cena, titulek). Krátkodobá technická cache pro opakované dotazy je
+ * v pořádku — ale bez mazání by se časem nahromadila paralelní databáze
+ * obsahu inzertních portálů, což by mohlo kolidovat se zvláštním právem
+ * pořizovatele databáze (směrnice 96/9/ES, AZ § 88 a násl.). Proto se staré
+ * záznamy automaticky mažou; dlouhodobé poznatky držíme výhradně jako vlastní
+ * odvozené agregáty v price_stats (src/lib/price-stats.ts).
+ */
+export const MARKET_SCANS_RETENTION_DAYS = 14;
+
+/**
  * Inserts a new scan record. Returns the new row ID, or null if the insert fails.
  * A failed insert is logged but does NOT throw — the scan result is still returned to the user.
  */
@@ -71,6 +84,16 @@ export async function saveScan(
       VALUES (${signature}, ${JSON.stringify(scanData)}::jsonb)
       RETURNING id
     ` as { id: number }[];
+
+    // Oportunistický úklid při každém zápisu (žádný cron není potřeba).
+    // Index market_scans_scanned_at_idx viz neon/migrations/0001_price_stats.sql.
+    sql`
+      DELETE FROM market_scans
+      WHERE scanned_at < now() - make_interval(days => ${MARKET_SCANS_RETENTION_DAYS})
+    `.catch((err: unknown) =>
+      console.error('[market-cache] retention cleanup failed (non-blocking):', err)
+    );
+
     return rows[0]?.id ?? null;
   } catch (err) {
     console.error('[market-cache] saveScan DB error (scan data was NOT cached):', err);

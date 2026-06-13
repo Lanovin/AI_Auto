@@ -207,8 +207,43 @@
 
 
 
-    // ---------- Token costs (mirrors src/lib/tokens.ts TOKEN_COSTS) ----------
+    // ---------- Token costs ----------
+    // Defaults mirror src/lib/tokens.ts TOKEN_COSTS; the live price list
+    // (admin-editable in /admin → Ceník služeb) is fetched from the API below.
     var TIER_TOKEN_COSTS = { quick: 4, standard: 8, detailed: 12, expert: 20 };
+
+    function applyTierPricing(features) {
+        for (var i = 0; i < features.length; i++) {
+            var f = features[i];
+            var match = /^estimator:(quick|standard|detailed|expert)$/.exec(f.feature || '');
+            if (!match) continue;
+            var tier = match[1];
+            TIER_TOKEN_COSTS[tier] = f.cost;
+            // Show the price on the tier card (appended to the meta line).
+            var input = document.getElementById('tier-' + tier);
+            var meta = input && input.parentElement
+                ? input.parentElement.querySelector('.tier-meta')
+                : null;
+            if (meta) {
+                var priceEl = meta.parentElement.querySelector('.tier-cost');
+                if (!priceEl) {
+                    priceEl = document.createElement('span');
+                    priceEl.className = 'tier-meta tier-cost';
+                    meta.parentElement.appendChild(priceEl);
+                }
+                priceEl.textContent = f.cost === 0
+                    ? 'Zdarma'
+                    : f.cost + ' token' + (f.cost === 1 ? '' : (f.cost >= 2 && f.cost <= 4 ? 'y' : 'ů'));
+            }
+        }
+    }
+
+    fetch('/api/tokens/pricing')
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (json) {
+            if (json && json.features) applyTierPricing(json.features);
+        })
+        .catch(function () { /* offline → keep defaults */ });
 
     function deductLocalTokens(cost) {
         try {
@@ -358,6 +393,12 @@
             return `<table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
         });
 
+        // Markdown links [text](url) → clickable anchors (e.g. "Link" column
+        // in detailed/expert tables). rel guards against opener abuse and
+        // tells crawlers we don't endorse/transfer ranking to listed ads.
+        html = html.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,
+            '<a href="$2" target="_blank" rel="nofollow noopener noreferrer">$1</a>');
+
         // Unordered lists
         html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
         html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
@@ -494,7 +535,28 @@
                 cacheHtml = '<div class="cache-notice cache-notice-fresh">✨ Odhad na základě ' + count + ' aktuálních inzerátů (čerstvý scan)</div>';
             }
 
-            resultContent.innerHTML = cacheHtml + html;
+            // Zdroje — odkazy na původní inzeráty (transparentnost + atribuce
+            // portálům; odkazování je legální, viz /zdroje-dat).
+            var sourcesHtml = '';
+            if (Array.isArray(result.sources) && result.sources.length > 0) {
+                var items = result.sources.map(function (src) {
+                    if (!src || !src.url) return '';
+                    var label = escapeHtml(src.portal || 'Inzerát');
+                    var title = src.title ? ' — ' + escapeHtml(src.title) : '';
+                    var price = src.price ? ' — ' + Number(src.price).toLocaleString('cs-CZ') + ' Kč' : '';
+                    return '<li><a href="' + escapeHtml(src.url) + '" target="_blank" rel="nofollow noopener noreferrer">'
+                        + label + title + '</a>' + price + '</li>';
+                }).join('');
+                if (items) {
+                    sourcesHtml =
+                        '<h2>🔗 Zdroje — původní inzeráty</h2>' +
+                        '<ul>' + items + '</ul>' +
+                        '<p style="font-size:13px;opacity:0.75;">Odkazy vedou na původní inzeráty na uvedených portálech. '
+                        + 'Více o tom, jak s daty pracujeme: <a href="/zdroje-dat" target="_top">Zdroje dat</a>.</p>';
+                }
+            }
+
+            resultContent.innerHTML = cacheHtml + html + sourcesHtml;
             resultSection.style.display = 'block';
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (err) {

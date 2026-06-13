@@ -267,7 +267,7 @@
             throw new Error('Centrální Anthropic vrstva není načtená.');
         }
 
-        return window.AutoAIAnthropic.call(requestBody);
+        return window.AutoAIAnthropic.call(requestBody, 'popisky:generate');
     }
 
     // ---------- Extract text ----------

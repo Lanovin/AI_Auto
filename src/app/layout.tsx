@@ -1,22 +1,14 @@
 import type { Metadata } from 'next';
-import { Fraunces, Hanken_Grotesk, Inter, Spline_Sans_Mono } from 'next/font/google';
+import { Hanken_Grotesk, Inter, Spline_Sans_Mono } from 'next/font/google';
 import './legacy.css';
 import './globals.css';
 
 // ── Cargent typography ─────────────────────────────────────────────
-// Display headlines — editorial serif with italic accent (Fraunces).
-const fraunces = Fraunces({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-fraunces',
-  display: 'swap',
-});
-
-// Body / UI — humanist grotesk that pairs with Fraunces.
+// Body i display — jeden čistý grotesk; nadpisy nesou těžší řezy
+// (700/800), look po vzoru data-driven platforem typu brego.io.
 const hanken = Hanken_Grotesk({
   subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-hanken',
   display: 'swap',
 });
@@ -42,6 +34,10 @@ export const metadata: Metadata = {
   },
   description:
     'Cargent projde živé inzeráty, výbavu a ověřenou historii vozu a vrátí tržní ocenění s intervalem spolehlivosti — ne jen tip od oka.',
+  icons: {
+    icon: '/logo_cargent.png',
+    apple: '/logo_cargent.png',
+  },
 };
 
 type RootLayoutProps = {
@@ -53,7 +49,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="cs" data-scroll-behavior="smooth">
       <body
         className={[
-          fraunces.variable,
           hanken.variable,
           splineMono.variable,
           inter.variable,

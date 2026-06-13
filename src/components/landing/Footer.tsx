@@ -1,10 +1,17 @@
 import Link from 'next/link';
+import { getSiteContent } from '@/lib/content/server';
 
+/**
+ * Footer — čistá vícesloupcová patička po vzoru brego.io:
+ * světlý podklad, vlasová linka nahoře, značka + sloupce odkazů,
+ * dole řádek s copyrightem.
+ */
 const columns = [
   {
     heading: 'Produkt',
     links: [
       { label: 'Ocenit vůz', href: '/odhad-ceny' },
+      { label: 'Co Cargent umí', href: '/#features' },
       { label: 'Jak to funguje', href: '/#how' },
       { label: 'Proč věřit ceně', href: '/#engine' },
       { label: 'Předplatné', href: '/predplatne' },
@@ -13,17 +20,18 @@ const columns = [
   {
     heading: 'Společnost',
     links: [
-      { label: 'O nás', href: '#' },
       { label: 'Kontakt', href: 'mailto:hello@cargent.cz' },
-      { label: 'Ochrana údajů', href: '#' },
-      { label: 'Obchodní podmínky', href: '#' },
+      { label: 'Zdroje dat', href: '/zdroje-dat' },
+      { label: 'Ochrana údajů', href: '/ochrana-udaju' },
+      { label: 'Obchodní podmínky', href: '/podminky' },
     ],
   },
 ];
 
-export default function Footer() {
+export default async function Footer() {
+  const t = await getSiteContent();
   return (
-    <footer className="border-t border-[color:var(--color-line)] bg-paper-2 px-[22px] py-16 md:px-8 md:py-20">
+    <footer className="border-t border-line bg-paper-2/60 px-[22px] pb-8 pt-14 md:px-8 md:pt-16">
       <div className="mx-auto max-w-[1240px]">
         <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr] md:gap-8">
           {/* ── Brand column ────────────────────────────────────── */}
@@ -31,31 +39,30 @@ export default function Footer() {
             <Link
               href="/"
               aria-label="Cargent — domů"
-              className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper-2"
+              className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               <FooterLogoGauge />
-              <span className="text-[20px] font-semibold tracking-tight text-ink font-display">
-                Car<span className="italic text-brass">gent</span>
+              <span className="text-[20px] font-bold tracking-tight text-ink">
+                Car<span className="text-brass">gent</span>
               </span>
             </Link>
-            <p className="mt-4 max-w-[34ch] text-[14px] leading-relaxed text-ink-soft">
-              AI oceňovací agent pro český trh ojetých vozů. Reálná tržní cena
-              s intervalem spolehlivosti, ne jen tip od oka.
+            <p className="mt-4 max-w-[36ch] text-[14px] leading-relaxed text-dim">
+              {t('footer.tagline')}
             </p>
           </div>
 
           {/* ── Link columns ────────────────────────────────────── */}
           {columns.map((col) => (
             <nav key={col.heading} aria-label={col.heading}>
-              <h3 className="text-[11px] font-medium uppercase tracking-[0.10em] text-faint">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">
                 {col.heading}
               </h3>
-              <ul className="mt-4 flex flex-col gap-2.5">
+              <ul className="mt-5 flex flex-col gap-3">
                 {col.links.map((link) => (
                   <li key={`${col.heading}-${link.label}`}>
                     <Link
                       href={link.href}
-                      className="text-[14px] text-ink-soft transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper-2"
+                      className="cargent-link text-[14px] text-ink-soft transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
                     >
                       {link.label}
                     </Link>
@@ -67,9 +74,9 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom row ────────────────────────────────────────── */}
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--color-line)] pt-6 text-[12px] text-faint">
-          <span>© 2026 Cargent — AI oceňovací agent pro ojeté vozy.</span>
-          <span className="cargent-mono flex items-center gap-1.5">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-5 text-[12px] text-faint">
+          <span>{t('footer.copyright')}</span>
+          <span className="flex items-center gap-1.5">
             Postaveno v Česku <span aria-hidden="true">🇨🇿</span>
           </span>
         </div>

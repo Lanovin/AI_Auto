@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getScanOrFetch } from '@/lib/market-cache';
 import { runMonitorScan } from '@/lib/run-scan';
 import { generateSignature } from '@/lib/car-signature';
+import { deductTokens } from '@/lib/tokens-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,7 +34,23 @@ export async function POST(request: Request) {
 
     const result = await getScanOrFetch(car, runMonitorScan, 3.5, 'monitor');
 
+    // Deduct tokens for Supabase-authenticated users (price set in /admin →
+    // Ceník služeb). Mirrors the price-estimator pattern: deduction must never
+    // break the scan result; unauthenticated users are billed client-side.
+    let tokensDeducted = 0;
+    try {
+      const deductResult = await deductTokens('monitor:scan');
+      if (deductResult.ok) {
+        tokensDeducted = deductResult.cost;
+      } else if (deductResult.reason !== 'Nejste přihlášeni.') {
+        return NextResponse.json({ error: deductResult.reason }, { status: 402 });
+      }
+    } catch (tokenErr) {
+      console.error('[api/market-monitor/scan] deductTokens threw unexpectedly (non-blocking):', tokenErr);
+    }
+
     return NextResponse.json({
+      tokensDeducted,
       averagePrice: result.data.averagePrice,
       minPrice:     result.data.minPrice,
       maxPrice:     result.data.maxPrice,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { APP_SESSION_EVENT, getAppSession } from '@/lib/app-session';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
-import { TOKENS_STARTING_BALANCE } from '@/lib/tokens';
+import { TOKENS_STARTING_BALANCE, TOKEN_VALUE_CZK } from '@/lib/tokens';
 
 // localStorage key for credits when using the legacy session system
 const CREDITS_KEY = 'autoai_credits_v1';
@@ -97,7 +97,7 @@ export default function TokenBadge() {
           ? 'border-[#9C3A2A]/30 bg-[#9C3A2A]/10 text-[#9C3A2A]'
           : 'border-brass/30 bg-brass/10 text-brass'
       }`}
-      title={`Kredit: ${balance} tokenů · 1 T = $0.10`}
+      title={`Kredit: ${balance} tokenů · 1 token ≈ ${TOKEN_VALUE_CZK} Kč`}
     >
       <span aria-hidden="true" className="text-[10px]">◈</span>
       {balance}

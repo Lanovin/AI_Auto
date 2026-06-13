@@ -1,53 +1,71 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import AnimateOnScroll from '@/components/animate-on-scroll';
+import { getSiteContent } from '@/lib/content/server';
+import { RichText } from '@/components/rich-text';
 
 /**
- * Final CTA — jedno jasné sdělení.
- *
- * Na konci stránky neopakujeme hero obsah.
- * Odstraňujeme poslední pochybnost a usnadňujeme první krok.
+ * Final CTA — tmavě modrý panel po vzoru enterprise sekcí brego.io:
+ * navy podklad s jemnou modrou září, bílý titulek se světle modrým
+ * akcentem a bílé tlačítko.
  */
-export default function CTA() {
+export default async function CTA() {
+  const t = await getSiteContent();
   return (
-    <section className="relative px-[22px] py-24 md:px-8 md:py-32">
-      {/* Brass bloom */}
+    <section className="px-[22px] py-20 md:px-8 md:py-28">
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 opacity-40 blur-[120px]"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(176,121,29,0.30), rgba(176,121,29,0) 70%)' }}
-      />
+        className="relative mx-auto max-w-[1240px] overflow-hidden rounded-[24px] bg-ink px-6 py-16 md:px-12 md:py-24"
+        style={{ boxShadow: 'var(--shadow-cargent)' }}
+      >
+        {/* Modrá záře v panelu */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[680px] -translate-x-1/2 -translate-y-1/3 opacity-60 blur-[120px]"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(37,99,235,0.45), rgba(37,99,235,0) 70%)' }}
+        />
 
-      <div className="mx-auto flex max-w-xl flex-col items-center text-center">
-        <span className="cargent-mono text-[11px] uppercase tracking-[0.14em] text-brass">
-          — Začněte zdarma
-        </span>
+        <div className="relative mx-auto max-w-[680px] text-center">
+          <AnimateOnScroll>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8FB0FF]">
+              {t('cta.eyebrow').replace(/^[—–-]\s*/, '')}
+            </span>
+          </AnimateOnScroll>
 
-        <h2 className="cargent-h2 mt-5 text-[38px] md:text-[52px]">
-          Kolik vaše auto
-          <br />
-          <i>skutečně stojí?</i>
-        </h2>
+          <AnimateOnScroll delay={100}>
+            <h2
+              className="cargent-h2 mt-6 text-[36px] md:text-[52px]"
+              style={{ color: '#FFFFFF', ['--color-brass' as string]: '#8FB0FF' }}
+            >
+              <RichText>{t('cta.title')}</RichText>
+            </h2>
+          </AnimateOnScroll>
 
-        <p className="mt-5 max-w-[44ch] text-[16px] leading-relaxed text-ink-soft">
-          Zadejte auto a do 30 sekund uvidíte výsledek.
-          Zdarma, bez registrace, bez kreditky.
-        </p>
+          <AnimateOnScroll delay={200}>
+            <p className="mx-auto mt-5 max-w-[44ch] text-[16px] leading-relaxed text-[#B8C4D9] md:text-[17px]">
+              <RichText>{t('cta.subtitle')}</RichText>
+            </p>
+          </AnimateOnScroll>
 
-        <Link
-          href="/odhad-ceny"
-          style={{ color: '#FFFFFF' }}
-          className="group mt-8 inline-flex items-center gap-2 rounded-[12px] bg-ink px-7 py-4 text-[16px] font-medium text-white transition-colors hover:bg-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
-        >
-          Ocenit vůz zdarma
-          <ArrowRight
-            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
-        </Link>
+          <AnimateOnScroll delay={300}>
+            <div className="mt-10 flex flex-col items-center gap-5">
+              <Link
+                href="/odhad-ceny"
+                style={{ color: 'var(--color-ink)' }}
+                className="group inline-flex items-center gap-2.5 rounded-full bg-white py-4 pl-8 pr-6 text-[16px] font-semibold transition-colors hover:bg-[#E8EEF9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+              >
+                {t('cta.button')}
+                <ArrowRight
+                  aria-hidden="true"
+                  className="h-4 w-4 text-brass transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </Link>
 
-        <p className="mt-4 text-[13px] text-faint">
-          Neukládáme osobní data · Výsledek ihned
-        </p>
+              <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#8093B0]">
+                {t('cta.microcopy')}
+              </p>
+            </div>
+          </AnimateOnScroll>
+        </div>
       </div>
     </section>
   );

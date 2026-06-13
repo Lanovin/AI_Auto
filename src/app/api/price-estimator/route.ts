@@ -3,8 +3,10 @@ import { getScanOrFetch, saveScan } from '@/lib/market-cache';
 import { runScan } from '@/lib/run-scan';
 import { generateSignature, type CarInput } from '@/lib/car-signature';
 import { deductTokens } from '@/lib/tokens-server';
-import { TOKEN_COSTS, type TokenFeature } from '@/lib/tokens';
+import { type TokenFeature } from '@/lib/tokens';
 import { saveScanHistory } from '@/lib/supabase/user-data';
+import { getPriceStats, updatePriceStats } from '@/lib/price-stats';
+import { checkDailyScanCap } from '@/lib/rate-limit';
 
 const TIER_FEATURE: Record<string, TokenFeature> = {
   quick:    'estimator:quick',
@@ -144,11 +146,26 @@ export async function POST(request: Request) {
       );
     }
 
+    // Denní limit skenů (právní pojistka proti hromadné extrakci — viz rate-limit.ts)
+    const cap = await checkDailyScanCap();
+    if (!cap.ok) {
+      return NextResponse.json(
+        {
+          error: `Dosáhli jste denního limitu ocenění (${cap.limit} za 24 hodin). Zkuste to znovu později.`,
+        },
+        { status: 429, headers: { 'Retry-After': '3600' } }
+      );
+    }
+
     const actualTier = (tier && TIER_FEATURE[tier]) ? tier : 'standard';
     const actualScope = scope === 'international' ? 'international' : 'czech';
     const feature = TIER_FEATURE[actualTier];
 
     const carInput = parseRichCarInput(car);
+
+    // Vlastní historická statistika jako prior pro model (src/lib/price-stats.ts).
+    // Při chybě / prázdné DB je null a sken běží beze změny.
+    const prior = await getPriceStats(carInput).catch(() => null);
 
     // For detailed/expert we ALWAYS run fresh — rich inputs vary per user and
     // a cached result for a different condition/equipment would be misleading.
@@ -159,7 +176,7 @@ export async function POST(request: Request) {
     let result: { data: Awaited<ReturnType<typeof runScan>>; cached: boolean; ageHours: number | null };
 
     if (shouldBypassCache) {
-      const freshData = await runScan(carInput, actualTier, actualScope);
+      const freshData = await runScan(carInput, actualTier, actualScope, prior);
       // fire-and-forget save (best-effort; never blocks)
       const base = generateSignature(carInput);
       saveScan(`${base}:${cacheSuffix}`, freshData).catch((err) =>
@@ -169,11 +186,17 @@ export async function POST(request: Request) {
     } else {
       const cached = await getScanOrFetch(
         carInput,
-        (c) => runScan(c, actualTier, actualScope),
+        (c) => runScan(c, actualTier, actualScope, prior),
         7,
         cacheSuffix
       );
       result = { data: cached.data, cached: cached.cached, ageHours: cached.ageHours ?? null };
+    }
+
+    // Fold fresh aggregates into our own derived statistics DB — never from
+    // cache hits (no double counting). Fire-and-forget, never blocks.
+    if (!result.cached) {
+      void updatePriceStats(carInput, result.data);
     }
 
     // Deduct tokens for Supabase-authenticated users.
@@ -184,7 +207,7 @@ export async function POST(request: Request) {
     try {
       const deductResult = await deductTokens(feature);
       if (deductResult.ok) {
-        tokensDeducted = TOKEN_COSTS[feature];
+        tokensDeducted = deductResult.cost;
       } else if (deductResult.reason !== 'Nejste přihlášeni.') {
         // Authenticated but insufficient balance → block (402, not 500)
         return NextResponse.json({ error: deductResult.reason }, { status: 402 });

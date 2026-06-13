@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Header from '@/components/landing/Header';
 import { createClient } from '@/lib/supabase/server';
 import { getScanHistory } from '@/lib/supabase/user-data';
+import ScanHistoryList from '@/components/dashboard/ScanHistoryList';
 
 export const metadata = { title: 'Můj účet' };
 
@@ -45,13 +46,6 @@ const TOOLS: Array<{
     description: 'Firemní generátor popisků navázaný na stejné údaje o autě.',
   },
 ];
-
-const TIER_LABELS: Record<string, string> = {
-  quick: 'Rychlý',
-  standard: 'Standardní',
-  detailed: 'Detailní',
-  expert: 'Expertní',
-};
 
 function getToolStatus(access: ToolAccess, accountType: AccountType) {
   if (access === 'public') {
@@ -226,57 +220,7 @@ export default async function DashboardPage() {
                 </Link>
               </div>
 
-              {history.length === 0 ? (
-                <div className="mt-5 rounded-3xl border border-dashed border-brand-100 bg-brand-50/40 p-5">
-                  <p className="text-[15px] leading-relaxed text-neutral-500">
-                    Zatím tu není žádné ocenění. Začněte na{' '}
-                    <Link href="/odhad-ceny" className="font-medium text-brand-600 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2">
-                      odhadu ceny
-                    </Link>
-                    {' '}a účet začne dávat smysl i v historii.
-                  </p>
-                </div>
-              ) : (
-                <ul className="mt-5 flex flex-col gap-3">
-                  {history.map((scan) => {
-                    const car = scan.car_data as {
-                      brand?: string;
-                      model?: string;
-                      year?: number;
-                      mileage?: number;
-                    };
-                    const price = scan.average_price
-                      ? `${Number(scan.average_price).toLocaleString('cs-CZ')} Kč`
-                      : '—';
-                    const km = car.mileage
-                      ? `${Number(car.mileage).toLocaleString('cs-CZ')} km`
-                      : null;
-                    const date = new Date(scan.created_at).toLocaleDateString('cs-CZ', {
-                      day: 'numeric',
-                      month: 'short',
-                    });
-
-                    return (
-                      <li
-                        key={scan.id}
-                        className="flex items-center justify-between gap-4 rounded-2xl border border-brand-100 px-4 py-4 transition-colors hover:border-brand-200 hover:bg-brand-50/40"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-[15px] font-medium text-brand-900">
-                            {[car.brand, car.model, car.year].filter(Boolean).join(' ')}
-                            {km && <span className="ml-2 font-normal text-neutral-400">{km}</span>}
-                          </p>
-                          <p className="mt-1 text-[12px] text-neutral-400">
-                            {TIER_LABELS[scan.tier] ?? scan.tier} · {date}
-                            {scan.tokens_spent > 0 && ` · ${scan.tokens_spent} T`}
-                          </p>
-                        </div>
-                        <span className="shrink-0 whitespace-nowrap text-[14px] font-medium tabular-nums text-brand-700">{price}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+              <ScanHistoryList history={history} />
             </section>
 
             <aside className="space-y-4">
@@ -287,7 +231,7 @@ export default async function DashboardPage() {
                   <span className="mb-1 text-[15px] text-neutral-500">tokenů</span>
                 </div>
                 <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
-                  1 token = $0.10 · rychlý odhad stojí 4 T, expertní 20 T.
+                  1 token ≈ 5 Kč · aktuální ceny jednotlivých akcí najdete v ceníku.
                 </p>
                 {balance <= 10 ? (
                   <p className="mt-3 text-[13px] font-medium text-amber-600">

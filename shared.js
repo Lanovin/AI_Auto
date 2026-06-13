@@ -441,14 +441,48 @@
         }
     };
 
+    // ---- App-token pricing (admin-editable; mirrors src/lib/tokens.ts) ----
+    var APP_TOKEN_COSTS = {
+        'estimator:quick': 4, 'estimator:standard': 8, 'estimator:detailed': 12,
+        'estimator:expert': 20, 'scout:search': 6, 'monitor:scan': 2, 'popisky:generate': 4
+    };
+    var pricingLoaded = fetch('/api/tokens/pricing')
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (json) {
+            if (json && json.features) {
+                json.features.forEach(function (f) { APP_TOKEN_COSTS[f.feature] = f.cost; });
+            }
+            return APP_TOKEN_COSTS;
+        })
+        .catch(function () { return APP_TOKEN_COSTS; });
+
+    // Deduct from the localStorage wallet — fallback for users who are not
+    // signed in to Supabase (server then reports x-autoai-tokens-deducted: 0).
+    function deductLocalAppTokens(cost) {
+        if (!cost || cost <= 0) return;
+        try {
+            var raw = localStorage.getItem('autoai_credits_v1');
+            var wallet = raw ? JSON.parse(raw) : { balance: 100 };
+            wallet.balance = Math.max(0, (wallet.balance || 0) - cost);
+            localStorage.setItem('autoai_credits_v1', JSON.stringify(wallet));
+            try { window.parent.dispatchEvent(new CustomEvent('autoai:credits-changed')); } catch (e) {}
+            try { window.dispatchEvent(new CustomEvent('autoai:credits-changed')); } catch (e) {}
+        } catch (e) { /* ignore storage errors */ }
+    }
+
     var AnthropicGateway = {
-        call: async function (requestBody) {
+        /**
+         * @param requestBody Anthropic Messages API payload
+         * @param feature volitelný billing klíč (např. 'popisky:generate') —
+         *   server odečte tokeny přihlášeným, nepřihlášeným se odečte lokálně.
+         */
+        call: async function (requestBody, feature) {
             var payload = Object.assign({}, requestBody || {});
+            var headers = { 'Content-Type': 'application/json' };
+            if (feature) headers['x-autoai-feature'] = feature;
             var response = await fetch('/api/anthropic', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify(payload)
             });
 
@@ -458,8 +492,17 @@
                 throw new Error('API chyba ' + response.status + ': ' + (((err.error && err.error.message) || err.message) || response.statusText));
             }
 
+            // Server billed 0 → not signed in → bill the local wallet instead.
+            if (feature && response.headers.get('x-autoai-tokens-deducted') === '0') {
+                pricingLoaded.then(function (costs) {
+                    deductLocalAppTokens(costs[feature] || 0);
+                });
+            }
+
             return response.json();
-        }
+        },
+        getPricing: function () { return pricingLoaded; },
+        deductLocalAppTokens: deductLocalAppTokens
     };
 
     window.TokenTracker = TokenTracker;

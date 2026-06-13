@@ -1,6 +1,7 @@
 import Header from '@/components/landing/Header';
 import Hero from '@/components/landing/Hero';
 import TrustStrip from '@/components/landing/TrustStrip';
+import Features from '@/components/landing/Features';
 import HowItWorks from '@/components/landing/HowItWorks';
 import Engine from '@/components/landing/Engine';
 import Ticker from '@/components/landing/Ticker';
@@ -14,6 +15,7 @@ export default function HomePage() {
       <main>
         <Hero />
         <TrustStrip />
+        <Features />
         <HowItWorks />
         <Engine />
         <Ticker />

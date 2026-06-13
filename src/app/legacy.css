@@ -1,22 +1,22 @@
 :root {
   color-scheme: light;
   /* ── Cargent typography (uses next/font CSS vars when available) ── */
-  --font-heading: var(--font-fraunces), Georgia, 'Times New Roman', serif;
+  --font-heading: var(--font-hanken),   system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body:    var(--font-hanken),   system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* ── Cargent palette ────────────────────────────────────────────── */
-  --bg:            #F6F4EE;                       /* paper */
+  /* ── Cargent palette (bílá / navy / akční modrá) ────────────────── */
+  --bg:            #FFFFFF;                       /* paper */
   --panel:         rgba(255, 255, 255, 0.84);
   --panel-strong:  #FFFFFF;                       /* surface */
-  --text:          #14171C;                       /* ink */
-  --muted:         #676C74;                       /* dim */
-  --line:          rgba(20, 23, 28, 0.10);
-  --accent:        #B0791D;                       /* brass */
-  --accent-dark:   #946315;                       /* brass-2 */
-  --accent-soft:   rgba(176, 121, 29, 0.10);
-  --dealer:        #B0791D;
-  --dealer-dark:   #946315;
-  --dealer-soft:   rgba(176, 121, 29, 0.10);
-  --shadow:        0 30px 70px -34px rgba(20, 23, 28, 0.30);
+  --text:          #0A1B33;                       /* ink */
+  --muted:         #5B6A80;                       /* dim */
+  --line:          rgba(10, 27, 51, 0.10);
+  --accent:        #2563EB;                       /* akční modrá */
+  --accent-dark:   #1D4ED8;
+  --accent-soft:   rgba(37, 99, 235, 0.10);
+  --dealer:        #2563EB;
+  --dealer-dark:   #1D4ED8;
+  --dealer-soft:   rgba(37, 99, 235, 0.10);
+  --shadow:        0 30px 70px -34px rgba(10, 27, 51, 0.28);
 }
 
 * {

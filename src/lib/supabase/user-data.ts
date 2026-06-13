@@ -161,6 +161,39 @@ export async function saveScanHistory(entry: ScanHistoryInput): Promise<void> {
   }
 }
 
+/** Smaže jeden záznam historie skenů přihlášeného uživatele (RLS hlídá vlastnictví). */
+export async function deleteScanHistoryEntry(id: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('scan_history')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('[user-data] deleteScanHistoryEntry:', error.message);
+    return false;
+  }
+  return true;
+}
+
+/** Smaže CELOU historii skenů přihlášeného uživatele (GDPR — právo na výmaz). */
+export async function clearScanHistory(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { error } = await supabase
+    .from('scan_history')
+    .delete()
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('[user-data] clearScanHistory:', error.message);
+    return false;
+  }
+  return true;
+}
+
 export async function getScanHistory(limit = 20): Promise<ScanHistoryEntry[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

@@ -1,35 +1,70 @@
-import { TRUST_ITEMS } from '@/data/demo';
+import { getSiteContent } from '@/lib/content/server';
 
 /**
- * TrustStrip — tenký pruh hned pod heroem.
- *
- * Odpovídá na podvědomou otázku "proč věřit tomuto webu?" dřív, než
- * uživatel začne scrollovat. Čtyři konkrétní fakta v lidském jazyce.
- * Žádné technické metriky, žádný jargon.
+ * TrustStrip — sociální důkaz po vzoru brego.io:
+ *   • nahoře řádek inzertních portálů, ze kterých čerpáme (textové
+ *     wordmarky — obdoba „logo stripu", ale pravdivá: žádní smyšlení
+ *     klienti),
+ *   • pod ním čtyři klíčové statistiky jako bílé karty na světlém pásu.
  */
-export default function TrustStrip() {
+const PORTALS = [
+  'Sauto.cz',
+  'TipCars',
+  'AutoScout24',
+  'mobile.de',
+  'Otomoto',
+  'Willhaben',
+  'La Centrale',
+];
+
+export default async function TrustStrip() {
+  const t = await getSiteContent();
+  const items = [
+    { stat: t('trust.0.stat'), label: t('trust.0.label') },
+    { stat: t('trust.1.stat'), label: t('trust.1.label') },
+    { stat: t('trust.2.stat'), label: t('trust.2.label') },
+    { stat: t('trust.3.stat'), label: t('trust.3.label') },
+  ];
+
   return (
-    <div
-      className="border-y border-line bg-paper-2 px-[22px] py-5 md:px-8"
-      aria-label="Klíčové statistiky"
+    <section
+      aria-label="Zdroje dat a klíčové statistiky"
+      className="border-y border-line bg-paper-2/70 px-[22px] py-14 md:px-8 md:py-16"
     >
-      <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-center gap-6 md:justify-between md:gap-8">
-        {TRUST_ITEMS.map((item, i) => (
-          <div
-            key={item.label}
-            className={[
-              'flex items-center gap-3',
-              // Vertical separator on desktop between items (not after last)
-              i < TRUST_ITEMS.length - 1 ? 'md:pr-8 md:border-r md:border-line' : '',
-            ].join(' ')}
-          >
-            <span className="cargent-mono text-[22px] font-medium text-brass">
-              {item.stat}
-            </span>
-            <span className="text-[13px] text-ink-soft">{item.label}</span>
-          </div>
-        ))}
+      <div className="mx-auto max-w-[1240px]">
+        {/* ── Portály — textové wordmarky ──────────────────────────── */}
+        <p className="text-center text-[12px] font-medium uppercase tracking-[0.16em] text-faint">
+          Čerpáme z předních inzertních portálů
+        </p>
+        <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+          {PORTALS.map((name) => (
+            <li
+              key={name}
+              className="text-[17px] font-bold tracking-tight text-dim transition-colors hover:text-ink"
+            >
+              {name}
+            </li>
+          ))}
+        </ul>
+
+        {/* ── Statistiky — karty ───────────────────────────────────── */}
+        <div className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+          {items.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-[14px] border border-line bg-surface px-6 py-6"
+              style={{ boxShadow: 'var(--shadow-cargent-card)' }}
+            >
+              <span className="cargent-mono block text-[26px] font-medium leading-none text-brass md:text-[30px]">
+                {item.stat}
+              </span>
+              <span className="mt-2.5 block text-[13px] leading-snug text-dim">
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -6,26 +6,32 @@
    ════════════════════════════════════════════════════════════════════ */
 @theme {
   /* ── Fonts ─────────────────────────────────────────────────────── */
-  /* Cargent typography (set as CSS vars by next/font in layout.tsx) */
-  --font-display: var(--font-fraunces),  Georgia, "Times New Roman", serif;
+  /* Cargent typography (set as CSS vars by next/font in layout.tsx).
+     Display = stejný grotesk jako body, jen těžší řezy — čistý
+     data-driven look (inspirace brego.io), žádný serif. */
+  --font-display: var(--font-hanken),    system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body:    var(--font-hanken),    system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono:    var(--font-spline-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   /* Legacy default sans — used by existing AutoAI tool pages */
   --font-sans:    var(--font-inter),     system-ui, sans-serif;
 
-  /* ── Cargent palette (light theme) ─────────────────────────────── */
-  --color-paper:    #F6F4EE;
-  --color-paper-2:  #EFEDE4;
+  /* ── Cargent palette (light, cool — bílá / navy / akční modrá) ──
+     Pozn.: token „brass" je historický název — dnes nese akční modrou.
+     Přejmenování by znamenalo dotknout se ~27 souborů, hodnota je
+     sémantická („akcent"), takže název necháváme. */
+  --color-paper:    #FFFFFF;
+  --color-paper-2:  #F3F6FA;
   --color-surface:  #FFFFFF;
-  --color-ink:      #14171C;
-  --color-ink-soft: #3B4047;
-  --color-dim:      #676C74;
-  --color-faint:    #9CA1A8;
-  --color-brass:    #B0791D;
-  --color-brass-2:  #946315;
-  --color-emerald:  #1C6B57;
-  --color-line:     rgba(20, 23, 28, 0.10);
-  --color-line-2:   rgba(20, 23, 28, 0.16);
+  --color-ink:      #0A1B33;
+  --color-ink-soft: #344459;
+  --color-dim:      #5B6A80;
+  --color-faint:    #919EB2;
+  --color-brass:    #2563EB;
+  --color-brass-2:  #1D4ED8;
+  --color-emerald:  #0E7A5F;
+  --color-negative: #C2402D;
+  --color-line:     rgba(10, 27, 51, 0.10);
+  --color-line-2:   rgba(10, 27, 51, 0.16);
 
   /* ── Legacy AutoAI brand palette (preserved for existing pages) ── */
   --color-brand-50:  #e6f1fb;
@@ -37,11 +43,11 @@
   --color-brand-900: #042c53;
   --color-neutral-500: #5f5e5a;
 
-  /* ── Shadows (Cargent — soft and low) ──────────────────────────── */
+  /* ── Shadows (Cargent — soft and low, cool navy tint) ──────────── */
   --shadow-card:      0 1px 0 rgba(24, 95, 165, 0.04);   /* legacy */
-  --shadow-cargent:   0 30px 70px -34px rgba(20, 23, 28, 0.30);
-  --shadow-cargent-2: 0 18px 40px -22px rgba(20, 23, 28, 0.22);
-  --shadow-cargent-card: 0 1px 0 rgba(20, 23, 28, 0.04), 0 18px 44px -28px rgba(20, 23, 28, 0.20);
+  --shadow-cargent:   0 30px 70px -34px rgba(10, 27, 51, 0.28);
+  --shadow-cargent-2: 0 18px 40px -22px rgba(10, 27, 51, 0.18);
+  --shadow-cargent-card: 0 1px 0 rgba(10, 27, 51, 0.04), 0 18px 44px -28px rgba(10, 27, 51, 0.16);
 }
 
 :root {
@@ -61,9 +67,9 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  /* Cargent default — warm paper background, ink text, Hanken body font */
-  background: #F6F4EE;
-  color: #14171C;
+  /* Cargent default — clean white background, navy text, Hanken body font */
+  background: #FFFFFF;
+  color: #0A1B33;
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.55;
@@ -135,6 +141,44 @@ textarea {
   to   { transform: rotate(360deg); }
 }
 
+/* ── Editorial motion (Cargent redesign) ─────────────────────────── */
+
+/* Headline entrance — rise with a soft blur settle (print "develops in") */
+@keyframes rise-soft {
+  from { opacity: 0; transform: translateY(26px); filter: blur(9px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+
+/* Gentle float for the valuation certificate card */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0)    rotate(-0.35deg); }
+  50%      { transform: translateY(-9px) rotate(0.2deg); }
+}
+
+/* Slow background drift — used as scroll-driven parallax when supported */
+@keyframes parallax-rise {
+  from { transform: translateY(40px); }
+  to   { transform: translateY(-90px); }
+}
+
+.animate-rise-soft {
+  animation: rise-soft 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cargent-float {
+  animation: float-soft 9s ease-in-out 1.4s infinite;
+}
+
+/* Scroll-driven parallax — progressive enhancement only (Chromium).
+   Without support the element simply stays static. */
+@supports (animation-timeline: view()) {
+  .cargent-parallax {
+    animation: parallax-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+}
+
 /* Generic entrance — staggered via inline animation-delay */
 .animate-fade-up {
   animation: fade-up 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -152,7 +196,7 @@ textarea {
 
 /* Cargent ticker — duplicated content shifts by 50% for a seamless loop */
 .cargent-ticker-track {
-  animation: ticker-scroll 38s linear infinite;
+  animation: ticker-scroll 55s linear infinite;
 }
 .cargent-ticker:hover .cargent-ticker-track {
   animation-play-state: paused;
@@ -199,20 +243,22 @@ textarea {
    Cargent typographic helpers
    ════════════════════════════════════════════════════════════════════ */
 
-/* Display headlines — Fraunces, tight tracking, gold italic accent span */
+/* Display headlines — bold grotesk, tight tracking, blue accent span */
 .cargent-h1,
 .cargent-h2,
 .cargent-h3 {
   font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1.02;
+  font-weight: 700;
+  letter-spacing: -0.028em;
+  line-height: 1.06;
   color: var(--color-ink);
 }
+/* CMS markup `_text_` → <i> = barevný akcent (bez kurzívy — čistý
+   data-driven look, ne editorial) */
 .cargent-h1 i,
 .cargent-h2 i,
 .cargent-h3 i {
-  font-style: italic;
+  font-style: normal;
   color: var(--color-brass);
 }
 
@@ -231,11 +277,57 @@ textarea {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   Cargent editorial helpers (print-catalogue details)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Animated underline — premium link hover (grows from left) */
+.cargent-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 calc(100% - 1px);
+  background-repeat: no-repeat;
+  transition: background-size 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cargent-link:hover,
+.cargent-link:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Double hairline — newspaper section divider */
+.cargent-rule-double {
+  height: 5px;
+  border-top: 1.5px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-line-2);
+}
+
+/* Dotted leader — connects label and value like a printed price list */
+.cargent-leader {
+  flex: 1 1 24px;
+  min-width: 24px;
+  margin: 0 10px;
+  border-bottom: 1.5px dotted var(--color-line-2);
+  transform: translateY(-4px);
+}
+
+/* Ghost numeral — oversized index behind sections (outline, blue tint) */
+.cargent-ghost-num {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-style: normal;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(37, 99, 235, 0.30);
+}
+
+/* ════════════════════════════════════════════════════════════════════
    Reduced motion — skip all decorative animation, freeze at end state
    ════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
+  .animate-rise-soft,
   .animate-blob,
+  .cargent-float,
+  .cargent-parallax,
   .cargent-ticker-track,
   .cargent-pulse,
   .cargent-range-fill,

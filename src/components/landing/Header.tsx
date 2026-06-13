@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -14,7 +15,7 @@ import { useClientAuthState } from '@/lib/client-auth';
  *   • jediná položka „Odhad ceny",
  *   • vpravo přihlášení (host) nebo účet + tokeny (přihlášený).
  *
- * Transparentní nahoře, po odscrollování (>20px) průsvitný papírový
+ * Transparentní nahoře, po odscrollování (>20px) průsvitný bílý
  * podklad s blur efektem a hairline lemem.
  *
  * `brandName` se přijímá kvůli zpětné kompatibilitě se staršími call-sity,
@@ -50,7 +51,7 @@ export default function Header(_props: HeaderProps = {}) {
       className={[
         'sticky top-0 z-40 w-full transition-[background-color,border-color,backdrop-filter] duration-300',
         scrolled
-          ? 'border-b border-[color:var(--color-line)] bg-[rgba(246,244,238,0.78)] backdrop-blur-md'
+          ? 'border-b border-[color:var(--color-line)] bg-[rgba(255,255,255,0.82)] backdrop-blur-md'
           : 'border-b border-transparent bg-transparent',
       ].join(' ')}
     >
@@ -61,10 +62,17 @@ export default function Header(_props: HeaderProps = {}) {
           aria-label="Cargent — domů"
           className="group flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
         >
-          <LogoGauge />
-          <span className="text-[20px] font-semibold tracking-tight text-ink font-display">
+          <Image
+            src="/logo_cargent.png"
+            alt="Cargent"
+            width={32}
+            height={32}
+            className="shrink-0"
+            priority
+          />
+          <span className="text-[20px] font-bold tracking-tight text-ink">
             Car
-            <span className="italic text-brass">gent</span>
+            <span className="text-brass">gent</span>
           </span>
         </Link>
 
@@ -73,7 +81,7 @@ export default function Header(_props: HeaderProps = {}) {
           <Link
             href="/odhad-ceny"
             className={[
-              'rounded-[8px] px-3 py-2 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
+              'cargent-link mx-3 py-2 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
               isActive('/odhad-ceny')
                 ? 'font-medium text-ink'
                 : 'text-ink-soft hover:text-ink',
@@ -101,8 +109,8 @@ export default function Header(_props: HeaderProps = {}) {
           ) : (
             <Link
               href={`/prihlaseni${authRedirectSuffix}`}
-              className="rounded-[10px] px-4 py-2.5 text-[14px] font-medium transition-colors hover:bg-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
-              style={{ color: '#FFFFFF', backgroundColor: '#14171C' }}
+              className="rounded-full bg-brass px-5 py-2.5 text-[14px] font-semibold transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+              style={{ color: '#FFFFFF' }}
             >
               Přihlásit
             </Link>
@@ -113,36 +121,3 @@ export default function Header(_props: HeaderProps = {}) {
   );
 }
 
-/** Small logo mark — miniature gauge that echoes the hero motif. */
-function LogoGauge() {
-  return (
-    <svg
-      width="26"
-      height="26"
-      viewBox="0 0 32 32"
-      fill="none"
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <circle cx="16" cy="16" r="14" stroke="var(--color-ink)" strokeWidth="1.4" />
-      <circle
-        cx="16"
-        cy="16"
-        r="10"
-        stroke="var(--color-brass)"
-        strokeWidth="1"
-        strokeDasharray="1 3"
-      />
-      <line
-        x1="16"
-        y1="16"
-        x2="22"
-        y2="10"
-        stroke="var(--color-brass)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="16" cy="16" r="1.6" fill="var(--color-brass)" />
-    </svg>
-  );
-}

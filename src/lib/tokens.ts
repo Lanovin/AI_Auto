@@ -3,10 +3,21 @@
 // Starting balance for every new account. Change here to adjust the trial.
 export const TOKENS_STARTING_BALANCE = 100;
 
-// 1 token = $0.10
-export const TOKEN_VALUE_USD = 0.10;
+// 1 token ≈ 5 Kč — used for the "≈ X Kč" hints in UI and the admin price editor.
+export const TOKEN_VALUE_CZK = 5;
 
-/** All billable actions in the app. */
+/** Formats a token amount as an approximate CZK price (e.g. "≈ 20 Kč"). */
+export function tokensToCzk(tokens: number): string {
+  return `≈ ${(tokens * TOKEN_VALUE_CZK).toLocaleString('cs-CZ')} Kč`;
+}
+
+/**
+ * DEFAULT cost of each billable action, in tokens.
+ * The admin can override any of these in /admin → „Ceník služeb" — overrides
+ * live in the `token_pricing` table and win over these values. Server code
+ * must therefore resolve prices via getTokenPricing()/getTokenCost()
+ * (src/lib/tokens-server.ts), never read TOKEN_COSTS directly for billing.
+ */
 export const TOKEN_COSTS = {
   // Price Estimator tiers (maps to `tier` param in /api/price-estimator)
   'estimator:quick':    4,

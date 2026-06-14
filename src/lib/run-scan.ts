@@ -15,13 +15,13 @@ const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
  *      pre-sale checklist, regional pricing, etc.
  */
 const TIER_CONFIGS: Record<string, { max_tokens: number; max_search: number }> = {
-  quick:    { max_tokens: 2500,  max_search: 3 },
-  standard: { max_tokens: 4500,  max_search: 6 },
+  quick:    { max_tokens: 2500,  max_search: 9 },
+  standard: { max_tokens: 4500,  max_search: 9 },
   // Detailní a expertní posudek je dlouhý — dřív se ořezával na max_tokens
   // a výsledný JSON nešel naparsovat. Díky streamingu (viz callClaude) můžeme
   // dát štědrý strop, aby se kompletní markdown vždy vešel. Lokálně bez limitu;
   // na Vercel Free se delší běh přeruší časovým limitem (řešeno hláškou).
-  detailed: { max_tokens: 16000, max_search: 7 },
+  detailed: { max_tokens: 16000, max_search: 9 },
   expert:   { max_tokens: 24000, max_search: 9 },
 };
 

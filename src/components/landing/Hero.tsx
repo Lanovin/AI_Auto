@@ -1,18 +1,10 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import BackgroundDecor from './BackgroundDecor';
-import Instrument from './Instrument';
+import CardDeck from './CardDeck';
 import { getSiteContent } from '@/lib/content/server';
 import { RichText } from '@/components/rich-text';
 
-/**
- * Hero — čistý data-driven layout po vzoru brego.io:
- *   • centrovaný eyebrow chip s pulzující tečkou,
- *   • masivní tučný grotesk titulek s modrým akcentem,
- *   • dvojice CTA (plná modrá + ghost),
- *   • řádek metrik se svislými předěly,
- *   • pod tím ukázková karta ocenění (Instrument) v prezentačním rámu.
- */
 export default async function Hero() {
   const t = await getSiteContent();
   const metrics = [
@@ -24,100 +16,102 @@ export default async function Hero() {
   return (
     <section
       id="main"
-      className="relative isolate overflow-hidden pb-20 pt-16 md:pb-28 md:pt-24"
+      className="relative isolate overflow-hidden pb-16 pt-14 md:pb-24 md:pt-20"
     >
       <BackgroundDecor />
 
-      <div className="mx-auto max-w-[1240px] px-[22px] md:px-8">
-        <div className="mx-auto flex max-w-[820px] flex-col items-center text-center">
-          {/* ── Eyebrow chip ─────────────────────────────────────────── */}
-          <span
-            className="animate-fade-up inline-flex items-center gap-2.5 rounded-full border border-line bg-surface px-4 py-1.5 text-[12px] font-medium uppercase tracking-[0.14em] text-ink-soft shadow-[0_1px_2px_rgba(10,27,51,0.05)]"
-            style={{ animationDelay: '0ms' }}
-          >
-            <span className="cargent-pulse h-1.5 w-1.5 rounded-full bg-brass" aria-hidden="true" />
-            {t('hero.eyebrow').replace(/^[—–-]\s*/, '')}
-          </span>
+      <div className="mx-auto max-w-310 px-5.5 md:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,1fr)] gap-10 lg:gap-12 xl:gap-16 items-center">
 
-          {/* ── Headline ─────────────────────────────────────────────── */}
-          <h1
-            className="animate-rise-soft cargent-h1 mt-7"
-            style={{ animationDelay: '100ms', fontSize: 'clamp(38px, 5.6vw, 72px)' }}
-          >
-            <RichText>{t('hero.title')}</RichText>
-          </h1>
+          {/* ── LEFT: text column ──────────────────────────────────────── */}
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
 
-          <p
-            className="animate-rise-soft mt-6 max-w-[54ch] text-[16px] leading-relaxed text-ink-soft md:text-[18px]"
-            style={{ animationDelay: '220ms' }}
-          >
-            <RichText>{t('hero.subtitle')}</RichText>
-          </p>
-
-          {/* ── CTA row ──────────────────────────────────────────────── */}
-          <div
-            className="animate-rise-soft mt-9 flex flex-wrap items-center justify-center gap-4"
-            style={{ animationDelay: '320ms' }}
-          >
-            <Link
-              href="/odhad-ceny"
-              style={{ color: '#FFFFFF' }}
-              className="group inline-flex items-center gap-2.5 rounded-full bg-brass py-4 pl-7 pr-6 text-[15px] font-semibold text-white shadow-[0_8px_24px_-10px_rgba(37,99,235,0.55)] transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+            {/* Eyebrow chip */}
+            <span
+              className="animate-fade-up inline-flex items-center gap-2.5 rounded-full border border-line bg-surface px-4 py-1.5 text-[12px] font-medium uppercase tracking-[0.14em] text-ink-soft shadow-[0_1px_2px_rgba(10,27,51,0.05)]"
+              style={{ animationDelay: '0ms' }}
             >
-              {t('hero.cta_primary')}
-              <ArrowRight
-                aria-hidden="true"
-                className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </Link>
-            <Link
-              href="#how"
-              className="inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface px-7 py-4 text-[15px] font-semibold text-ink transition-colors hover:border-brass hover:text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+              <span className="cargent-pulse h-1.5 w-1.5 rounded-full bg-brass" aria-hidden="true" />
+              {t('hero.eyebrow').replace(/^[—–-]\s*/, '')}
+            </span>
+
+            {/* Headline */}
+            <h1
+              className="animate-rise-soft cargent-h1 mt-6"
+              style={{ animationDelay: '100ms', fontSize: 'clamp(34px, 4.8vw, 62px)' }}
             >
-              {t('hero.cta_secondary')}
-            </Link>
-          </div>
+              <RichText>{t('hero.title')}</RichText>
+            </h1>
 
-          <p
-            className="animate-rise-soft mt-5 text-[13px] text-faint"
-            style={{ animationDelay: '380ms' }}
-          >
-            {t('hero.microcopy')}
-          </p>
+            <p
+              className="animate-rise-soft mt-5 max-w-[50ch] text-[16px] leading-relaxed text-ink-soft md:text-[17px]"
+              style={{ animationDelay: '220ms' }}
+            >
+              <RichText>{t('hero.subtitle')}</RichText>
+            </p>
 
-          {/* ── Metric row — inline stats with dividers ──────────────── */}
-          <dl
-            className="animate-rise-soft mt-12 flex flex-wrap items-stretch justify-center gap-y-6"
-            style={{ animationDelay: '460ms' }}
-          >
-            {metrics.map((m, i) => (
-              <div
-                key={m.label}
-                className={[
-                  'flex flex-col items-center gap-1 px-8 md:px-10',
-                  i > 0 ? 'border-l border-line' : '',
-                ].join(' ')}
+            {/* CTA row */}
+            <div
+              className="animate-rise-soft mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3.5"
+              style={{ animationDelay: '320ms' }}
+            >
+              <Link
+                href="/odhad-ceny"
+                style={{ color: '#FFFFFF' }}
+                className="group inline-flex items-center gap-2.5 rounded-full bg-brass py-3.5 pl-7 pr-6 text-[15px] font-semibold text-white shadow-[0_8px_24px_-10px_rgba(37,99,235,0.55)] transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
               >
-                <dd className="cargent-mono order-1 text-[26px] font-medium leading-none text-ink md:text-[30px]">
-                  {m.value}
-                </dd>
-                <dt className="order-2 mt-1.5 text-[13px] text-dim">{m.label}</dt>
-              </div>
-            ))}
-          </dl>
-        </div>
+                {t('hero.cta_primary')}
+                <ArrowRight
+                  aria-hidden="true"
+                  className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </Link>
+              <Link
+                href="#how"
+                className="inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface px-7 py-3.5 text-[15px] font-semibold text-ink transition-colors hover:border-brass hover:text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+              >
+                {t('hero.cta_secondary')}
+              </Link>
+            </div>
 
-        {/* ── Product showcase — ukázka výsledku v prezentačním rámu ── */}
-        <div
-          className="animate-rise-soft mx-auto mt-16 max-w-[640px] md:mt-20"
-          style={{ animationDelay: '560ms' }}
-        >
-          <div
-            className="rounded-[24px] border border-line bg-paper-2/70 p-3 md:p-4"
-            style={{ boxShadow: 'var(--shadow-cargent)' }}
-          >
-            <Instrument />
+            <p
+              className="animate-rise-soft mt-4 text-[13px] text-faint"
+              style={{ animationDelay: '380ms' }}
+            >
+              {t('hero.microcopy')}
+            </p>
+
+            {/* Metric row */}
+            <dl
+              className="animate-rise-soft mt-10 flex flex-wrap items-stretch justify-center lg:justify-start gap-y-5"
+              style={{ animationDelay: '460ms' }}
+            >
+              {metrics.map((m, i) => (
+                <div
+                  key={m.label}
+                  className={[
+                    'flex flex-col items-center lg:items-start gap-1 px-7 lg:px-8',
+                    i > 0 ? 'border-l border-line' : '',
+                    i === 0 ? 'pl-0' : '',
+                  ].join(' ')}
+                >
+                  <dd className="cargent-mono order-1 text-[24px] font-medium leading-none text-ink md:text-[28px]">
+                    {m.value}
+                  </dd>
+                  <dt className="order-2 mt-1.5 text-[12.5px] text-dim">{m.label}</dt>
+                </div>
+              ))}
+            </dl>
           </div>
+
+          {/* ── RIGHT: card carousel ───────────────────────────────────── */}
+          <div
+            className="animate-rise-soft w-full"
+            style={{ animationDelay: '500ms' }}
+          >
+            <CardDeck />
+          </div>
+
         </div>
       </div>
     </section>

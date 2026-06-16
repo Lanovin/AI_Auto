@@ -19,7 +19,7 @@ function isValidPlanKey(value: unknown): value is PlanKey {
 
 /**
  * POST /api/stripe/checkout
- * Body: { plan: 'dealer' | 'monitoring' | 'tokens_test' }
+ * Body: { plan: 'tokens_100' }
  *
  * Creates a Stripe Checkout session and returns its URL. The client redirects
  * the user there. After payment, Stripe redirects back to /predplatne?status=...
@@ -124,27 +124,15 @@ export async function POST(request: Request) {
       plan_key: plan.key,
       bonus_tokens: String(plan.bonusTokens),
     },
-    ...(plan.mode === 'subscription'
-      ? {
-          subscription_data: {
-            metadata: {
-              supabase_user_id: user.id,
-              plan_key: plan.key,
-              bonus_tokens: String(plan.bonusTokens),
-            },
-          },
-        }
-      : {
-          // For one-time test payment, allow 0 Kč by enabling automatic tax off and
-          // letting Stripe handle the 0 amount (Stripe supports 0-amount Prices).
-          payment_intent_data: {
-            metadata: {
-              supabase_user_id: user.id,
-              plan_key: plan.key,
-              bonus_tokens: String(plan.bonusTokens),
-            },
-          },
-        }),
+    // One-time token purchase — carry the grant context on the payment intent so
+    // the webhook can credit tokens.
+    payment_intent_data: {
+      metadata: {
+        supabase_user_id: user.id,
+        plan_key: plan.key,
+        bonus_tokens: String(plan.bonusTokens),
+      },
+    },
   });
 
   if (!session.url) {

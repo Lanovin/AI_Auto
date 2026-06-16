@@ -27,7 +27,7 @@ function parseStatus(value: string | string[] | undefined): 'success' | 'cancell
 
 function parsePlan(value: string | string[] | undefined): PlanKey | null {
   const raw = Array.isArray(value) ? value[0] : value;
-  if (raw === 'dealer' || raw === 'monitoring' || raw === 'tokens_test') return raw;
+  if (raw === 'tokens_100') return raw;
   return null;
 }
 
@@ -133,7 +133,7 @@ export default async function PricingPage({ searchParams }: PageProps) {
             />
           </section>
 
-          <section className="mt-6 rounded-[24px] border border-brand-100 bg-white p-6">
+          <section className="mt-6 rounded-3xl border border-brand-100 bg-white p-6">
             <h2 className="text-[18px] font-medium text-brand-900">Jak to funguje</h2>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-[14px] leading-relaxed text-neutral-600">
               <li>Klikněte na <strong>Předplatit / Koupit</strong>. Otevře se Stripe checkout.</li>

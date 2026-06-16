@@ -4,6 +4,7 @@ import Header from '@/components/landing/Header';
 import { createClient } from '@/lib/supabase/server';
 import { getScanHistory } from '@/lib/supabase/user-data';
 import ScanHistoryList from '@/components/dashboard/ScanHistoryList';
+import BillingHistory from '@/components/dashboard/BillingHistory';
 
 export const metadata = { title: 'Můj účet' };
 
@@ -312,6 +313,8 @@ export default async function DashboardPage() {
               })}
             </div>
           </section>
+
+          <BillingHistory />
 
           <section className="mt-6 rounded-3xl border border-brand-100 bg-white px-4 py-3">
             <p className="wrap-break-word text-[12px] text-neutral-500">

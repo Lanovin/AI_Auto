@@ -32,7 +32,7 @@ type PricingFeature = {
   customized: boolean;
 };
 
-type Tab = 'content' | 'pricing' | 'promo';
+type Tab = 'content' | 'pricing' | 'promo' | 'tokens';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -71,10 +71,21 @@ export default function AdminDashboard() {
         <TabButton active={tab === 'promo'} onClick={() => setTab('promo')}>
           Promo kódy
         </TabButton>
+        <TabButton active={tab === 'tokens'} onClick={() => setTab('tokens')}>
+          Tokeny
+        </TabButton>
       </nav>
 
       <div className="mt-8">
-        {tab === 'content' ? <ContentEditor /> : tab === 'pricing' ? <PricingEditor /> : <PromoManager />}
+        {tab === 'content' ? (
+          <ContentEditor />
+        ) : tab === 'pricing' ? (
+          <PricingEditor />
+        ) : tab === 'promo' ? (
+          <PromoManager />
+        ) : (
+          <TokenGranter />
+        )}
       </div>
     </main>
   );
@@ -418,6 +429,88 @@ function PricingEditor() {
           {saving ? 'Ukládám…' : 'Uložit ceník'}
         </button>
       </div>
+    </div>
+  );
+}
+
+// ── Ruční přičítání tokenů ─────────────────────────────────────────────────
+function TokenGranter() {
+  const [email, setEmail] = useState('');
+  const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus(null);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), amount: Number(amount) }),
+      });
+      const json = await res.json() as { ok?: boolean; newBalance?: number; error?: string };
+      if (!res.ok) {
+        setStatus({ kind: 'err', msg: json.error ?? 'Přičtení selhalo.' });
+        return;
+      }
+      setStatus({
+        kind: 'ok',
+        msg: `✓ Přičteno ${amount} tokenů na účet ${email}. Nový zůstatek: ${json.newBalance ?? '?'} tokenů.`,
+      });
+      setAmount('');
+    } catch {
+      setStatus({ kind: 'err', msg: 'Síťová chyba.' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="max-w-120">
+      <div className="rounded-xl border border-line bg-paper-2 px-4 py-3 text-[13px] text-ink-soft mb-6">
+        Přičti libovolný počet tokenů na jakýkoliv účet podle e-mailu. Funguje okamžitě bez Stripe.
+      </div>
+      <form onSubmit={handleSubmit} className="rounded-[14px] border border-line bg-surface p-5 flex flex-col gap-4">
+        <label className="block text-[13px] font-medium text-ink-soft">
+          E-mail uživatele
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="vas@email.cz"
+            required
+            className="mt-1.5 w-full rounded-[8px] border border-line-2 bg-paper px-3 py-2 text-[14px] text-ink outline-none focus:border-brass"
+          />
+        </label>
+        <label className="block text-[13px] font-medium text-ink-soft">
+          Počet tokenů
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="100"
+            required
+            className="mt-1.5 w-full rounded-[8px] border border-line-2 bg-paper px-3 py-2 text-[14px] text-ink outline-none focus:border-brass"
+          />
+        </label>
+        {status && (
+          <p className={`text-[13px] ${status.kind === 'ok' ? 'text-emerald' : 'text-[#9C3A2A]'}`}>
+            {status.msg}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-[10px] bg-ink px-4 py-3 text-[15px] font-medium text-white transition-colors hover:bg-ink-soft disabled:opacity-60"
+          style={{ color: '#FFFFFF' }}
+        >
+          {loading ? 'Přičítám…' : 'Přičíst tokeny'}
+        </button>
+      </form>
     </div>
   );
 }

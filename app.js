@@ -456,7 +456,7 @@
 
         var slow = (tier === 'detailed' || tier === 'expert');
         var hint = slow
-            ? 'Hloubková analýza obvykle trvá ' + cfg.est + ' s. Nechte prosím okno otevřené.'
+            ? 'Hloubková analýza obvykle trvá cca 3 minuty. Nechte prosím okno otevřené.'
             : 'Obvykle do ' + cfg.est + ' s.';
 
         resultContent.innerHTML =

@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function isValidPlanKey(value: unknown): value is PlanKey {
-  return value === 'dealer' || value === 'monitoring' || value === 'tokens_test';
+  return value === 'tokens_100';
 }
 
 /**
@@ -35,10 +35,7 @@ export async function POST(request: Request) {
 
   if (!isStripeConfigured()) {
     return NextResponse.json(
-      {
-        error:
-          'Stripe není nastaven. Doplňte STRIPE_SECRET_KEY, STRIPE_PRICE_DEALER, STRIPE_PRICE_MONITORING a STRIPE_PRICE_TOKENS_TEST do .env.local.',
-      },
+      { error: 'Stripe není nastaven. Doplňte STRIPE_SECRET_KEY a STRIPE_PRICE_TOKENS_100 do .env.local.' },
       { status: 503 },
     );
   }

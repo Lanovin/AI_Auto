@@ -7,6 +7,7 @@ import { type TokenFeature } from '@/lib/tokens';
 import { saveScanHistory } from '@/lib/supabase/user-data';
 import { getPriceStats, updatePriceStats } from '@/lib/price-stats';
 import { checkDailyScanCap } from '@/lib/rate-limit';
+import { isAdminAuthenticated } from '@/lib/admin/auth';
 
 const TIER_FEATURE: Record<string, TokenFeature> = {
   quick:    'estimator:quick',
@@ -146,15 +147,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Denní limit skenů (právní pojistka proti hromadné extrakci — viz rate-limit.ts)
-    const cap = await checkDailyScanCap();
-    if (!cap.ok) {
-      return NextResponse.json(
-        {
-          error: `Dosáhli jste denního limitu ocenění (${cap.limit} za 24 hodin). Zkuste to znovu později.`,
-        },
-        { status: 429, headers: { 'Retry-After': '3600' } }
-      );
+    // Admin (přihlášený do /admin přes cargent_admin cookie) má neomezené hledání:
+    // přeskakuje denní limit i strhávání tokenů. Viz isAdminAuthenticated().
+    const isAdmin = await isAdminAuthenticated();
+
+    // Denní limit skenů (právní pojistka proti hromadné extrakci — viz rate-limit.ts).
+    // Admina se netýká.
+    if (!isAdmin) {
+      const cap = await checkDailyScanCap();
+      if (!cap.ok) {
+        return NextResponse.json(
+          {
+            error: `Dosáhli jste denního limitu ocenění (${cap.limit} za 24 hodin). Zkuste to znovu později.`,
+          },
+          { status: 429, headers: { 'Retry-After': '3600' } }
+        );
+      }
     }
 
     const actualTier = (tier && TIER_FEATURE[tier]) ? tier : 'standard';
@@ -205,7 +213,10 @@ export async function POST(request: Request) {
     // result is still returned and the client falls back to localStorage deduction.
     let tokensDeducted = 0;
     try {
-      const deductResult = await deductTokens(feature);
+      // Admin nehradí tokeny — neomezené hledání ceny.
+      const deductResult = isAdmin
+        ? ({ ok: true, cost: 0 } as const)
+        : await deductTokens(feature);
       if (deductResult.ok) {
         tokensDeducted = deductResult.cost;
       } else if (deductResult.reason !== 'Nejste přihlášeni.') {

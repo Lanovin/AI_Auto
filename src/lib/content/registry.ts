@@ -29,7 +29,7 @@ export const CONTENT_REGISTRY = {
     label: 'Nadřazený popisek',
   },
   'hero.title': {
-    default: 'Tržní cena vašeho auta.\n_Podložená daty._',
+    default: 'Tržní cena vašeho auta.\n_Podložená inzeráty._',
     group: 'Hero (úvodní blok)',
     label: 'Hlavní nadpis',
     multiline: true,
@@ -62,8 +62,8 @@ export const CONTENT_REGISTRY = {
   'hero.metric.0.label': { default: 'Portálů v jednom skenu', group: 'Hero (úvodní blok)', label: 'Metrika 1 — popisek' },
   'hero.metric.1.value': { default: '30 s', group: 'Hero (úvodní blok)', label: 'Metrika 2 — číslo' },
   'hero.metric.1.label': { default: 'Rychlý odhad ceny', group: 'Hero (úvodní blok)', label: 'Metrika 2 — popisek' },
-  'hero.metric.2.value': { default: 'Živá data', group: 'Hero (úvodní blok)', label: 'Metrika 3 — číslo' },
-  'hero.metric.2.label': { default: 'Z aktuálních inzerátů', group: 'Hero (úvodní blok)', label: 'Metrika 3 — popisek' },
+  'hero.metric.2.value': { default: 'Až 16', group: 'Hero (úvodní blok)', label: 'Metrika 3 — číslo' },
+  'hero.metric.2.label': { default: 'Inzerátů na odhad', group: 'Hero (úvodní blok)', label: 'Metrika 3 — popisek' },
 
   // ── Trust strip ─────────────────────────────────────────────────────────
   'trust.0.stat': { default: 'Až 8', group: 'Pruh důvěry', label: 'Položka 1 — číslo' },

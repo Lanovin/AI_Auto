@@ -104,7 +104,7 @@ export default function Header(_props: HeaderProps = {}) {
           ) : (
             <Link
               href={`/prihlaseni${authRedirectSuffix}`}
-              className="rounded-full bg-brass px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+              className="rounded-md bg-brass px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               Přihlásit
             </Link>

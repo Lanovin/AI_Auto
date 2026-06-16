@@ -49,20 +49,23 @@ export default async function TrustStrip() {
 
         {/* ── Statistiky — karty ───────────────────────────────────── */}
         <div className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
-          {items.map((item) => (
+          {items.map((item) => {
+            const hasDigit = /\d/.test(item.stat);
+            return (
             <div
               key={item.label}
               className="rounded-[14px] border border-line bg-surface px-6 py-6"
               style={{ boxShadow: 'var(--shadow-cargent-card)' }}
             >
-              <span className="cargent-mono block text-[26px] font-medium leading-none text-brass md:text-[30px]">
+              <span className={`cargent-mono block font-medium leading-none md:text-[30px] ${hasDigit ? 'text-[26px] text-brass' : 'text-[18px] text-ink-soft'}`}>
                 {item.stat}
               </span>
               <span className="mt-2.5 block text-[13px] leading-snug text-dim">
                 {item.label}
               </span>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

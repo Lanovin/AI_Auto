@@ -26,19 +26,19 @@ export default async function Hero() {
           {/* ── LEFT: text column ──────────────────────────────────────── */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
 
-            {/* Eyebrow chip */}
+            {/* Eyebrow — editorial marker, ne startup badge */}
             <span
-              className="animate-fade-up inline-flex items-center gap-2.5 rounded-full border border-line bg-surface px-4 py-1.5 text-[12px] font-medium uppercase tracking-[0.14em] text-ink-soft shadow-[0_1px_2px_rgba(10,27,51,0.05)]"
+              className="animate-fade-up inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-dim"
               style={{ animationDelay: '0ms' }}
             >
-              <span className="cargent-pulse h-1.5 w-1.5 rounded-full bg-brass" aria-hidden="true" />
+              <span className="h-px w-5 bg-brass" aria-hidden="true" />
               {t('hero.eyebrow').replace(/^[—–-]\s*/, '')}
             </span>
 
             {/* Headline */}
             <h1
               className="animate-rise-soft cargent-h1 mt-6"
-              style={{ animationDelay: '100ms', fontSize: 'clamp(34px, 4.8vw, 62px)' }}
+              style={{ animationDelay: '100ms', fontSize: 'clamp(42px, 5.6vw, 74px)', letterSpacing: '-0.036em' }}
             >
               <RichText>{t('hero.title')}</RichText>
             </h1>
@@ -58,7 +58,7 @@ export default async function Hero() {
               <Link
                 href="/odhad-ceny"
                 style={{ color: '#FFFFFF' }}
-                className="group inline-flex items-center gap-2.5 rounded-full bg-brass py-3.5 pl-7 pr-6 text-[15px] font-semibold text-white shadow-[0_8px_24px_-10px_rgba(37,99,235,0.55)] transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+                className="group inline-flex items-center gap-2.5 rounded-md bg-brass py-3.5 pl-7 pr-6 text-[15px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
               >
                 {t('hero.cta_primary')}
                 <ArrowRight
@@ -68,7 +68,7 @@ export default async function Hero() {
               </Link>
               <Link
                 href="#how"
-                className="inline-flex items-center gap-2 rounded-full border border-line-2 bg-surface px-7 py-3.5 text-[15px] font-semibold text-ink transition-colors hover:border-brass hover:text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+                className="inline-flex items-center gap-2 rounded-md border border-line-2 bg-surface px-7 py-3.5 text-[15px] font-semibold text-ink transition-colors hover:border-brass hover:text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
               >
                 {t('hero.cta_secondary')}
               </Link>

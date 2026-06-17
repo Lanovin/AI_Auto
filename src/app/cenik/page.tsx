@@ -56,11 +56,11 @@ export default async function CenikPage() {
               Ceník
             </span>
             <h1 className="mt-4 text-[40px] font-bold leading-[1.1] tracking-tight text-ink md:text-[52px]">
-              Platíte jen za to,<br className="hidden sm:block" /> co skutečně použijete
+              100 tokenů každý měsíc,<br className="hidden sm:block" /> bez překvapení
             </h1>
             <p className="mx-auto mt-5 max-w-[52ch] text-[17px] leading-relaxed text-ink/60">
-              Žádné předplatné, žádné skryté poplatky. Kupte balíček tokenů a spotřebujte je
-              vlastním tempem — platnost bez omezení.
+              Měsíční předplatné za 1 000 Kč. Každý měsíc dostanete 100 tokenů —
+              nevyčerpané se převádějí, platnost bez omezení.
             </p>
 
             {isAuthenticated && profile?.tokens_balance != null ? (
@@ -89,10 +89,10 @@ export default async function CenikPage() {
 
               {/* Balíček tokenů */}
               <div>
-                <p className="text-[12px] font-semibold uppercase tracking-widest text-brass">Balíček</p>
-                <h2 className="mt-2 text-[26px] font-bold tracking-tight text-ink">Kupte tokeny</h2>
+                <p className="text-[12px] font-semibold uppercase tracking-widest text-brass">Předplatné</p>
+                <h2 className="mt-2 text-[26px] font-bold tracking-tight text-ink">Aktivujte přístup</h2>
                 <p className="mt-2 text-[14px] leading-relaxed text-ink/60">
-                  Jeden balíček = 100 tokenů. Připsáno okamžitě po zaplacení přes Stripe.
+                  100 tokenů měsíčně za 1 000 Kč. Tokeny připsány okamžitě po první platbě přes Stripe.
                 </p>
 
                 <div className="mt-6">
@@ -137,7 +137,7 @@ export default async function CenikPage() {
 
                 <div className="mt-4 rounded-2xl border border-emerald/20 bg-emerald/5 px-5 py-4">
                   <p className="text-[13px] leading-relaxed text-ink/70">
-                    <strong className="text-ink">Příklad:</strong> Za 100 tokenů (99 Kč) zvládnete
+                    <strong className="text-ink">Příklad:</strong> Za 100 tokenů (1 000 Kč/měs) zvládnete
                     100× rychlou cenu, nebo 12× detailní posudek, nebo 6× expertní analýzu —
                     nebo libovolnou kombinaci.
                   </p>
@@ -186,7 +186,7 @@ export default async function CenikPage() {
           <div className="mx-auto max-w-310">
             <h2 className="text-[28px] font-bold tracking-tight text-ink">Připraveni oceňovat?</h2>
             <p className="mt-3 text-[15px] text-ink/60">
-              Registrace zdarma, první tokeny získáte ihned po zakoupení balíčku.
+              Registrace zdarma, první tokeny obdržíte ihned po aktivaci předplatného.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link

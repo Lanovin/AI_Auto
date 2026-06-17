@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 
 export const runtime = 'nodejs';
 
@@ -9,11 +10,25 @@ interface ContactBody {
   typ?: string;
 }
 
-export async function POST(request: Request) {
-  const apiKey = process.env.BREVO_API_KEY;
-  const toEmail = process.env.BREVO_CONTACT_TO_EMAIL ?? 'ytlaso2@gmail.com';
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-  if (!apiKey) {
+export async function POST(request: Request) {
+  const smtpHost = process.env.BREVO_SMTP_HOST ?? 'smtp-relay.brevo.com';
+  const smtpPort = Number(process.env.BREVO_SMTP_PORT ?? '587');
+  const smtpUser = process.env.BREVO_SMTP_USER;
+  const smtpPass = process.env.BREVO_SMTP_PASS;
+  const toEmail = process.env.BREVO_CONTACT_TO_EMAIL ?? 'ytlaso2@gmail.com';
+  const senderEmail = process.env.BREVO_SENDER_EMAIL ?? 'noreply@cargent.cz';
+  const senderName = process.env.BREVO_SENDER_NAME ?? 'Cargent Kontakt';
+
+  if (!smtpUser || !smtpPass) {
     return NextResponse.json(
       { error: 'Kontaktní formulář není nakonfigurován.' },
       { status: 503 },
@@ -38,31 +53,30 @@ export async function POST(request: Request) {
 
   const htmlContent = `
     <h2>Nová zpráva z kontaktního formuláře</h2>
-    <p><strong>Jméno:</strong> ${jmeno}</p>
-    <p><strong>E-mail:</strong> ${email}</p>
-    ${typ ? `<p><strong>Typ:</strong> ${typ}</p>` : ''}
+    <p><strong>Jméno:</strong> ${escapeHtml(jmeno)}</p>
+    <p><strong>E-mail:</strong> ${escapeHtml(email)}</p>
+    ${typ ? `<p><strong>Typ:</strong> ${escapeHtml(typ)}</p>` : ''}
     <p><strong>Zpráva:</strong></p>
-    <p style="white-space:pre-wrap">${zprava}</p>
+    <p style="white-space:pre-wrap">${escapeHtml(zprava)}</p>
   `;
 
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender: { name: 'Cargent Kontakt', email: 'noreply@cargent.cz' },
-      to: [{ email: toEmail }],
-      replyTo: { email, name: jmeno },
-      subject: `Cargent — zpráva od ${jmeno}`,
-      htmlContent,
-    }),
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465, // 465 = SSL, 587 = STARTTLS
+    auth: { user: smtpUser, pass: smtpPass },
   });
 
-  if (!res.ok) {
-    const detail = await res.text();
-    console.error('[kontakt] Brevo error:', res.status, detail);
+  try {
+    await transporter.sendMail({
+      from: { name: senderName, address: senderEmail },
+      to: toEmail,
+      replyTo: { name: jmeno, address: email },
+      subject: `Cargent — zpráva od ${jmeno}`,
+      html: htmlContent,
+    });
+  } catch (err) {
+    console.error('[kontakt] Brevo SMTP error:', err);
     return NextResponse.json(
       { error: 'Zprávu se nepodařilo odeslat. Zkuste to prosím znovu.' },
       { status: 502 },

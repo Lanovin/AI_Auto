@@ -214,16 +214,20 @@ const CARDS = [CardPrice, CardComparables, CardBreakdown];
 export default function CardDeck() {
   const [active, setActive] = useState(0);
   const [jumping, setJumping] = useState(-1);
+  const [paused, setPaused] = useState(false);
   const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeRef = useRef(0);
 
   useEffect(() => {
-    let curr = 0;
+    if (paused) return;
+    let curr = activeRef.current;
     const id = setInterval(() => {
       const next = (curr + 1) % 3;
       const jump = (curr + 2) % 3;
       setJumping(jump);
       setActive(next);
       curr = next;
+      activeRef.current = next;
       if (jumpTimer.current) clearTimeout(jumpTimer.current);
       jumpTimer.current = setTimeout(() => setJumping(-1), 750);
     }, 4500);
@@ -231,7 +235,7 @@ export default function CardDeck() {
       clearInterval(id);
       if (jumpTimer.current) clearTimeout(jumpTimer.current);
     };
-  }, []);
+  }, [paused]);
 
   function getPos(i: number) {
     const d = (i - active + 3) % 3;
@@ -286,7 +290,14 @@ export default function CardDeck() {
         style={{ perspective: '1100px', perspectiveOrigin: '50% 40%' }}
       >
         {/* Card track — clips lateral overflow */}
-        <div className="relative overflow-hidden" style={{ height: '470px' }}>
+        <div
+          className="relative overflow-hidden"
+          style={{ height: '470px' }}
+          onPointerDown={() => setPaused(true)}
+          onPointerUp={() => setPaused(false)}
+          onPointerLeave={() => setPaused(false)}
+          onPointerCancel={() => setPaused(false)}
+        >
           {CARDS.map((CardComp, i) => (
             <div key={i} style={cardStyle(i)}>
               <CardComp />

@@ -15,7 +15,7 @@ interface PricingPlansProps {
   initialStatusPlan?: PlanKey | null;
 }
 
-const PLAN_ORDER: PlanKey[] = ['tokens_100'];
+const PLAN_ORDER: PlanKey[] = ['tokens_100', 'test'];
 
 export default function PricingPlans({
   isAuthenticated,
@@ -118,15 +118,18 @@ export default function PricingPlans({
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-1 max-w-sm">
+      <div className="grid gap-4 md:grid-cols-2 max-w-2xl">
         {PLAN_ORDER.map((key) => {
           const plan = PLANS[key];
           const isPending = pendingPlan === key;
-          const buttonDisabled = !stripeReady || !isAuthenticated || isPending;
+          const buttonDisabled = !stripeReady || isPending;
 
-          let buttonLabel = `Koupit za ${plan.priceCzk} Kč`;
+          const isSubscription = plan.mode === 'subscription';
+          let buttonLabel = isSubscription
+            ? `Předplatit za ${plan.priceCzk.toLocaleString('cs-CZ')} Kč/měs`
+            : `Koupit za ${plan.priceCzk.toLocaleString('cs-CZ')} Kč`;
           if (isPending) buttonLabel = 'Otevírám Stripe…';
-          if (!isAuthenticated) buttonLabel = 'Nejprve se přihlaste';
+          if (!isAuthenticated) buttonLabel = 'Přihlásit se';
 
           return (
             <article
@@ -136,7 +139,7 @@ export default function PricingPlans({
               <div className="flex items-start justify-between gap-2">
                 <h3 className="text-[20px] font-medium text-ink">{plan.label}</h3>
                 <span className="inline-flex rounded-full border border-brass/20 bg-brass/10 px-3 py-1 text-[11px] font-medium text-brass">
-                  Jednorázově
+                  {isSubscription ? 'Měsíčně' : 'Jednorázově'}
                 </span>
               </div>
 
@@ -144,8 +147,11 @@ export default function PricingPlans({
 
               <div className="mt-5 flex items-baseline gap-2">
                 <span className="text-[42px] font-medium tabular-nums text-ink">
-                  {plan.priceCzk} Kč
+                  {plan.priceCzk.toLocaleString('cs-CZ')} Kč
                 </span>
+                {plan.mode === 'subscription' && (
+                  <span className="text-[15px] text-ink/50">/měs</span>
+                )}
               </div>
 
               <ul className="mt-5 flex flex-col gap-2">
@@ -163,11 +169,17 @@ export default function PricingPlans({
               <button
                 type="button"
                 disabled={buttonDisabled}
-                onClick={() => void handleBuy(key)}
-                className={`mt-6 rounded-full px-5 py-3 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 ${
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    window.location.assign('/prihlaseni?next=/cenik');
+                    return;
+                  }
+                  void handleBuy(key);
+                }}
+                className={`mt-6 rounded-full px-5 py-3 text-[14px] font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 ${
                   buttonDisabled
-                    ? 'cursor-not-allowed bg-neutral-100 text-neutral-400'
-                    : 'bg-brass text-white hover:bg-brass-2'
+                    ? 'cursor-not-allowed bg-neutral-300'
+                    : 'bg-brass hover:bg-brass-2'
                 }`}
               >
                 {buttonLabel}

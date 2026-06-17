@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function isPlanKey(value: unknown): value is PlanKey {
-  return value === 'tokens_100';
+  return value === 'tokens_100' || value === 'test';
 }
 
 interface ChargeMetadata {

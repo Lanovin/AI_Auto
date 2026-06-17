@@ -355,7 +355,13 @@
         if (!response.ok) {
             var errBody = {};
             try { errBody = await response.json(); } catch (e) { /* ignore */ }
-            throw new Error('API chyba ' + response.status + ': ' + (errBody.error || response.statusText));
+            var errMsg = errBody.error || response.statusText;
+            if (response.status === 401) {
+                var authErr = new Error(errMsg);
+                authErr.isAuth = true;
+                throw authErr;
+            }
+            throw new Error('API chyba ' + response.status + ': ' + errMsg);
         }
 
         return response.json();
@@ -560,7 +566,17 @@
             resultSection.style.display = 'block';
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (err) {
-            resultContent.innerHTML = '<div style="color:var(--danger);font-weight:600;">❌ Chyba: ' + escapeHtml(err.message) + '</div>';
+            if (err.isAuth) {
+                resultContent.innerHTML =
+                    '<div style="color:var(--danger);font-weight:600;">❌ ' + escapeHtml(err.message) + '</div>' +
+                    '<div style="margin-top:12px;">' +
+                    '<a href="/prihlaseni" target="_top" style="color:var(--accent);font-weight:500;">Přihlásit se</a>' +
+                    ' &nbsp;·&nbsp; ' +
+                    '<a href="/cenik" target="_top" style="color:var(--accent);font-weight:500;">Koupit tokeny</a>' +
+                    '</div>';
+            } else {
+                resultContent.innerHTML = '<div style="color:var(--danger);font-weight:600;">❌ Chyba: ' + escapeHtml(err.message) + '</div>';
+            }
             resultSection.style.display = 'block';
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } finally {

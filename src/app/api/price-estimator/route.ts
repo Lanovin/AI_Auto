@@ -207,26 +207,22 @@ export async function POST(request: Request) {
       void updatePriceStats(carInput, result.data);
     }
 
-    // Deduct tokens for Supabase-authenticated users.
-    // localStorage users are billed client-side when tokensDeducted === 0.
-    // IMPORTANT: token deduction must NEVER throw — if Supabase is unavailable the scan
-    // result is still returned and the client falls back to localStorage deduction.
     let tokensDeducted = 0;
-    try {
-      // Admin nehradí tokeny — neomezené hledání ceny.
-      const deductResult = isAdmin
-        ? ({ ok: true, cost: 0 } as const)
-        : await deductTokens(feature);
-      if (deductResult.ok) {
-        tokensDeducted = deductResult.cost;
-      } else if (deductResult.reason !== 'Nejste přihlášeni.') {
-        // Authenticated but insufficient balance → block (402, not 500)
-        return NextResponse.json({ error: deductResult.reason }, { status: 402 });
-      }
-    } catch (tokenErr) {
-      // Defensive fallback — deductTokens should never throw (see tokens-server.ts),
-      // but if it does, log it and continue so the user still receives their scan result.
-      console.error('[api/price-estimator] deductTokens threw unexpectedly (non-blocking):', tokenErr);
+    // Admin nehradí tokeny — neomezené hledání ceny.
+    const deductResult = isAdmin
+      ? ({ ok: true, cost: 0 } as const)
+      : await deductTokens(feature);
+
+    if (deductResult.ok) {
+      tokensDeducted = deductResult.cost;
+    } else if (deductResult.reason === 'Nejste přihlášeni.') {
+      return NextResponse.json(
+        { error: 'Pro ocenění vozu se musíte přihlásit a mít předplacené tokeny.' },
+        { status: 401 },
+      );
+    } else {
+      // Authenticated but insufficient balance → 402
+      return NextResponse.json({ error: deductResult.reason }, { status: 402 });
     }
 
     // Persist scan to user history (fire-and-forget — never blocks the response)

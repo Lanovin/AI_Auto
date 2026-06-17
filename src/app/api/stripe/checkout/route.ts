@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
 import { getStripe } from '@/lib/stripe/server';
@@ -14,7 +15,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function isValidPlanKey(value: unknown): value is PlanKey {
-  return value === 'tokens_100';
+  return value === 'tokens_100' || value === 'test';
 }
 
 /**
@@ -110,30 +111,26 @@ export async function POST(request: Request) {
   const successUrl = `${origin}/predplatne?status=success&plan=${plan.key}`;
   const cancelUrl = `${origin}/predplatne?status=cancelled`;
 
-  const session = await stripe.checkout.sessions.create({
+  const grantMeta = {
+    supabase_user_id: user.id,
+    plan_key: plan.key,
+    bonus_tokens: String(plan.bonusTokens),
+  };
+
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: plan.mode,
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: cancelUrl,
     locale: 'cs',
-    // Pass our domain context into the session so the webhook knows what to grant
-    // even before we look up the line items.
-    metadata: {
-      supabase_user_id: user.id,
-      plan_key: plan.key,
-      bonus_tokens: String(plan.bonusTokens),
-    },
-    // One-time token purchase — carry the grant context on the payment intent so
-    // the webhook can credit tokens.
-    payment_intent_data: {
-      metadata: {
-        supabase_user_id: user.id,
-        plan_key: plan.key,
-        bonus_tokens: String(plan.bonusTokens),
-      },
-    },
-  });
+    metadata: grantMeta,
+    ...(plan.mode === 'subscription'
+      ? { subscription_data: { metadata: grantMeta } }
+      : { payment_intent_data: { metadata: grantMeta } }),
+  };
+
+  const session = await stripe.checkout.sessions.create(sessionParams);
 
   if (!session.url) {
     return NextResponse.json(

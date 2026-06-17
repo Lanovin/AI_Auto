@@ -33,8 +33,8 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
   test: {
     key: 'test',
     label: 'Test — 100 tokenů',
-    description: 'Testovací produkt. Jednorázová platba 5 Kč, za kterou získáte 100 tokenů. Slouží k ověření platebního toku.',
-    priceCzk: 5,
+    description: 'Testovací produkt. Jednorázová platba 15 Kč, za kterou získáte 100 tokenů. Slouží k ověření platebního toku (15 Kč je minimum Stripe pro CZK).',
+    priceCzk: 15,
     mode: 'payment',
     bonusTokens: 100,
     bullets: [

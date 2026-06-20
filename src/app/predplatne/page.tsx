@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
 import PricingPlans from '@/components/pricing-plans';
 import { createClient } from '@/lib/supabase/server';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
@@ -78,51 +79,59 @@ export default async function PricingPage({ searchParams }: PageProps) {
     <>
       <Header />
 
-      <main className="min-h-screen bg-[linear-gradient(180deg,#F4F8FD_0%,#FFFFFF_38%,#FFFFFF_100%)]">
-        <div className="mx-auto max-w-5xl px-6 py-10 md:px-10 md:py-12">
-          <section className="rounded-[28px] border border-brand-100 bg-white p-6 shadow-[0_18px_40px_rgba(24,95,165,0.06)] md:p-8">
-            <Link
-              href="/dashboard"
-              className="text-[13px] text-neutral-500 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
-            >
-              ← Dashboard
-            </Link>
-            <p className="mt-4 text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">
+      <main className="min-h-screen bg-paper" id="main">
+        <div className="mx-auto max-w-4xl px-5.5 py-14 md:px-8 md:py-20">
+          {/* ── Editorial header ──────────────────────────────────── */}
+          <Link
+            href="/dashboard"
+            className="cargent-link text-[13px] text-dim hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
+          >
+            ← Dashboard
+          </Link>
+
+          <div className="mt-6 flex items-center gap-4">
+            <span className="cargent-mono text-[11px] uppercase tracking-[0.18em] text-ink-soft">
               Předplatné &amp; tokeny
+            </span>
+            <span aria-hidden="true" className="h-px flex-1 bg-line-2" />
+          </div>
+
+          <h1 className="cargent-h1 mt-7 text-[36px] md:text-[48px]">
+            Vyberte si <i>plán</i>
+          </h1>
+          <p className="mt-5 max-w-[62ch] text-[16px] leading-relaxed text-ink-soft">
+            Platba probíhá v zabezpečeném Stripe checkoutu. Tokeny a přístupy se
+            připisují automaticky po úspěšné platbě.
+          </p>
+
+          {!isAuthenticated ? (
+            <div className="mt-6 rounded-lg border border-line bg-paper-2 p-4">
+              <p className="text-[14px] leading-relaxed text-ink-soft">
+                Pro nákup je nutné se{' '}
+                <Link href="/prihlaseni?next=/predplatne" className="cargent-link font-medium text-brass">
+                  přihlásit
+                </Link>{' '}
+                nebo{' '}
+                <Link href="/registrace" className="cargent-link font-medium text-brass">
+                  založit účet
+                </Link>
+                . Pak se sem vraťte a vyberte si plán.
+              </p>
+            </div>
+          ) : null}
+
+          {profile?.tokens_balance != null ? (
+            <p className="mt-6 text-[14px] text-dim">
+              Aktuální zůstatek:{' '}
+              <span className="cargent-mono font-medium text-ink">
+                {profile.tokens_balance} tokenů
+              </span>
             </p>
-            <h1 className="mt-2 text-[30px] font-medium tracking-tight text-brand-900 md:text-[36px]">
-              Vyberte si plán
-            </h1>
-            <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-neutral-500">
-              Testovací ceny (Stripe test mode). Platba probíhá v zabezpečeném Stripe checkoutu. Tokeny
-              a přístupy se připisují automaticky po úspěšné platbě.
-            </p>
+          ) : null}
 
-            {!isAuthenticated ? (
-              <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
-                <p className="text-[14px] leading-relaxed text-brand-800">
-                  Pro nákup je nutné se{' '}
-                  <Link href="/prihlaseni?next=/predplatne" className="font-medium underline">
-                    přihlásit
-                  </Link>{' '}
-                  nebo{' '}
-                  <Link href="/registrace" className="font-medium underline">
-                    založit účet
-                  </Link>
-                  . Pak se sem vraťte a vyberte si plán.
-                </p>
-              </div>
-            ) : null}
+          <div aria-hidden="true" className="cargent-rule-double mt-10" />
 
-            {profile?.tokens_balance != null ? (
-              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-[13px] font-medium text-brand-700">
-                <span className="text-[10px]">◈</span>
-                Aktuální zůstatek: {profile.tokens_balance} tokenů
-              </div>
-            ) : null}
-          </section>
-
-          <section className="mt-6">
+          <section className="mt-10">
             <PricingPlans
               isAuthenticated={isAuthenticated}
               stripeReady={stripeReady}
@@ -133,27 +142,30 @@ export default async function PricingPage({ searchParams }: PageProps) {
             />
           </section>
 
-          <section className="mt-6 rounded-3xl border border-brand-100 bg-white p-6">
-            <h2 className="text-[18px] font-medium text-brand-900">Jak to funguje</h2>
-            <ol className="mt-3 list-decimal space-y-2 pl-5 text-[14px] leading-relaxed text-neutral-600">
-              <li>Klikněte na <strong>Předplatit / Koupit</strong>. Otevře se Stripe checkout.</li>
+          <section className="mt-10 rounded-lg border border-line bg-surface p-6">
+            <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Postup</p>
+            <h2 className="cargent-h3 mt-1 text-[18px]">Jak to funguje</h2>
+            <ol className="mt-4 list-decimal space-y-2 pl-5 text-[14px] leading-relaxed text-ink-soft marker:text-faint">
+              <li>Klikněte na <strong className="text-ink">Předplatit / Koupit</strong>. Otevře se Stripe checkout.</li>
               <li>
-                Dokončete platbu v testovacím režimu. Použijte testovací kartu{' '}
-                <code className="rounded bg-brand-50 px-1.5 py-0.5 text-[12px]">4242 4242 4242 4242</code>{' '}
+                Dokončete platbu. V testovacím režimu použijte kartu{' '}
+                <code className="cargent-mono rounded bg-paper-2 px-1.5 py-0.5 text-[12px]">4242 4242 4242 4242</code>{' '}
                 s libovolným budoucím datem a CVC.
               </li>
               <li>
-                Stripe pošle webhook na <code className="rounded bg-brand-50 px-1.5 py-0.5 text-[12px]">/api/stripe/webhook</code>{' '}
+                Stripe pošle webhook na <code className="cargent-mono rounded bg-paper-2 px-1.5 py-0.5 text-[12px]">/api/stripe/webhook</code>{' '}
                 a tokeny se připíšou na váš účet.
               </li>
               <li>
                 Předplatné spravujte v zákaznickém portálu (níže) nebo přes{' '}
-                <code className="rounded bg-brand-50 px-1.5 py-0.5 text-[12px]">stripe billing portal</code>.
+                <code className="cargent-mono rounded bg-paper-2 px-1.5 py-0.5 text-[12px]">stripe billing portal</code>.
               </li>
             </ol>
           </section>
         </div>
       </main>
+
+      <Footer />
     </>
   );
 }

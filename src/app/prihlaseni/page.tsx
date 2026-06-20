@@ -88,11 +88,11 @@ function LoginForm() {
             className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
           >
             <LogoGauge />
-            <span className="font-display text-[22px] font-semibold tracking-tight text-ink">
-              Car<span className="italic" style={{ color: '#B0791D' }}>gent</span>
+            <span className="font-display text-[22px] font-bold tracking-tight text-ink">
+              Car<span className="text-brass">gent</span>
             </span>
           </Link>
-          <h1 className="mt-5 font-display text-[30px] font-medium tracking-tight text-ink" style={{ letterSpacing: '-0.02em' }}>
+          <h1 className="cargent-h1 mt-5 text-[30px]">
             Přihlásit se
           </h1>
           <p className="mt-2 text-[14px] text-dim">
@@ -108,8 +108,8 @@ function LoginForm() {
 
         {/* Card */}
         <div
-          className="rounded-[22px] border border-line bg-surface p-7"
-          style={{ boxShadow: '0 30px 70px -34px rgba(20,23,28,0.22)' }}
+          className="rounded-2xl border border-line bg-surface p-7"
+          style={{ boxShadow: 'var(--shadow-cargent)' }}
         >
           {/* Google OAuth */}
           <button
@@ -165,7 +165,7 @@ function LoginForm() {
             {error && (
               <p
                 role="alert"
-                className="rounded-[10px] border border-[#9C3A2A]/20 bg-[#9C3A2A]/8 px-4 py-3 text-[13px] leading-normal text-[#9C3A2A]"
+                className="rounded-lg border border-negative/20 bg-negative/8 px-4 py-3 text-[13px] leading-normal text-negative"
               >
                 {error}
               </p>
@@ -174,8 +174,7 @@ function LoginForm() {
             <button
               disabled={loading}
               type="submit"
-              className="mt-1 rounded-[10px] px-6 py-3 text-[15px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50"
-              style={{ backgroundColor: '#14171C', color: '#FFFFFF' }}
+              className="mt-1 rounded-md bg-brass px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50"
             >
               {loading ? 'Přihlašuji…' : 'Přihlásit se'}
             </button>
@@ -216,10 +215,10 @@ function mapAuthError(message: string): string {
 function LogoGauge() {
   return (
     <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="14" stroke="#14171C" strokeWidth="1.4" />
-      <circle cx="16" cy="16" r="10" stroke="#B0791D" strokeWidth="1" strokeDasharray="1 3" />
-      <line x1="16" y1="16" x2="22" y2="10" stroke="#B0791D" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="16" cy="16" r="1.6" fill="#B0791D" />
+      <circle cx="16" cy="16" r="14" stroke="var(--color-ink)" strokeWidth="1.4" />
+      <circle cx="16" cy="16" r="10" stroke="var(--color-brass)" strokeWidth="1" strokeDasharray="1 3" />
+      <line x1="16" y1="16" x2="22" y2="10" stroke="var(--color-brass)" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="16" cy="16" r="1.6" fill="var(--color-brass)" />
     </svg>
   );
 }

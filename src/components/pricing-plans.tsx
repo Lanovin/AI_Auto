@@ -93,27 +93,27 @@ export default function PricingPlans({
   }
 
   const bannerStyle: Record<'success' | 'info' | 'error', string> = {
-    success: 'border border-emerald-100 bg-emerald-50 text-emerald-800',
-    info: 'border border-brand-100 bg-brand-50 text-brand-800',
-    error: 'border border-red-100 bg-red-50 text-red-800',
+    success: 'border border-emerald/25 bg-emerald/8 text-ink',
+    info: 'border border-brass/25 bg-brass/8 text-ink',
+    error: 'border border-negative/25 bg-negative/8 text-ink',
   };
 
   return (
     <div className="space-y-6">
       {statusBanner ? (
-        <div className={`rounded-2xl p-4 ${bannerStyle[statusBanner.tone]}`}>
+        <div className={`rounded-lg p-4 ${bannerStyle[statusBanner.tone]}`}>
           <strong className="block text-[15px]">{statusBanner.title}</strong>
-          <p className="mt-1 text-[14px] leading-relaxed">{statusBanner.body}</p>
+          <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">{statusBanner.body}</p>
         </div>
       ) : null}
 
       {!stripeReady ? (
-        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-amber-800">
-          <strong className="block text-[15px]">Stripe zatím není nastaven</strong>
+        <div className="rounded-lg border border-line bg-paper-2 p-4 text-ink-soft">
+          <strong className="block text-[15px] text-ink">Stripe zatím není nastaven</strong>
           <p className="mt-1 text-[14px] leading-relaxed">
-            Doplňte <code className="rounded bg-white px-1.5 py-0.5 text-[12px]">STRIPE_SECRET_KEY</code> a{' '}
-            <code className="rounded bg-white px-1.5 py-0.5 text-[12px]">STRIPE_PRICE_TOKENS_100</code> do{' '}
-            <code className="rounded bg-white px-1.5 py-0.5 text-[12px]">.env.local</code>.
+            Doplňte <code className="cargent-mono rounded bg-surface px-1.5 py-0.5 text-[12px]">STRIPE_SECRET_KEY</code> a{' '}
+            <code className="cargent-mono rounded bg-surface px-1.5 py-0.5 text-[12px]">STRIPE_PRICE_TOKENS_100</code> do{' '}
+            <code className="cargent-mono rounded bg-surface px-1.5 py-0.5 text-[12px]">.env.local</code>.
           </p>
         </div>
       ) : null}
@@ -134,23 +134,24 @@ export default function PricingPlans({
           return (
             <article
               key={key}
-              className="flex flex-col rounded-3xl border border-brass/30 bg-white p-6 shadow-[0_18px_40px_rgba(24,95,165,0.06)]"
+              className="flex flex-col rounded-lg border border-line bg-surface p-6"
+              style={{ boxShadow: 'var(--shadow-cargent-card)' }}
             >
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-[20px] font-medium text-ink">{plan.label}</h3>
-                <span className="inline-flex rounded-full border border-brass/20 bg-brass/10 px-3 py-1 text-[11px] font-medium text-brass">
+                <h3 className="cargent-h3 text-[20px]">{plan.label}</h3>
+                <span className="cargent-mono text-[10px] uppercase tracking-[0.14em] text-dim">
                   {isSubscription ? 'Měsíčně' : 'Jednorázově'}
                 </span>
               </div>
 
-              <p className="mt-3 text-[14px] leading-relaxed text-neutral-500">{plan.description}</p>
+              <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">{plan.description}</p>
 
               <div className="mt-5 flex items-baseline gap-2">
-                <span className="text-[42px] font-medium tabular-nums text-ink">
+                <span className="cargent-mono text-[40px] font-medium text-ink">
                   {plan.priceCzk.toLocaleString('cs-CZ')} Kč
                 </span>
                 {plan.mode === 'subscription' && (
-                  <span className="text-[15px] text-ink/50">/měs</span>
+                  <span className="text-[15px] text-dim">/měs</span>
                 )}
               </div>
 
@@ -158,9 +159,9 @@ export default function PricingPlans({
                 {plan.bullets.map((bullet) => (
                   <li
                     key={bullet}
-                    className="flex items-center gap-2 text-[14px] text-neutral-600"
+                    className="flex items-center gap-2 text-[14px] text-ink-soft"
                   >
-                    <span className="text-emerald shrink-0">✓</span>
+                    <span className="shrink-0 text-emerald">✓</span>
                     {bullet}
                   </li>
                 ))}
@@ -176,9 +177,9 @@ export default function PricingPlans({
                   }
                   void handleBuy(key);
                 }}
-                className={`mt-6 rounded-full px-5 py-3 text-[14px] font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 ${
+                className={`mt-6 rounded-md px-5 py-3 text-[14px] font-semibold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 ${
                   buttonDisabled
-                    ? 'cursor-not-allowed bg-neutral-300'
+                    ? 'cursor-not-allowed bg-faint'
                     : 'bg-brass hover:bg-brass-2'
                 }`}
               >
@@ -190,17 +191,17 @@ export default function PricingPlans({
       </div>
 
       {isAuthenticated && hasStripeCustomer ? (
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-dim">Správa plateb</p>
-          <h3 className="mt-1 text-[18px] font-medium text-ink">Zákaznický portál Stripe</h3>
-          <p className="mt-2 text-[14px] leading-relaxed text-neutral-500">
+        <div className="rounded-lg border border-line bg-surface p-5">
+          <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Správa plateb</p>
+          <h3 className="cargent-h3 mt-1 text-[18px]">Zákaznický portál Stripe</h3>
+          <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
             Stáhněte faktury nebo spravujte platební metodu přímo ve Stripe.
           </p>
           <button
             type="button"
             onClick={() => void handlePortal()}
             disabled={!stripeReady || openingPortal}
-            className="mt-4 rounded-full border border-line px-5 py-3 text-[14px] font-medium text-ink transition-colors hover:border-ink/20 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-neutral-400"
+            className="mt-4 rounded-md border border-line-2 px-5 py-3 text-[14px] font-semibold text-ink transition-colors hover:border-brass hover:text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:text-faint"
           >
             {openingPortal ? 'Otevírám portál…' : 'Otevřít zákaznický portál'}
           </button>
@@ -208,7 +209,7 @@ export default function PricingPlans({
       ) : null}
 
       {error ? (
-        <p className="text-[13px] text-red-600" role="alert">
+        <p className="text-[13px] text-negative" role="alert">
           {error}
         </p>
       ) : null}

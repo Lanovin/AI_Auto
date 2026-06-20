@@ -52,25 +52,25 @@ function getToolStatus(access: ToolAccess, accountType: AccountType) {
   if (access === 'public') {
     return {
       label: 'Dostupné nyní',
-      className: 'border border-emerald-100 bg-emerald-50 text-emerald-700',
+      className: 'border border-emerald/25 bg-emerald/8 text-emerald',
     };
   }
 
   if (access === 'authenticated') {
     return {
       label: 'Součást účtu',
-      className: 'border border-brand-100 bg-brand-50 text-brand-700',
+      className: 'border border-brass/25 bg-brass/8 text-brass',
     };
   }
 
   return accountType === 'dealer'
     ? {
       label: 'Součást firemního účtu',
-      className: 'border border-brand-100 bg-brand-100 text-brand-800',
+      className: 'border border-ink/15 bg-ink/5 text-ink',
     }
     : {
       label: 'Jen pro autobazary',
-      className: 'border border-amber-100 bg-amber-50 text-amber-700',
+      className: 'border border-line bg-paper-2 text-dim',
     };
 }
 
@@ -95,10 +95,10 @@ export default async function DashboardPage() {
   const companyName = profileData?.company_name ?? metadataCompanyName;
   const profileIdentity = accountType === 'dealer' ? companyName : fullName;
   const pageTitle = accountType === 'dealer'
-    ? companyName || 'Firemní účet AutoAI'
+    ? companyName || 'Firemní účet'
     : fullName
       ? `Ahoj, ${fullName.split(' ')[0]}`
-      : 'Můj účet AutoAI';
+      : 'Můj účet';
   const identityReady = accountType === 'dealer' ? Boolean(companyName) : Boolean(fullName);
   const profileHref = accountType === 'dealer' ? '/profil?mode=dealer' : '/profil';
   const nextAction = accountType === 'dealer'
@@ -145,30 +145,28 @@ export default async function DashboardPage() {
     <>
       <Header />
 
-      <main className="min-h-screen bg-[linear-gradient(180deg,#F4F8FD_0%,#FFFFFF_38%,#FFFFFF_100%)]" id="main">
-        <div className="mx-auto max-w-6xl px-6 py-10 md:px-10 md:py-12">
-          <section className="rounded-4xl border border-brand-100 bg-white/95 p-6 shadow-[0_24px_60px_rgba(24,95,165,0.08)] md:p-8">
+      <main className="min-h-screen bg-paper" id="main">
+        <div className="mx-auto max-w-6xl px-5.5 py-12 md:px-8">
+          <section className="rounded-xl border border-line bg-surface p-6 md:p-8" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <Link href="/" className="text-[13px] text-neutral-500 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2">
-                  ← AutoAI
+                <Link href="/" className="cargent-link text-[13px] text-dim hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2">
+                  ← Domů
                 </Link>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${
-                    accountType === 'dealer' ? 'border border-brand-100 bg-brand-100 text-brand-800' : 'border border-brand-100 bg-brand-50 text-brand-700'
-                  }`}>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="cargent-mono rounded-md border border-line bg-paper-2 px-2.5 py-1 text-[11px] uppercase tracking-[0.1em] text-ink-soft">
                     {accountType === 'dealer' ? 'Autobazar' : 'Soukromá osoba'}
                   </span>
-                  <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${
-                    identityReady ? 'border border-emerald-100 bg-emerald-50 text-emerald-700' : 'border border-amber-100 bg-amber-50 text-amber-700'
+                  <span className={`cargent-mono rounded-md px-2.5 py-1 text-[11px] uppercase tracking-[0.1em] ${
+                    identityReady ? 'border border-emerald/25 bg-emerald/8 text-emerald' : 'border border-line bg-paper-2 text-dim'
                   }`}>
                     {identityReady ? 'Profil připraven' : 'Chybí údaje'}
                   </span>
                 </div>
-                <h1 className="mt-4 text-[30px] font-medium tracking-tight text-brand-900 md:text-[38px]">
+                <h1 className="cargent-h1 mt-5 text-[30px] md:text-[40px]">
                   {pageTitle}
                 </h1>
-                <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-neutral-500">
+                <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-ink-soft">
                   {accountType === 'dealer'
                     ? 'Firemní účet spojuje monitoring, popisky, skauta a účetovou administraci do jedné přihlášené větve.'
                     : 'Osobní účet drží historii ocenění, kredit a rychlý přechod do navazujících modulů bez míchání s demo režimem.'}
@@ -176,14 +174,14 @@ export default async function DashboardPage() {
               </div>
 
               <div className="flex flex-col gap-3 sm:items-end">
-                <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-left sm:text-right">
-                  <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Přihlášený e-mail</p>
-                  <p className="mt-1 wrap-break-word text-[14px] font-medium text-brand-900">{user.email}</p>
+                <div className="rounded-lg border border-line bg-paper-2 px-4 py-3 text-left sm:text-right">
+                  <p className="cargent-mono text-[11px] uppercase tracking-[0.14em] text-dim">Přihlášený e-mail</p>
+                  <p className="mt-1 wrap-break-word text-[14px] font-medium text-ink">{user.email}</p>
                 </div>
                 <form action="/auth/logout" method="POST">
                   <button
                     type="submit"
-                    className="rounded-full border border-brand-100 px-5 py-2.5 text-[13px] font-medium text-neutral-600 transition-colors hover:border-brand-200 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+                    className="rounded-md border border-line-2 px-5 py-2.5 text-[13px] font-semibold text-ink-soft transition-colors hover:border-brass hover:text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
                   >
                     Odhlásit se
                   </button>
@@ -195,14 +193,14 @@ export default async function DashboardPage() {
               <h2 className="sr-only" id="dashboard-progress-heading">Postup nastavení účtu</h2>
               <div className="grid gap-3 md:grid-cols-3">
                 {progressItems.map((item) => (
-                  <article key={item.title} className="rounded-2xl border border-brand-100 bg-white p-4">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-medium ${
-                      item.done ? 'bg-brand-50 text-brand-700' : 'bg-amber-50 text-amber-700'
+                  <article key={item.title} className="rounded-lg border border-line bg-paper-2 p-4">
+                    <span className={`cargent-mono inline-flex rounded-md px-2.5 py-1 text-[11px] uppercase tracking-[0.1em] ${
+                      item.done ? 'border border-emerald/25 bg-emerald/8 text-emerald' : 'border border-brass/25 bg-brass/8 text-brass'
                     }`}>
                       {item.done ? 'Hotovo' : 'Další krok'}
                     </span>
-                    <strong className="mt-3 block text-[16px] font-medium text-brand-900">{item.title}</strong>
-                    <p className="mt-2 text-[14px] leading-relaxed text-neutral-500">{item.detail}</p>
+                    <strong className="mt-3 block text-[16px] font-semibold text-ink">{item.title}</strong>
+                    <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{item.detail}</p>
                   </article>
                 ))}
               </div>
@@ -210,13 +208,13 @@ export default async function DashboardPage() {
           </section>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-            <section className="rounded-[28px] border border-brand-100 bg-white p-6 shadow-[0_18px_40px_rgba(24,95,165,0.06)]">
+            <section className="rounded-xl border border-line bg-surface p-6" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Poslední ocenění</p>
-                  <h2 className="mt-2 text-[24px] font-medium tracking-tight text-brand-900">Co se v účtu dělo naposledy</h2>
+                  <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Poslední ocenění</p>
+                  <h2 className="cargent-h2 mt-2 text-[24px]">Co se v účtu dělo naposledy</h2>
                 </div>
-                <Link className="text-[14px] font-medium text-brand-600 transition-colors hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2" href={profileHref}>
+                <Link className="cargent-link text-[14px] font-medium text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2" href={profileHref}>
                   Profil a přístupy
                 </Link>
               </div>
@@ -225,50 +223,50 @@ export default async function DashboardPage() {
             </section>
 
             <aside className="space-y-4">
-              <article className="rounded-[28px] border border-brand-100 bg-[linear-gradient(160deg,#FFFFFF_0%,#F5F9FF_100%)] p-6 shadow-[0_18px_40px_rgba(24,95,165,0.06)]">
-                <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Kredit</p>
+              <article className="rounded-xl border border-line bg-paper-2 p-6" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
+                <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Kredit</p>
                 <div className="mt-3 flex items-end gap-2">
-                  <span className="text-[46px] font-medium leading-none tabular-nums text-brand-900">{balance}</span>
-                  <span className="mb-1 text-[15px] text-neutral-500">tokenů</span>
+                  <span className="cargent-mono text-[46px] font-medium leading-none text-ink">{balance}</span>
+                  <span className="mb-1 text-[15px] text-dim">tokenů</span>
                 </div>
-                <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
+                <p className="mt-3 text-[13px] leading-relaxed text-ink-soft">
                   1 token ≈ 5 Kč · aktuální ceny jednotlivých akcí najdete v ceníku.
                 </p>
                 {balance <= 10 ? (
-                  <p className="mt-3 text-[13px] font-medium text-amber-600">
+                  <p className="mt-3 text-[13px] font-medium text-negative">
                     Nízký kredit. Dashboard už to hlídá, další krok bude dobití.
                   </p>
                 ) : null}
                 <Link
                   href="/predplatne"
-                  className="mt-4 inline-flex rounded-full bg-brand-600 px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+                  className="mt-4 inline-flex rounded-md bg-brass px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
                 >
                   Předplatné &amp; tokeny
                 </Link>
               </article>
 
-              <article className="rounded-[28px] border border-brand-100 bg-white p-6 shadow-[0_18px_40px_rgba(24,95,165,0.06)]">
-                <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Přehled účtu</p>
+              <article className="rounded-xl border border-line bg-surface p-6" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
+                <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Přehled účtu</p>
                 <div className="mt-4 space-y-3">
-                  <div className="rounded-2xl border border-brand-100 bg-brand-50/40 px-4 py-3">
-                    <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Identita</p>
-                    <p className="mt-2 text-[14px] font-medium text-brand-900">{profileIdentity || 'Zatím bez doplněného názvu'}</p>
+                  <div className="rounded-lg border border-line bg-paper-2 px-4 py-3">
+                    <p className="cargent-mono text-[11px] uppercase tracking-[0.14em] text-dim">Identita</p>
+                    <p className="mt-2 text-[14px] font-medium text-ink">{profileIdentity || 'Zatím bez doplněného názvu'}</p>
                   </div>
-                  <div className="rounded-2xl border border-brand-100 bg-white px-4 py-3">
-                    <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Typ účtu</p>
-                    <p className="mt-2 text-[14px] font-medium text-brand-900">{accountType === 'dealer' ? 'Autobazar' : 'Soukromá osoba'}</p>
+                  <div className="rounded-lg border border-line px-4 py-3">
+                    <p className="cargent-mono text-[11px] uppercase tracking-[0.14em] text-dim">Typ účtu</p>
+                    <p className="mt-2 text-[14px] font-medium text-ink">{accountType === 'dealer' ? 'Autobazar' : 'Soukromá osoba'}</p>
                   </div>
-                  <div className="rounded-2xl border border-brand-100 bg-white px-4 py-3">
-                    <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Další krok</p>
-                    <p className="mt-2 text-[14px] leading-relaxed text-neutral-500">{nextAction.detail}</p>
+                  <div className="rounded-lg border border-line px-4 py-3">
+                    <p className="cargent-mono text-[11px] uppercase tracking-[0.14em] text-dim">Další krok</p>
+                    <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{nextAction.detail}</p>
                   </div>
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link className="rounded-full bg-brand-600 px-5 py-3 text-[14px] font-medium text-white transition-colors hover:bg-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2" href={nextAction.href}>
+                  <Link className="rounded-md bg-brass px-5 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2" href={nextAction.href}>
                     {nextAction.label}
                   </Link>
-                  <Link className="rounded-full border border-brand-100 px-5 py-3 text-[14px] font-medium text-neutral-600 transition-colors hover:border-brand-200 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2" href={profileHref}>
+                  <Link className="rounded-md border border-line-2 px-5 py-3 text-[14px] font-semibold text-ink-soft transition-colors hover:border-brass hover:text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2" href={profileHref}>
                     Profil a přístupy
                   </Link>
                 </div>
@@ -276,13 +274,13 @@ export default async function DashboardPage() {
             </aside>
           </div>
 
-          <section className="mt-6 rounded-[28px] border border-brand-100 bg-white p-6 shadow-[0_18px_40px_rgba(24,95,165,0.06)]">
+          <section className="mt-6 rounded-xl border border-line bg-surface p-6" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Dostupné moduly</p>
-                <h2 className="mt-2 text-[24px] font-medium tracking-tight text-brand-900">Přehled přístupů podle typu účtu</h2>
+                <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Dostupné moduly</p>
+                <h2 className="cargent-h2 mt-2 text-[24px]">Přehled přístupů podle typu účtu</h2>
               </div>
-              <Link className="text-[14px] font-medium text-brand-600 transition-colors hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2" href={profileHref}>
+              <Link className="cargent-link text-[14px] font-medium text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2" href={profileHref}>
                 Spravovat profil
               </Link>
             </div>
@@ -296,18 +294,18 @@ export default async function DashboardPage() {
                     aria-label={`${tool.label} — ${status.label}`}
                     key={tool.href}
                     href={tool.href}
-                    className="rounded-2xl border border-brand-100 bg-brand-50/35 p-4 transition-colors hover:border-brand-200 hover:bg-brand-50/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+                    className="rounded-lg border border-line bg-paper-2 p-4 transition-colors hover:border-brass/40 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">{tool.badge}</span>
-                        <h3 className="mt-2 text-[16px] font-medium text-brand-900">{tool.label}</h3>
+                        <span className="cargent-mono text-[11px] uppercase tracking-[0.1em] text-dim">{tool.badge}</span>
+                        <h3 className="mt-2 text-[16px] font-semibold text-ink">{tool.label}</h3>
                       </div>
-                      <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-medium ${status.className}`}>
+                      <span className={`cargent-mono shrink-0 rounded-md px-2.5 py-1 text-[11px] uppercase tracking-[0.08em] ${status.className}`}>
                         {status.label}
                       </span>
                     </div>
-                    <p className="mt-3 text-[14px] leading-relaxed text-neutral-500">{tool.description}</p>
+                    <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">{tool.description}</p>
                   </Link>
                 );
               })}
@@ -316,9 +314,9 @@ export default async function DashboardPage() {
 
           <BillingHistory />
 
-          <section className="mt-6 rounded-3xl border border-brand-100 bg-white px-4 py-3">
-            <p className="wrap-break-word text-[12px] text-neutral-500">
-              ID účtu: <span className="font-mono text-neutral-500">{user.id}</span>
+          <section className="mt-6 rounded-lg border border-line bg-surface px-4 py-3">
+            <p className="wrap-break-word text-[12px] text-dim">
+              ID účtu: <span className="cargent-mono text-dim">{user.id}</span>
             </p>
           </section>
         </div>

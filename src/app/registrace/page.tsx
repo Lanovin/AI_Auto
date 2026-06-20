@@ -80,8 +80,8 @@ function InfoButton({ type }: { type: AccountType }) {
       {open && (
         <div
           role="tooltip"
-          className="absolute right-0 top-7 z-30 w-60 rounded-[14px] border border-line bg-surface p-3 text-[13px] leading-relaxed text-ink-soft"
-          style={{ boxShadow: '0 18px 40px -22px rgba(20,23,28,0.28)' }}
+          className="absolute right-0 top-7 z-30 w-60 rounded-lg border border-line bg-surface p-3 text-[13px] leading-relaxed text-ink-soft"
+          style={{ boxShadow: 'var(--shadow-cargent-2)' }}
         >
           {ACCOUNT_CONFIG[type].tooltip}
         </div>
@@ -164,18 +164,17 @@ function SignupForm() {
     return (
       <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-paper px-5 py-12" id="main">
         <div
-          className="w-full max-w-md rounded-[22px] border border-line bg-surface p-8 text-center"
-          style={{ boxShadow: '0 30px 70px -34px rgba(20,23,28,0.22)' }}
+          className="w-full max-w-md rounded-2xl border border-line bg-surface p-8 text-center"
+          style={{ boxShadow: 'var(--shadow-cargent)' }}
         >
           <div
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-brass/30"
-            style={{ backgroundColor: 'rgba(176,121,29,0.10)' }}
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-brass/30 bg-brass/10"
           >
             <svg aria-hidden="true" className="h-7 w-7 text-brass" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h1 className="font-display text-[26px] font-medium tracking-tight text-ink">
+          <h1 className="cargent-h1 text-[26px]">
             {config.confirmationTitle}
           </h1>
           <p className="mt-3 text-[14px] leading-relaxed text-ink-soft">
@@ -203,14 +202,13 @@ function SignupForm() {
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Link
               href={loginHref}
-              className="rounded-[10px] px-5 py-2.5 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
-              style={{ backgroundColor: '#14171C', color: '#FFFFFF' }}
+              className="rounded-md bg-brass px-5 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
             >
               Mám potvrzeno — přihlásit se
             </Link>
             <Link
               href="/"
-              className="rounded-[10px] border border-line px-5 py-2.5 text-[14px] font-medium text-ink-soft transition-colors hover:border-line-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
+              className="rounded-md border border-line px-5 py-2.5 text-[14px] font-medium text-ink-soft transition-colors hover:border-line-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
             >
               Zpět na hlavní stránku
             </Link>
@@ -225,7 +223,7 @@ function SignupForm() {
     <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-paper px-5 py-12" id="main">
       <div className="w-full max-w-md">
         <div className="mb-7 text-center">
-          <h1 className="font-display text-[30px] font-medium tracking-tight text-ink" style={{ letterSpacing: '-0.02em' }}>
+          <h1 className="cargent-h1 text-[30px]">
             Registrace
           </h1>
           <p className="mt-2 text-[14px] text-dim">
@@ -240,8 +238,8 @@ function SignupForm() {
         </div>
 
         <div
-          className="rounded-[22px] border border-line bg-surface p-6 md:p-8"
-          style={{ boxShadow: '0 30px 70px -34px rgba(20,23,28,0.22)' }}
+          className="rounded-2xl border border-line bg-surface p-6 md:p-8"
+          style={{ boxShadow: 'var(--shadow-cargent)' }}
         >
           {/* Account type toggle */}
           <fieldset className="mb-5">
@@ -256,12 +254,11 @@ function SignupForm() {
                     type="button"
                     onClick={() => setAccountType(type)}
                     className={[
-                      'relative flex items-center justify-between gap-2 rounded-[12px] border px-4 py-3 text-left text-[14px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2',
+                      'relative flex items-center justify-between gap-2 rounded-lg border px-4 py-3 text-left text-[14px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2',
                       active
-                        ? 'border-brass/40 text-ink'
+                        ? 'border-brass/40 bg-brass/8 text-ink'
                         : 'border-line bg-paper-2/40 text-ink-soft hover:border-line-2 hover:bg-paper-2',
                     ].join(' ')}
-                    style={active ? { backgroundColor: 'rgba(176,121,29,0.08)' } : undefined}
                   >
                     <span>{ACCOUNT_CONFIG[type].label}</span>
                     <InfoButton type={type} />
@@ -348,7 +345,7 @@ function SignupForm() {
               <p
                 id="signup-error"
                 role="alert"
-                className="rounded-[10px] border border-[#9C3A2A]/20 bg-[#9C3A2A]/8 px-4 py-3 text-[13px] leading-normal text-[#9C3A2A]"
+                className="rounded-lg border border-negative/20 bg-negative/8 px-4 py-3 text-[13px] leading-normal text-negative"
               >
                 {error}
               </p>
@@ -357,8 +354,7 @@ function SignupForm() {
             <button
               disabled={loading}
               type="submit"
-              className="mt-1 rounded-[10px] px-6 py-3 text-[15px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 disabled:opacity-50"
-              style={{ backgroundColor: '#14171C', color: '#FFFFFF' }}
+              className="mt-1 rounded-md bg-brass px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-brass-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 disabled:opacity-50"
             >
               {loading ? 'Registruji…' : config.cta}
             </button>

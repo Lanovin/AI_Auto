@@ -47,12 +47,12 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
 
   if (history.length === 0) {
     return (
-      <div className="mt-5 rounded-3xl border border-dashed border-brand-100 bg-brand-50/40 p-5">
-        <p className="text-[15px] leading-relaxed text-neutral-500">
+      <div className="mt-5 rounded-lg border border-dashed border-line-2 bg-paper-2 p-5">
+        <p className="text-[15px] leading-relaxed text-ink-soft">
           Zatím tu není žádné ocenění. Začněte na{' '}
           <Link
             href="/odhad-ceny"
-            className="font-medium text-brand-600 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+            className="cargent-link font-medium text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
           >
             odhadu ceny
           </Link>
@@ -86,20 +86,20 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
           return (
             <li
               key={scan.id}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-brand-100 px-4 py-4 transition-colors hover:border-brand-200 hover:bg-brand-50/40"
+              className="flex items-center justify-between gap-4 rounded-lg border border-line px-4 py-4 transition-colors hover:border-brass/40 hover:bg-paper-2"
             >
               <div className="min-w-0">
-                <p className="truncate text-[15px] font-medium text-brand-900">
+                <p className="truncate text-[15px] font-medium text-ink">
                   {[car.brand, car.model, car.year].filter(Boolean).join(' ')}
-                  {km && <span className="ml-2 font-normal text-neutral-400">{km}</span>}
+                  {km && <span className="cargent-mono ml-2 text-[13px] font-normal text-faint">{km}</span>}
                 </p>
-                <p className="mt-1 text-[12px] text-neutral-400">
+                <p className="mt-1 text-[12px] text-dim">
                   {TIER_LABELS[scan.tier] ?? scan.tier} · {date}
                   {scan.tokens_spent > 0 && ` · ${scan.tokens_spent} T`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <span className="whitespace-nowrap text-[14px] font-medium tabular-nums text-brand-700">
+                <span className="cargent-mono whitespace-nowrap text-[14px] font-medium text-ink">
                   {price}
                 </span>
                 <button
@@ -107,7 +107,7 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
                   onClick={() => handleDelete(scan.id)}
                   disabled={busy !== null}
                   aria-label={`Smazat záznam ${[car.brand, car.model].filter(Boolean).join(' ')}`}
-                  className="rounded-full px-2 py-1 text-[12px] text-neutral-400 transition-colors hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
+                  className="rounded-md px-2 py-1 text-[12px] text-faint transition-colors hover:text-negative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass disabled:opacity-50"
                 >
                   {busy === scan.id ? '…' : 'Smazat'}
                 </button>
@@ -119,9 +119,9 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
 
       <div className="mt-4 flex items-center justify-between gap-3">
         {error ? (
-          <span className="text-[13px] text-red-600">{error}</span>
+          <span className="text-[13px] text-negative">{error}</span>
         ) : (
-          <span className="text-[12px] text-neutral-400">
+          <span className="text-[12px] text-faint">
             Historii můžete kdykoli smazat — záznamy neobsahují odkazy ani data z inzerátů.
           </span>
         )}
@@ -129,7 +129,7 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
           type="button"
           onClick={() => handleDelete()}
           disabled={busy !== null}
-          className="shrink-0 rounded-full border border-brand-100 px-3 py-1.5 text-[12px] font-medium text-neutral-500 transition-colors hover:border-red-200 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
+          className="shrink-0 rounded-md border border-line px-3 py-1.5 text-[12px] font-medium text-dim transition-colors hover:border-negative/40 hover:text-negative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass disabled:opacity-50"
         >
           {busy === 'all' ? 'Mažu…' : 'Smazat historii'}
         </button>

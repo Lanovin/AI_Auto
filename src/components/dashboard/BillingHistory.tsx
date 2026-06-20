@@ -10,9 +10,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_CLASS: Record<string, string> = {
-  succeeded: 'border-emerald-100 bg-emerald-50 text-emerald-700',
-  pending: 'border-amber-100 bg-amber-50 text-amber-700',
-  failed: 'border-red-100 bg-red-50 text-red-700',
+  succeeded: 'border-emerald/25 bg-emerald/8 text-emerald',
+  pending: 'border-brass/25 bg-brass/8 text-brass',
+  failed: 'border-negative/25 bg-negative/8 text-negative',
 };
 
 function formatDate(iso: string) {
@@ -42,15 +42,15 @@ export default function BillingHistory() {
   }, []);
 
   return (
-    <section className="mt-6 rounded-[28px] border border-brand-100 bg-white p-6 shadow-[0_18px_40px_rgba(24,95,165,0.06)]">
+    <section className="mt-6 rounded-xl border border-line bg-surface p-6" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-brand-500">Platby</p>
-          <h2 className="mt-2 text-[24px] font-medium tracking-tight text-brand-900">Historie plateb</h2>
+          <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Platby</p>
+          <h2 className="cargent-h2 mt-2 text-[24px]">Historie plateb</h2>
         </div>
         <a
           href="/predplatne"
-          className="text-[14px] font-medium text-brand-600 transition-colors hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+          className="cargent-link text-[14px] font-medium text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
         >
           Koupit tokeny →
         </a>
@@ -59,43 +59,43 @@ export default function BillingHistory() {
       {loading ? (
         <div className="mt-5 space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-14 animate-pulse rounded-2xl bg-brand-50" />
+            <div key={i} className="h-14 animate-pulse rounded-lg bg-paper-2" />
           ))}
         </div>
       ) : error ? (
-        <p className="mt-5 text-[13px] text-red-600">{error}</p>
+        <p className="mt-5 text-[13px] text-negative">{error}</p>
       ) : items.length === 0 ? (
-        <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-50/40 px-5 py-8 text-center">
-          <p className="text-[14px] text-neutral-500">Žádné platby zatím.</p>
+        <div className="mt-5 rounded-lg border border-line bg-paper-2 px-5 py-8 text-center">
+          <p className="text-[14px] text-ink-soft">Žádné platby zatím.</p>
           <a
             href="/cenik"
-            className="mt-3 inline-flex rounded-full bg-brand-600 px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-brand-800"
+            className="mt-3 inline-flex rounded-md bg-brass px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-brass-2"
           >
             Koupit tokeny
           </a>
         </div>
       ) : (
-        <div className="mt-5 overflow-hidden rounded-2xl border border-brand-100">
+        <div className="mt-5 overflow-hidden rounded-lg border border-line">
           {items.map((item, i) => (
             <div
               key={item.id}
               className={`flex items-center justify-between gap-4 px-5 py-4 ${
-                i < items.length - 1 ? 'border-b border-brand-100' : ''
+                i < items.length - 1 ? 'border-b border-line' : ''
               }`}
             >
               <div className="min-w-0">
-                <p className="truncate text-[14px] font-medium text-brand-900">{item.description}</p>
-                <p className="mt-0.5 text-[12px] text-neutral-500">{formatDate(item.date)}</p>
+                <p className="truncate text-[14px] font-medium text-ink">{item.description}</p>
+                <p className="mt-0.5 text-[12px] text-dim">{formatDate(item.date)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <span
-                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-                    STATUS_CLASS[item.status] ?? 'border-line bg-surface text-ink/60'
+                  className={`cargent-mono rounded-md border px-2.5 py-1 text-[11px] uppercase tracking-[0.08em] ${
+                    STATUS_CLASS[item.status] ?? 'border-line bg-surface text-dim'
                   }`}
                 >
                   {STATUS_LABEL[item.status] ?? item.status}
                 </span>
-                <span className="text-[15px] font-medium tabular-nums text-brand-900">
+                <span className="cargent-mono text-[15px] font-medium text-ink">
                   {item.amount.toFixed(0)} {item.currency}
                 </span>
                 {item.receiptUrl ? (
@@ -103,7 +103,7 @@ export default function BillingHistory() {
                     href={item.receiptUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[12px] font-medium text-brand-600 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                    className="cargent-link text-[12px] font-medium text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass"
                   >
                     Faktura
                   </a>

@@ -15,12 +15,17 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function isValidPlanKey(value: unknown): value is PlanKey {
-  return value === 'balicek_1000' || value === 'balicek_2000' || value === 'balicek_5000';
+  return (
+    value === 'balicek_500' ||
+    value === 'balicek_1000' ||
+    value === 'balicek_2000' ||
+    value === 'balicek_5000'
+  );
 }
 
 /**
  * POST /api/stripe/checkout
- * Body: { plan: 'balicek_1000' | 'balicek_2000' | 'balicek_5000' }
+ * Body: { plan: 'balicek_500' | 'balicek_1000' | 'balicek_2000' | 'balicek_5000' }
  *
  * Creates a Stripe Checkout session and returns its URL. The client redirects
  * the user there. After payment, Stripe redirects back to /predplatne?status=...

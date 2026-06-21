@@ -8,7 +8,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function isPlanKey(value: unknown): value is PlanKey {
-  return value === 'balicek_1000' || value === 'balicek_2000' || value === 'balicek_5000';
+  return (
+    value === 'balicek_500' ||
+    value === 'balicek_1000' ||
+    value === 'balicek_2000' ||
+    value === 'balicek_5000'
+  );
 }
 
 interface ChargeMetadata {

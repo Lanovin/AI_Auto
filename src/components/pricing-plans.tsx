@@ -15,7 +15,7 @@ interface PricingPlansProps {
   initialStatusPlan?: PlanKey | null;
 }
 
-const PLAN_ORDER: PlanKey[] = ['balicek_1000', 'balicek_2000', 'balicek_5000'];
+const PLAN_ORDER: PlanKey[] = ['balicek_500', 'balicek_1000', 'balicek_2000', 'balicek_5000'];
 
 export default function PricingPlans({
   isAuthenticated,
@@ -118,7 +118,7 @@ export default function PricingPlans({
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {PLAN_ORDER.map((key) => {
           const plan = PLANS[key];
           const isPending = pendingPlan === key;

@@ -1,11 +1,12 @@
 /**
  * Stripe pricing config — jednorázové balíčky tokenů:
+ *  - balicek_500:  500 Kč → 90 tokenů    (STRIPE_PRICE_BALICEK_500)
  *  - balicek_1000: 1 000 Kč → 200 tokenů  (STRIPE_PRICE_BALICEK_1000)
  *  - balicek_2000: 2 000 Kč → 440 tokenů  (STRIPE_PRICE_BALICEK_2000)
  *  - balicek_5000: 5 000 Kč → 1 200 tokenů (STRIPE_PRICE_BALICEK_5000)
  */
 
-export type PlanKey = 'balicek_1000' | 'balicek_2000' | 'balicek_5000';
+export type PlanKey = 'balicek_500' | 'balicek_1000' | 'balicek_2000' | 'balicek_5000';
 
 export interface PlanConfig {
   key: PlanKey;
@@ -18,6 +19,19 @@ export interface PlanConfig {
 }
 
 export const PLANS: Record<PlanKey, PlanConfig> = {
+  balicek_500: {
+    key: 'balicek_500',
+    label: 'Balíček 90 tokenů',
+    description: 'Jednorázová platba 500 Kč, za kterou získáte 90 tokenů. Ideální pro vyzkoušení nástroje. Tokeny nevyprší.',
+    priceCzk: 500,
+    mode: 'payment',
+    bonusTokens: 90,
+    bullets: [
+      '90 tokenů ihned po zaplacení',
+      'Jednorázová platba, žádné předplatné',
+      'Tokeny nevyprší',
+    ],
+  },
   balicek_1000: {
     key: 'balicek_1000',
     label: 'Balíček 200 tokenů',
@@ -61,6 +75,8 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
 
 export function getPriceId(plan: PlanKey): string | null {
   switch (plan) {
+    case 'balicek_500':
+      return process.env.STRIPE_PRICE_BALICEK_500 ?? null;
     case 'balicek_1000':
       return process.env.STRIPE_PRICE_BALICEK_1000 ?? null;
     case 'balicek_2000':
@@ -75,7 +91,10 @@ export function getPriceId(plan: PlanKey): string | null {
 export function isStripeConfigured(): boolean {
   return Boolean(
     process.env.STRIPE_SECRET_KEY &&
-      (getPriceId('balicek_1000') || getPriceId('balicek_2000') || getPriceId('balicek_5000')),
+      (getPriceId('balicek_500') ||
+        getPriceId('balicek_1000') ||
+        getPriceId('balicek_2000') ||
+        getPriceId('balicek_5000')),
   );
 }
 

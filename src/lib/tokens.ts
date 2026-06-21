@@ -20,10 +20,10 @@ export function tokensToCzk(tokens: number): string {
  */
 export const TOKEN_COSTS = {
   // Price Estimator tiers (maps to `tier` param in /api/price-estimator)
-  'estimator:quick':    4,
-  'estimator:standard': 8,
-  'estimator:detailed': 12,
-  'estimator:expert':   20,
+  'estimator:quick':    2,
+  'estimator:standard': 6,
+  'estimator:detailed': 10,
+  'estimator:expert':   14,
   // Scout (Skaut nabídek) — one search run
   'scout:search':       6,
   // Market Monitor scan (haiku, no web search — cheap + fast)

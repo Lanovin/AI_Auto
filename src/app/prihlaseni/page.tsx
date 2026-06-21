@@ -67,6 +67,30 @@ function LoginForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    // Hodnota bez „@" není e-mail → bereme ji jako admin uživatelské jméno
+    // a zkusíme přihlášení do administrace (/api/admin/login).
+    if (!email.includes('@')) {
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: email.trim(), password }),
+        });
+        const json = (await res.json()) as { ok?: boolean; error?: string };
+        if (res.ok && json.ok) {
+          window.location.replace('/admin');
+          return;
+        }
+        setError(json.error ?? 'Nesprávné jméno nebo heslo.');
+      } catch {
+        setError('Přihlášení se nezdařilo. Zkuste to prosím znovu.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
@@ -137,10 +161,11 @@ function LoginForm() {
                 autoComplete="email"
                 autoFocus
                 id="email"
+                inputMode="email"
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="vas@email.cz"
                 required
-                type="email"
+                type="text"
                 value={email}
                 className="rounded-[10px] border border-line bg-paper-2/50 px-4 py-3 text-[15px] text-ink outline-none transition-colors placeholder:text-faint focus:border-brass focus:bg-surface focus:ring-2 focus:ring-brass/20"
               />

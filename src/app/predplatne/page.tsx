@@ -28,7 +28,7 @@ function parseStatus(value: string | string[] | undefined): 'success' | 'cancell
 
 function parsePlan(value: string | string[] | undefined): PlanKey | null {
   const raw = Array.isArray(value) ? value[0] : value;
-  if (raw === 'tokens_100') return raw;
+  if (raw === 'balicek_1000' || raw === 'balicek_2000' || raw === 'balicek_5000') return raw;
   return null;
 }
 

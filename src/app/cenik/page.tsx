@@ -45,7 +45,7 @@ export default async function CenikPage() {
       <main className="min-h-screen bg-paper" id="main">
         {/* Karty tokenů — centrované */}
         <section className="px-5.5 pt-14 pb-20 md:px-8 md:pt-20">
-          <div className="mx-auto max-w-200 text-center">
+          <div className="mx-auto max-w-5xl text-center">
             <span className="cargent-mono text-[11px] uppercase tracking-[0.18em] text-brass">
               Ceník
             </span>
@@ -73,7 +73,7 @@ export default async function CenikPage() {
               </p>
             ) : null}
 
-            <div className="mx-auto mt-10 max-w-130 text-left">
+            <div className="mx-auto mt-10 max-w-5xl text-left">
               <PricingPlans
                 isAuthenticated={isAuthenticated}
                 stripeReady={stripeReady}

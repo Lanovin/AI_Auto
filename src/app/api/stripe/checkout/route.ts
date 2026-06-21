@@ -15,12 +15,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function isValidPlanKey(value: unknown): value is PlanKey {
-  return value === 'tokens_100' || value === 'test';
+  return value === 'balicek_1000' || value === 'balicek_2000' || value === 'balicek_5000';
 }
 
 /**
  * POST /api/stripe/checkout
- * Body: { plan: 'tokens_100' }
+ * Body: { plan: 'balicek_1000' | 'balicek_2000' | 'balicek_5000' }
  *
  * Creates a Stripe Checkout session and returns its URL. The client redirects
  * the user there. After payment, Stripe redirects back to /predplatne?status=...
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   if (!isStripeConfigured()) {
     return NextResponse.json(
-      { error: 'Stripe není nastaven. Doplňte STRIPE_SECRET_KEY a STRIPE_PRICE_TOKENS_100 do .env.local.' },
+      { error: 'Stripe není nastaven. Doplňte STRIPE_SECRET_KEY a STRIPE_PRICE_BALICEK_* do .env.local.' },
       { status: 503 },
     );
   }

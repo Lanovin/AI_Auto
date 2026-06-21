@@ -15,7 +15,7 @@ interface PricingPlansProps {
   initialStatusPlan?: PlanKey | null;
 }
 
-const PLAN_ORDER: PlanKey[] = ['tokens_100', 'test'];
+const PLAN_ORDER: PlanKey[] = ['balicek_1000', 'balicek_2000', 'balicek_5000'];
 
 export default function PricingPlans({
   isAuthenticated,
@@ -112,13 +112,13 @@ export default function PricingPlans({
           <strong className="block text-[15px] text-ink">Stripe zatím není nastaven</strong>
           <p className="mt-1 text-[14px] leading-relaxed">
             Doplňte <code className="cargent-mono rounded bg-surface px-1.5 py-0.5 text-[12px]">STRIPE_SECRET_KEY</code> a{' '}
-            <code className="cargent-mono rounded bg-surface px-1.5 py-0.5 text-[12px]">STRIPE_PRICE_TOKENS_100</code> do{' '}
+            <code className="cargent-mono rounded bg-surface px-1.5 py-0.5 text-[12px]">STRIPE_PRICE_BALICEK_*</code> do{' '}
             <code className="cargent-mono rounded bg-surface px-1.5 py-0.5 text-[12px]">.env.local</code>.
           </p>
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 max-w-2xl">
+      <div className="grid gap-4 md:grid-cols-3">
         {PLAN_ORDER.map((key) => {
           const plan = PLANS[key];
           const isPending = pendingPlan === key;

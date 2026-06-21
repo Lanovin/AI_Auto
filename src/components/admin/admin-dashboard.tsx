@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type ContentField = {
   key: string;
@@ -53,13 +54,28 @@ export default function AdminDashboard() {
             Úprava textů na úvodní stránce, ceník služeb a správa promo kódů.
           </p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="rounded-[10px] border border-line-2 bg-surface px-4 py-2.5 text-[14px] font-medium text-ink-soft transition-colors hover:text-ink"
-        >
-          Odhlásit se
-        </button>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/odhad-ceny"
+            className="rounded-[10px] bg-brass px-4 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-brass-2"
+          >
+            Do aplikace →
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="rounded-[10px] border border-line-2 bg-surface px-4 py-2.5 text-[14px] font-medium text-ink-soft transition-colors hover:text-ink"
+          >
+            Odhlásit se
+          </button>
+        </div>
       </header>
+
+      <div className="mt-4 rounded-[10px] border border-brass/25 bg-brass/8 px-4 py-3 text-[13px] leading-relaxed text-ink-soft">
+        Jako přihlášený admin máte v <strong className="text-ink">Odhadu ceny</strong> neomezené
+        oceňování (tokeny se nestrhávají). Klikněte na <strong className="text-ink">„Do aplikace →"</strong> —
+        zůstanete přihlášení. Tlačítko <strong className="text-ink">„Odhlásit se"</strong> ukončí
+        admin režim a neomezené oceňování přestane platit.
+      </div>
 
       <nav className="mt-8 flex gap-1 border-b border-line" aria-label="Sekce administrace">
         <TabButton active={tab === 'content'} onClick={() => setTab('content')}>

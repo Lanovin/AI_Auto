@@ -210,7 +210,7 @@
     // ---------- Token costs ----------
     // Defaults mirror src/lib/tokens.ts TOKEN_COSTS; the live price list
     // (admin-editable in /admin → Ceník služeb) is fetched from the API below.
-    var TIER_TOKEN_COSTS = { quick: 4, standard: 8, detailed: 12, expert: 20 };
+    var TIER_TOKEN_COSTS = { quick: 2, standard: 6, detailed: 10, expert: 14 };
 
     function applyTierPricing(features) {
         for (var i = 0; i < features.length; i++) {
@@ -525,7 +525,7 @@
             // Deduct from localStorage when server couldn't (no Supabase session)
             if (!result.tokensDeducted) {
                 var usedTier = document.querySelector('input[name="analysisTier"]:checked').value;
-                deductLocalTokens(TIER_TOKEN_COSTS[usedTier] || 8);
+                deductLocalTokens(TIER_TOKEN_COSTS[usedTier] || 6);
             }
 
             var text = result.markdownText || 'Žádná analýza nebyla vrácena.';

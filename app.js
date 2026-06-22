@@ -443,13 +443,14 @@
     }
 
     // ---------- Live progress panel (long-running detailed/expert scans) ----------
-    // Detailní a expertní posudky běží 60–90 s. Samotný spinner působí jako
-    // zamrznutí — proto během čekání zobrazíme odpočet + fáze analýzy.
+    // Samotný spinner působí jako zamrznutí — proto během čekání zobrazíme odpočet
+    // + fáze analýzy. Odhady (s) jsou hrubé; expert/detailed teď s web_fetch
+    // a hlubokým uvažováním běží i několik minut (server limit je 800 s).
     var TIER_PROGRESS = {
-        quick:    { est: 22, label: 'Rychlý odhad' },
-        standard: { est: 35, label: 'Standardní analýza' },
-        detailed: { est: 75, label: 'Detailní posudek' },
-        expert:   { est: 95, label: 'Expertní posudek' }
+        quick:    { est: 22,  label: 'Rychlý odhad' },
+        standard: { est: 40,  label: 'Standardní analýza' },
+        detailed: { est: 240, label: 'Detailní posudek' },
+        expert:   { est: 420, label: 'Expertní posudek' }
     };
 
     function startProgress(tier, scope) {
@@ -469,7 +470,7 @@
 
         var slow = (tier === 'detailed' || tier === 'expert');
         var hint = slow
-            ? 'Hloubková analýza obvykle trvá cca 3 minuty. Nechte prosím okno otevřené.'
+            ? 'Hloubková analýza může trvat několik minut (model otevírá a porovnává inzeráty). Nechte prosím okno otevřené.'
             : 'Obvykle do ' + cfg.est + ' s.';
 
         resultContent.innerHTML =

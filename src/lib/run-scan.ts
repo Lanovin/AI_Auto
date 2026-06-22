@@ -125,13 +125,13 @@ function salvageTruncatedJson(text: string): Record<string, unknown> | null {
  * operaci a nastavíme ho těsně pod route `maxDuration` (= 120 s na Vercelu),
  * abychom se sami korektně přerušili s čitelnou hláškou dřív než Vercel.
  *
- * Vercel:      290 s — pod maxDuration 300 s, rezerva na serializaci odpovědi.
- * Lokální dev: 300 s — žádný serverový limit, dáme dostatek prostoru.
+ * Vercel:      790 s — pod maxDuration 800 s, rezerva na serializaci odpovědi.
+ * Lokální dev: 800 s — žádný serverový limit, dáme dostatek prostoru.
  *
- * Pozn.: musí zůstat v souladu s `maxDuration` v route.ts (= 300 s). Pokud se
- * maxDuration změní, uprav i tuhle hodnotu (a nech ~10 s rezervu).
+ * Pozn.: musí zůstat v souladu s `maxDuration` v route.ts (= 800 s, vyžaduje
+ * Fluid Compute). Pokud se maxDuration změní, uprav i tuhle hodnotu (~10 s rezerva).
  */
-const CLAUDE_TOTAL_BUDGET_MS = process.env.VERCEL ? 290_000 : 300_000;
+const CLAUDE_TOTAL_BUDGET_MS = process.env.VERCEL ? 790_000 : 800_000;
 
 const TIMEOUT_MESSAGE =
   'TIMEOUT: Posudek trval příliš dlouho. ' +

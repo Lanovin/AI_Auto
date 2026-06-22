@@ -22,11 +22,12 @@ const NO_CACHE_TIERS = new Set(['detailed', 'expert']);
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// Vercel Pro umožňuje až 300 s běhu funkce (Free je stropnuté na 10 s).
-// Expertní/detailní posudek s 9 web searchi + dlouhým streamem 120 s často
-// nestihl → 504. Dáváme plný strop; interní rozpočet (CLAUDE_TOTAL_BUDGET_MS
-// v run-scan.ts) musí zůstat těsně POD touhle hodnotou.
-export const maxDuration = 300;
+// Expertní posudek (hluboké uvažování + 18 searchů + 12 fetchů + dlouhý stream)
+// běží klidně přes 5 minut. Vercel Pro s Fluid Compute umožňuje až 800 s (~13 min).
+// POZOR: 800 s vyžaduje zapnutý Fluid Compute (Project Settings → Functions);
+// bez něj je strop 300 s a tahle hodnota se ořízne. Interní rozpočet
+// (CLAUDE_TOTAL_BUDGET_MS v run-scan.ts) musí zůstat těsně POD touhle hodnotou.
+export const maxDuration = 800;
 
 function mapApiError(err: unknown): { status: number; error: string } {
   if (!(err instanceof Error)) {

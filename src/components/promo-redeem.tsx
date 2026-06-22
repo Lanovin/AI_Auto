@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useClientAuthState } from '@/lib/client-auth';
 
 /**
  * Pole pro uplatnění promo kódu v profilu. Po úspěchu připíše tokeny na
@@ -11,12 +10,34 @@ import { useClientAuthState } from '@/lib/client-auth';
  *
  * Funguje jen pro reálně přihlášené (Supabase) účty — demo/host režim
  * nemá serverový profil, na který by se tokeny daly připsat.
+ *
+ * Přihlášení zjišťujeme ze serveru přes `/api/auth/status` (čte session
+ * cookie), ne client-side detekcí — ta na Vercelu kvůli hydrataci často
+ * selhala a formulář se schoval i přihlášenému uživateli.
  */
 export default function PromoRedeem() {
-  const { ready, isSupabaseAuthenticated } = useClientAuthState();
+  const [ready, setReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/status', { cache: 'no-store' });
+        if (!active || !res.ok) return;
+        const json = (await res.json()) as { authenticated?: boolean };
+        setIsAuthenticated(Boolean(json.authenticated));
+      } catch {
+        if (active) setIsAuthenticated(false);
+      } finally {
+        if (active) setReady(true);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,7 +80,7 @@ export default function PromoRedeem() {
             Zadejte kód a získané tokeny se vám připíší na účet.
           </p>
 
-          {isSupabaseAuthenticated ? (
+          {isAuthenticated ? (
             <form onSubmit={handleSubmit} className="mt-4 flex flex-wrap items-start gap-3">
               <input
                 type="text"

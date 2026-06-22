@@ -19,6 +19,7 @@ type ClientAuthState = {
   ready: boolean;
   role: ClientRole;
   isSupabaseAuthenticated: boolean;
+  isAdmin: boolean;
   email: string | null;
   fullName: string | null;
   companyName: string | null;
@@ -59,10 +60,28 @@ function resolveSupabaseIdentity(user: User | null | undefined): SupabaseIdentit
 export function useClientAuthState(): ClientAuthState {
   const [legacyRole, setLegacyRole] = useState<ClientRole>(() => getLegacyRole());
   const [supabaseIdentity, setSupabaseIdentity] = useState<SupabaseIdentity>(DEFAULT_IDENTITY);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let active = true;
+
+    // Admin (cargent_admin) je httpOnly cookie, kterou klient nepřečte —
+    // stav zjistíme ze serveru, ať admin v aplikaci nevypadá jako odhlášený.
+    async function syncAdminStatus() {
+      try {
+        const res = await fetch('/api/auth/status', { cache: 'no-store' });
+        if (!active || !res.ok) return;
+        const json = (await res.json()) as { admin?: boolean };
+        setIsAdmin(Boolean(json.admin));
+      } catch {
+        if (active) setIsAdmin(false);
+      } finally {
+        if (active) setReady(true);
+      }
+    }
+
+    void syncAdminStatus();
 
     function syncLegacyRole() {
       if (!active) {
@@ -145,6 +164,7 @@ export function useClientAuthState(): ClientAuthState {
     ready,
     role,
     isSupabaseAuthenticated: supabaseIdentity.role !== 'guest',
+    isAdmin,
     email: supabaseIdentity.email,
     fullName: supabaseIdentity.fullName,
     companyName: supabaseIdentity.companyName,

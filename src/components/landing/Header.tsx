@@ -13,7 +13,7 @@ type HeaderProps = {
 
 export default function Header(_props: HeaderProps = {}) {
   const pathname = usePathname();
-  const { role, isSupabaseAuthenticated } = useClientAuthState();
+  const { role, isSupabaseAuthenticated, isAdmin } = useClientAuthState();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -88,7 +88,22 @@ export default function Header(_props: HeaderProps = {}) {
 
         {/* ── Vpravo: tokeny + přihlášení ──────────────────────────── */}
         <div className="flex items-center gap-2">
-          {role !== 'guest' ? (
+          {isAdmin ? (
+            <>
+              <span className="cargent-mono hidden rounded-full border border-brass/30 bg-brass/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-brass sm:inline">
+                Admin
+              </span>
+              <Link
+                href="/admin"
+                className={[
+                  'rounded-lg px-3 py-2 text-[14px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper',
+                  isActive('/admin') ? 'text-ink' : 'text-ink/70 hover:text-ink',
+                ].join(' ')}
+              >
+                Administrace
+              </Link>
+            </>
+          ) : role !== 'guest' ? (
             <>
               <TokenBadge />
               <Link

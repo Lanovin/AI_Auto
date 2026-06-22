@@ -1,28 +1,38 @@
 import type { CarInput, ScanData } from './market-cache';
 import type { PriceStatsPrior } from './price-stats';
+import { computeValuation, type Comparable } from './valuation';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 /**
  * Tier configs for runScan (price estimator with live web search).
  *
- * Tier defines THREE things:
+ * Tier defines:
  *   1. max_tokens — response budget (affects markdown depth)
  *   2. max_search — how many web searches Claude may run (more = more comparables)
- *   3. The PROMPT TEMPLATE (built by `buildOutputSpec` below) — this is the
+ *   3. max_fetch  — how many listing pages Claude may OPEN (web_fetch) to read the
+ *      exact price/mileage/spec instead of relying on lossy search snippets.
+ *   4. effort     — adaptive-thinking depth (deeper = more disciplined statistics)
+ *   5. The PROMPT TEMPLATE (built by `buildOutputSpec` below) — this is the
  *      single biggest differentiator. Quick = short JSON + table. Expert =
  *      multi-section professional valuation with TCO, depreciation forecast,
  *      pre-sale checklist, regional pricing, etc.
  */
-const TIER_CONFIGS: Record<string, { max_tokens: number; max_search: number }> = {
-  quick:    { max_tokens: 2500,  max_search: 9 },
-  standard: { max_tokens: 4500,  max_search: 9 },
+type EffortLevel = 'low' | 'medium' | 'high' | 'xhigh';
+const TIER_CONFIGS: Record<
+  string,
+  { max_tokens: number; max_search: number; max_fetch: number; effort: EffortLevel }
+> = {
+  quick:    { max_tokens: 2500,  max_search: 9,  max_fetch: 0,  effort: 'low'    },
+  standard: { max_tokens: 4500,  max_search: 9,  max_fetch: 0,  effort: 'medium' },
   // Detailní a expertní posudek je dlouhý — dřív se ořezával na max_tokens
   // a výsledný JSON nešel naparsovat. Díky streamingu (viz callClaude) můžeme
   // dát štědrý strop, aby se kompletní markdown vždy vešel. Lokálně bez limitu;
   // na Vercel Free se delší běh přeruší časovým limitem (řešeno hláškou).
-  detailed: { max_tokens: 16000, max_search: 9 },
-  expert:   { max_tokens: 24000, max_search: 9 },
+  // Expert/detailed mají vyšší max_search a navíc web_fetch — sběr přesných dat
+  // z konkrétních inzerátů je největší pákou přesnosti (viz valuation.ts).
+  detailed: { max_tokens: 16000, max_search: 12, max_fetch: 8,  effort: 'high'   },
+  expert:   { max_tokens: 24000, max_search: 18, max_fetch: 12, effort: 'xhigh'  },
 };
 
 interface AnthropicContent {
@@ -222,10 +232,16 @@ async function parseSSEStream(
             partialJson[idx] = '';
             break;
           case 'content_block_delta': {
-            const d = evt.delta as { type?: string; text?: string; thinking?: string; partial_json?: string };
+            const d = evt.delta as {
+              type?: string; text?: string; thinking?: string;
+              partial_json?: string; signature?: string;
+            };
             const b = (blocks[idx] ??= {});
             if (d.type === 'text_delta') b.text = (b.text ?? '') + (d.text ?? '');
             else if (d.type === 'thinking_delta') b.thinking = ((b.thinking as string) ?? '') + (d.thinking ?? '');
+            // Signature thinking bloku MUSÍME zachovat — bez ní by zpětné odeslání
+            // při pause_turn (echo asistentova obsahu) skončilo 400.
+            else if (d.type === 'signature_delta') b.signature = ((b.signature as string) ?? '') + (d.signature ?? '');
             else if (d.type === 'input_json_delta') partialJson[idx] = (partialJson[idx] ?? '') + (d.partial_json ?? '');
             break;
           }
@@ -347,6 +363,9 @@ function buildCarBlock(car: CarInput): string {
   if (car.owners)         lines.push(`Počet majitelů: ${car.owners}`);
   if (car.consumption)    lines.push(`Spotřeba: ${car.consumption}`);
   if (car.originCountry)  lines.push(`Země původu: ${car.originCountry}`);
+  if (car.importDetail)   lines.push(`Dovoz / historie v ČR: ${car.importDetail}`);
+  if (car.tires)          lines.push(`Pneumatiky: ${car.tires}`);
+  if (car.stkValidity)    lines.push(`Platnost STK: ${car.stkValidity}`);
   if (car.equipment && car.equipment.length > 0) {
     lines.push(`Výbava: ${car.equipment.join(', ')}`);
   }
@@ -427,12 +446,15 @@ function buildOutputSpec(tier: string): string {
   if (tier === 'detailed') {
     return `Vrať VÝHRADNĚ validní JSON objekt. Toto je PLACENÝ DETAILNÍ POSUDEK — uživatel za něj platí výrazně víc než za rychlou cenu, takže markdownText MUSÍ obsahovat VŠECHNY následující sekce v plné délce. NEZKRACUJ. Pokud něco neznáš, otevřeně to napiš ("nelze dohledat z dostupných zdrojů"), ale sekci nevynechej.
 
+DŮLEŽITÉ: K nalezeným inzerátům použij web_fetch a OTEVŘI je, ať máš PŘESNOU cenu, nájezd, výkon a převodovku (ne jen odhad z útržku hledání). Tato data vrať i strojově v poli "comparables" — z nich se serverově počítá výsledná cena.
+
 {
-  "averagePrice": <CZK>,
+  "averagePrice": <CZK — tvůj nejlepší odhad; server ho ověří/přepočítá z comparables>,
   "minPrice": <CZK>,
   "maxPrice": <CZK>,
   "listingCount": <alespoň 10 inzerátů>,
   "sources": [<aspoň 8 různých inzerátů: portal, url, price, title (max 80 znaků, jen vůz — žádné údaje o prodejci)>],
+  "comparables": [<aspoň 8 inzerátů jako STROJOVĚ ČITELNÉ objekty: {"portal": "Sauto.cz", "url": "https://...", "price": <CZK celé číslo>, "year": <rok>, "mileageKm": <nájezd v km celé číslo>, "powerKw": <kW nebo null>, "transmission": "manual"|"automat", "fuel": "diesel"|"benzin"|..., "trim": "<verze>", "sameModel": true|false}. Vyplň co nejvíc polí z OTEVŘENÝCH inzerátů. sameModel=false jen u příbuzných (jiná generace/model).>],
   "summary": "4–6 vět souhrnu klíčových zjištění (pozice v trhu, hlavní rizika, doporučení).",
   "markdownText": "ROZSÁHLÁ profesionální analýza v markdownu obsahující VŠECHNY následující sekce. Každá sekce začíná H2 nadpisem (##) s emoji. Mezi sekcemi prázdný řádek:\\n\\n## 💰 Tržní cena a pásmo spolehlivosti\\n- Doporučená prodejní cena (CZK): X Kč\\n- Doporučená výkupní cena (pro autobazar): Y Kč\\n- Pásmo: min — max\\n- 25. percentil / medián / 75. percentil z nalezených inzerátů\\n- Pozice tohoto vozu v rámci nabídek (např. 'v dolní třetině díky vyššímu nájezdu')\\n\\n## 📊 Srovnatelné inzeráty (tabulka, min. 8 řádků)\\nTabulka: Zdroj | Model/verze | Rok | Najeto | Převodovka | Cena | Link\\nPod tabulkou: identifikace odlehlých hodnot (které inzeráty výrazně vybočují a proč).\\n\\n## 🔧 Vliv výbavy a stavu na cenu (rozpad cenových úprav)\\nKonkrétní +/− CZK částky pro každý faktor:\\n- Výbavu (každý prvek samostatně, např. tažné zařízení +6 000 Kč, navigace +4 000 Kč, kožené sedačky +8 000 Kč, ...)\\n- Technický stav vůči průměru\\n- Stav laku a karoserie\\n- Nehodovost (pokud nehod) — odhad slevy\\n- Servisní historie (plná +X, částečná 0, žádná −Y)\\n- Najetých km vs benchmark pro daný rok (15 000 km/rok)\\n- Počet majitelů\\n\\n## 📈 Tržní trendy pro tento segment\\n- Sezónní vliv (jaro/léto/podzim/zima) — kdy se prodává nejrychleji a za nejlepší cenu\\n- Likvidita modelu (jak dlouho typicky stojí v inzerci)\\n- Trend depreciace za posledních 12 měsíců (rostoucí/stagnující/klesající)\\n- Konkurence — kolik podobných vozů je aktuálně v nabídce\\n\\n## ⚠️ Známá rizika a problémy modelu/motoru\\n- Typické mechanické a elektronické závady pro tento model+motor+rok\\n- Předpokládané servisní náklady na nejbližší rok\\n- Co kupující obvykle požadují před koupí (zkušební jízda, TPi, výměna konkrétních dílů)\\n- Doklady, které by měly být k dispozici (TP, servisní knížka, doklad o stavu km)\\n\\n## 💡 Doporučení k prodeji a koupi\\n- **Pro prodejce:**\\n  - Optimální cena pro rychlý prodej (do 30 dní): X Kč\\n  - Optimální cena pro trpělivý prodej (60–90 dní): Y Kč\\n  - Vyjednávací prostor (kolik nechat na slevě)\\n  - Klíčové prodejní argumenty (silné stránky vozu vůči konkurenci)\\n  - Doporučená inzertní strategie\\n- **Pro kupujícího:**\\n  - Maximální cena, kterou se vyplatí nabídnout\\n  - Body vyjednávání (na čem stáhnout cenu)\\n  - Co zkontrolovat před koupí (TOP 5 položek)"
 }`;
@@ -441,12 +463,18 @@ function buildOutputSpec(tier: string): string {
   if (tier === 'expert') {
     return `Vrať VÝHRADNĚ validní JSON objekt. Toto je NEJVYŠŠÍ TIER — EXPERTNÍ POSUDEK na úrovni profesionálního znaleckého odhadu. Uživatel platí maximum, takže markdownText MUSÍ obsahovat VŠECHNY následující sekce v plné délce a hloubce. NIKDY NEZKRACUJ — pokud informaci neznáš, napiš to explicitně, ale sekci nevynechej.
 
+POSTUP (důležité pro přesnost):
+1. Pokud je zadán VIN, NEJDŘÍV ho dekóduj (země výroby, modelový rok, motor, výbava) a použij pro přesné párování inzerátů.
+2. Najdi inzeráty přes web_search a ty nejrelevantnější OTEVŘI přes web_fetch, ať máš PŘESNOU cenu, nájezd, výkon, převodovku a výbavu (ne odhad z útržku).
+3. Tato přesná data vrať i strojově v poli "comparables" — z nich se serverově počítá výsledná cena (robustní medián s korekcí na nájezd/stáří). Čím víc kvalitních inzerátů, tím přesnější odhad.
+
 {
-  "averagePrice": <CZK>,
+  "averagePrice": <CZK — tvůj nejlepší odhad; server ho ověří/přepočítá z comparables>,
   "minPrice": <CZK>,
   "maxPrice": <CZK>,
   "listingCount": <alespoň 15 inzerátů>,
   "sources": [<aspoň 12 různých inzerátů: portal, url, price, title (max 80 znaků, jen vůz — žádné údaje o prodejci)>],
+  "comparables": [<aspoň 12 inzerátů jako STROJOVĚ ČITELNÉ objekty: {"portal": "Sauto.cz", "url": "https://...", "price": <CZK celé číslo>, "year": <rok>, "mileageKm": <nájezd v km celé číslo>, "powerKw": <kW nebo null>, "transmission": "manual"|"automat", "fuel": "diesel"|"benzin"|..., "trim": "<verze>", "sameModel": true|false}. Vyplň co nejvíc polí z OTEVŘENÝCH inzerátů. sameModel=false jen u příbuzných (jiná generace/model).>],
   "summary": "6–8 vět executive summary s klíčovými zjištěními.",
   "markdownText": "EXPERTNÍ posudek v markdownu — VŠECHNY sekce povinné:\\n\\n## 📋 Executive summary\\nKrátký rámec (4–6 vět) — co vůz je, kde se nachází na trhu, hlavní příležitosti a rizika, finální doporučení.\\n\\n## 💰 Tržní cena a pásmo spolehlivosti\\n- Doporučená prodejní cena (CZK)\\n- Doporučená výkupní cena (pro autobazar)\\n- Pásmo: min — max s interval spolehlivosti 90 %\\n- 25. / 50. / 75. percentil z nalezených inzerátů\\n- Pozice tohoto konkrétního vozu (kvartil + odůvodnění)\\n\\n## 📊 Srovnatelné inzeráty (tabulka, min. 12 řádků)\\nTabulka: Zdroj | Model/verze | Rok | Najeto | Převodovka | Cena | Odchylka od mediánu | Link\\nPod tabulkou: detailní analýza odlehlých hodnot.\\n\\n## 🔧 Rozpad cenových úprav (detailní)\\nPro každý faktor uveď konkrétní +/− CZK + zdůvodnění:\\n- Výbava — každý prvek samostatně s částkou\\n- Technický stav vůči průměru segmentu\\n- Stav laku, karoserie, interiéru\\n- Nehodovost a její vliv\\n- Servisní historie\\n- Najetých km vs benchmark\\n- Počet majitelů\\n- Země původu (CZ původ vs import)\\n\\n## 📈 Detailní cenový trend (12 měsíců + prognóza)\\n- Vývoj průměrné ceny za posledních 12 měsíců (+/− %)\\n- Sezónní křivka pro tento segment\\n- Prognóza vývoje na nejbližších 3–6 měsíců\\n- Faktory, které mohou cenu posunout (legislativa, nový model, …)\\n\\n## 🌍 Regionální srovnání\\n- Praha vs venkov\\n- Morava vs Čechy\\n- Importované vs domácí vozy\\n- Tipy: kde se prodává nejlépe / kde nejlevněji koupit\\n\\n## 🔬 VIN a historie vozu\\n${'${vinHint}'}\\n- Doporučení na ověření přes Cebia / VIN dekodér\\n- Co prověřit (nájezd, počet majitelů, exporty, leasing)\\n\\n## 💼 Investiční pohled\\n- Odhad zbytkové hodnoty za 1 / 3 / 5 let (CZK)\\n- Roční depreciace v %\\n- Vhodnost pro: krátkodobé držení / dlouhodobé držení / fleet\\n- Alternativy ze stejné kategorie, které drží hodnotu lépe\\n\\n## 🛠 Náklady vlastnictví (TCO) na 3 roky\\nKonkrétní roční částky:\\n- Pravidelný servis\\n- Očekávané výměny (rozvody, brzdy, pneu)\\n- Pojištění (povinné + havarijní orientačně)\\n- Spotřeba × roční nájezd × cena paliva\\n- Dálniční známka\\n- Celkový roční náklad + tříletý součet\\n\\n## ⚠️ Známá rizika a problémy modelu\\n- Typické mechanické a elektronické závady (motor, převodovka, elektronika)\\n- Závady spojené s vyšším nájezdem\\n- Doporučené preventivní výměny\\n- Co kupující obvykle požadují před koupí\\n\\n## 📋 Pre-purchase / Pre-sale checklist (10–15 bodů)\\n${'${checklistHint}'}\\n\\n## 🎯 Strategická doporučení\\n- Optimální čas prodeje/koupě\\n- Inzertní strategie (kde inzerovat, klíčové fráze, doporučené fotografie)\\n- Cenová strategie (nasazená cena → konečná cena, slevová elasticita)\\n- Vyjednávací prostor\\n- Plán B pokud se vůz neprodá za 60 dní"
 }`;
@@ -575,17 +603,35 @@ export async function runScan(
           ? 'Buď věcný a stručný, ale poskytni klíčové faktory ovlivňující cenu.'
           : 'Buď stručný a rychlý — uživatel chce orientační cenu, ne posudek.';
 
+  // web_search_20260209 má dynamické filtrování (filtruje výsledky kódem ještě
+  // před vstupem do kontextu → relevantnější a levnější). web_fetch_20260209
+  // umožní modelu OTEVŘÍT konkrétní inzerát a přečíst přesnou cenu/nájezd/spec
+  // (jen URL už přítomné z výsledků search). Oboje podporuje Opus 4.8.
+  const tools: Array<Record<string, unknown>> = [
+    {
+      type: 'web_search_20260209',
+      name: 'web_search',
+      max_uses: config.max_search,
+    },
+  ];
+  if (config.max_fetch > 0) {
+    tools.push({
+      type: 'web_fetch_20260209',
+      name: 'web_fetch',
+      max_uses: config.max_fetch,
+    });
+  }
+
   const requestBody = {
     model: 'claude-opus-4-8',
     max_tokens: config.max_tokens,
     system: systemBase + systemTierSuffix,
-    tools: [
-      {
-        type: 'web_search_20250305',
-        name: 'web_search',
-        max_uses: config.max_search,
-      },
-    ],
+    // Adaptivní uvažování + effort dle tieru: hlubší uvažování = disciplinovanější
+    // statistické korekce (nájezd/stáří/outliery/percentily). Reasoning jde do
+    // thinking bloků; JSON v text bloku zůstává čistý (viz extractText).
+    thinking: { type: 'adaptive' as const },
+    output_config: { effort: config.effort },
+    tools,
     messages: [{ role: 'user', content: userMessage }],
   };
 
@@ -611,9 +657,53 @@ export async function runScan(
     }
   }
 
-  const averagePrice = Number(parsed.averagePrice) || 0;
-  const minPrice     = Number(parsed.minPrice)     || 0;
-  const maxPrice     = Number(parsed.maxPrice)     || 0;
+  let averagePrice  = Number(parsed.averagePrice) || 0;
+  let minPrice      = Number(parsed.minPrice)     || 0;
+  let maxPrice      = Number(parsed.maxPrice)     || 0;
+  let listingCount  = Number(parsed.listingCount) || 0;
+  let markdownText  = '';
+
+  // Deterministický (robustní) přepočet ceny z nasbíraných inzerátů — jen pro
+  // expert/detailed, kde model vrací strojově čitelné `comparables`. Headline
+  // číslo pak nepochází z volného odhadu modelu, ale z transparentní statistiky
+  // (medián normalizovaných cen + blend s priorem). Viz valuation.ts.
+  if (tier === 'expert' || tier === 'detailed') {
+    const rawComps = Array.isArray(parsed.comparables) ? parsed.comparables : [];
+    const comparables: Comparable[] = rawComps
+      .filter((c): c is Record<string, unknown> => Boolean(c) && typeof c === 'object')
+      .map((c) => ({
+        portal:       c.portal != null ? String(c.portal) : undefined,
+        url:          c.url != null ? String(c.url) : undefined,
+        price:        Number(c.price) || undefined,
+        year:         Number(c.year) || undefined,
+        mileageKm:    Number(c.mileageKm) || undefined,
+        powerKw:      Number(c.powerKw) || undefined,
+        transmission: c.transmission != null ? String(c.transmission) : undefined,
+        fuel:         c.fuel != null ? String(c.fuel) : undefined,
+        trim:         c.trim != null ? String(c.trim) : undefined,
+        sameModel:    typeof c.sameModel === 'boolean' ? c.sameModel : undefined,
+      }));
+
+    const valuation = computeValuation(
+      comparables,
+      {
+        year:         Number(car.year),
+        mileageKm:    Number(car.mileage) || 0,
+        transmission: car.transmission,
+        powerKw:      car.powerKw != null ? Number(car.powerKw) : undefined,
+      },
+      { prior, modelAveragePrice: averagePrice },
+    );
+
+    if (valuation) {
+      averagePrice = valuation.averagePrice;
+      minPrice     = valuation.minPrice;
+      maxPrice     = valuation.maxPrice;
+      if (valuation.nComps > listingCount) listingCount = valuation.nComps;
+      // Předřaď metodiku, ať headline sedí s tělem posudku.
+      markdownText = valuation.methodologyMarkdown + '\n';
+    }
+  }
 
   const fallbackMarkdown =
     `## 💰 Odhad tržní ceny\n` +
@@ -621,11 +711,13 @@ export async function runScan(
     `- **Rozsah:** ${minPrice.toLocaleString('cs-CZ')} – ${maxPrice.toLocaleString('cs-CZ')} Kč\n\n` +
     `## 💡 Shrnutí\n${parsed.summary ?? ''}`;
 
+  markdownText += String(parsed.markdownText ?? fallbackMarkdown);
+
   return {
     averagePrice,
     minPrice,
     maxPrice,
-    listingCount: Number(parsed.listingCount) || 0,
+    listingCount,
     sources: sanitizeSources(parsed.sources),
     modelInput: {
       brand:      car.brand,
@@ -645,7 +737,7 @@ export async function runScan(
       vybava:     car.equipment ?? [],
     },
     summary:      sanitizeText(parsed.summary ?? '', 2000),
-    markdownText: String(parsed.markdownText ?? fallbackMarkdown),
+    markdownText,
   };
 }
 

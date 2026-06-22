@@ -126,7 +126,8 @@
         'brand', 'model', 'year', 'trim', 'vin', 'fuelType', 'engineCapacity', 'powerKw',
         'transmission', 'drivetrain', 'mileage', 'bodyType', 'color', 'techCondition',
         'consumption', 'serviceHistory', 'owners', 'doors', 'paintCondition',
-        'accidents', 'originCountry', 'market', 'saleType', 'currency', 'notes'
+        'accidents', 'originCountry', 'tires', 'stkValidity', 'importDetail',
+        'market', 'saleType', 'currency', 'notes'
     ];
 
     // ---------- Load shared data from description page ----------
@@ -325,6 +326,9 @@
             var owners        = readField('owners');
             var consumption   = readField('consumption');
             var originCountry = readField('originCountry');
+            var tires         = readField('tires');
+            var stkValidity   = readField('stkValidity');
+            var importDetail  = readField('importDetail');
             var notes         = readField('notes');
             var equipment     = readEquipmentCheckboxes();
 
@@ -342,6 +346,9 @@
             if (owners)         car.owners = owners;
             if (consumption)    car.consumption = consumption;
             if (originCountry)  car.originCountry = originCountry;
+            if (tires)          car.tires = tires;
+            if (stkValidity)    car.stkValidity = stkValidity;
+            if (importDetail)   car.importDetail = importDetail;
             if (notes)          car.notes = notes;
             if (equipment.length > 0) car.equipment = equipment;
         }
@@ -661,7 +668,7 @@
         'brand', 'model', 'year', 'trim', 'vin', 'fuelType', 'engineCapacity', 'powerKw',
         'transmission', 'drivetrain', 'mileage', 'bodyType', 'color', 'techCondition',
         'consumption', 'serviceHistory', 'owners', 'doors', 'paintCondition',
-        'accidents', 'originCountry', 'notes'
+        'accidents', 'originCountry', 'tires', 'stkValidity', 'importDetail', 'notes'
     ];
 
     var currentGarageCarId = null;

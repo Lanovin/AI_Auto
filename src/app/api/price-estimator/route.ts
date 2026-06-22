@@ -123,6 +123,9 @@ function parseRichCarInput(raw: Record<string, unknown>): CarInput {
     owners:         toStr(raw.owners),
     consumption:    toStr(raw.consumption),
     originCountry:  toStr(raw.originCountry),
+    tires:          toStr(raw.tires),
+    stkValidity:    toStr(raw.stkValidity),
+    importDetail:   toStr(raw.importDetail),
     equipment:      toArr(raw.equipment),
     notes:          toStr(raw.notes),
   };

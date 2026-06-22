@@ -25,6 +25,9 @@ export interface CarInput {
   owners?: number | string;
   consumption?: string;
   originCountry?: string;
+  tires?: string;        // stav/typ pneu (letní/zimní/celoroční + zbytek dezénu)
+  stkValidity?: string;  // platnost STK (do kdy)
+  importDetail?: string; // detail dovozu (první majitel v ČR / dovoz z …)
   equipment?: string[];
   notes?: string;
 }

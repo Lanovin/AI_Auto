@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getScanHistory } from '@/lib/supabase/user-data';
 import ScanHistoryList from '@/components/dashboard/ScanHistoryList';
 import BillingHistory from '@/components/dashboard/BillingHistory';
+import RedeemCode from '@/components/dashboard/RedeemCode';
 
 export const metadata = { title: 'Můj účet' };
 
@@ -244,6 +245,8 @@ export default async function DashboardPage() {
                   Předplatné &amp; tokeny
                 </Link>
               </article>
+
+              <RedeemCode />
 
               <article className="rounded-xl border border-line bg-surface p-6" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
                 <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Přehled účtu</p>

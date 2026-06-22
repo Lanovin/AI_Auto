@@ -22,7 +22,11 @@ const NO_CACHE_TIERS = new Set(['detailed', 'expert']);
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120; // Vercel Pro/Enterprise; Free tier is capped at 10 s
+// Vercel Pro umožňuje až 300 s běhu funkce (Free je stropnuté na 10 s).
+// Expertní/detailní posudek s 9 web searchi + dlouhým streamem 120 s často
+// nestihl → 504. Dáváme plný strop; interní rozpočet (CLAUDE_TOTAL_BUDGET_MS
+// v run-scan.ts) musí zůstat těsně POD touhle hodnotou.
+export const maxDuration = 300;
 
 function mapApiError(err: unknown): { status: number; error: string } {
   if (!(err instanceof Error)) {
@@ -36,8 +40,8 @@ function mapApiError(err: unknown): { status: number; error: string } {
       status: 504,
       error:
         'Posudek trval příliš dlouho a byl přerušen (server timeout). ' +
-        'Zkuste tier Standardní nebo Rychlý. Detailní a expertní posudky vyžadují Vercel Pro plán (60s limit). ' +
-        'Peníze za Anthropic API nebyly strhnuty — volání bylo přerušeno před dokončením.',
+        'Zkuste posudek zopakovat, případně zvolte nižší tier (Standardní nebo Rychlý). ' +
+        'Tokeny nebyly strhnuty — volání bylo přerušeno před dokončením.',
     };
   }
 

@@ -106,16 +106,22 @@ function salvageTruncatedJson(text: string): Record<string, unknown> | null {
 }
 
 /**
- * Timeout pro Anthropic API volání.
+ * CELKOVÝ časový rozpočet na jeden posudek (NIKOLIV per-call).
  *
- * Vercel Free:  10 s max → quick/standard by se vešly, detailed/expert NE.
- * Vercel Pro:   60 s max → detailed/expert (7–9 searchů) by se vešly.
- * Lokální dev:  300 s — žádný serverový limit, dáme dostatek prostoru.
+ * Klíčové: detailed/expert se kvůli web_search volá opakovaně ve smyčce
+ * (pause_turn — viz callClaudeUntilDone). Kdyby měl každý dílčí call vlastní
+ * timeout, jejich SOUČET by snadno přelezl maxDuration funkce a Vercel by ji
+ * tvrdě zabil → anonymní 504. Proto držíme JEDEN sdílený deadline pro celou
+ * operaci a nastavíme ho těsně pod route `maxDuration` (= 120 s na Vercelu),
+ * abychom se sami korektně přerušili s čitelnou hláškou dřív než Vercel.
  *
- * Na Vercelu nastavíme 55 s (těsně pod 60s limitem) a při překročení
- * vyhodíme čitelnou chybu dřív než Vercel vrátí anonymní 504.
+ * Vercel:      290 s — pod maxDuration 300 s, rezerva na serializaci odpovědi.
+ * Lokální dev: 300 s — žádný serverový limit, dáme dostatek prostoru.
+ *
+ * Pozn.: musí zůstat v souladu s `maxDuration` v route.ts (= 300 s). Pokud se
+ * maxDuration změní, uprav i tuhle hodnotu (a nech ~10 s rezervu).
  */
-const CLAUDE_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 300_000;
+const CLAUDE_TOTAL_BUDGET_MS = process.env.VERCEL ? 290_000 : 300_000;
 
 const TIMEOUT_MESSAGE =
   'TIMEOUT: Posudek trval příliš dlouho. ' +
@@ -131,12 +137,17 @@ const TIMEOUT_MESSAGE =
  * dojede až do konce. Bloky rekonstruujeme genericky (text / server_tool_use /
  * web_search_tool_result), aby je šlo poslat zpět při obnově `pause_turn`.
  */
-async function callClaude(body: object): Promise<AnthropicResponse> {
+async function callClaude(body: object, signal?: AbortSignal): Promise<AnthropicResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY není nastaven na serveru.');
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), CLAUDE_TIMEOUT_MS);
+  // Pokud volající nepředá sdílený signál (např. runMonitorScan — jediné volání),
+  // vytvoříme vlastní controller s celkovým rozpočtem jako pojistku.
+  const ownController = signal ? null : new AbortController();
+  const timeoutId = ownController
+    ? setTimeout(() => ownController.abort(), CLAUDE_TOTAL_BUDGET_MS)
+    : null;
+  const activeSignal = signal ?? ownController!.signal;
 
   try {
     let res: Response;
@@ -150,7 +161,7 @@ async function callClaude(body: object): Promise<AnthropicResponse> {
         },
         body: JSON.stringify({ ...body, stream: true }),
         cache: 'no-store',
-        signal: controller.signal,
+        signal: activeSignal,
       });
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') throw new Error(TIMEOUT_MESSAGE);
@@ -163,14 +174,20 @@ async function callClaude(body: object): Promise<AnthropicResponse> {
     }
     if (!res.body) throw new Error('Anthropic API nevrátila streamovanou odpověď.');
 
-    return await parseSSEStream(res.body);
+    return await parseSSEStream(res.body, activeSignal);
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
 /** Skládá SSE stream Anthropic API do AnthropicResponse (obsah + stop_reason). */
-async function parseSSEStream(body: ReadableStream<Uint8Array>): Promise<AnthropicResponse> {
+async function parseSSEStream(
+  body: ReadableStream<Uint8Array>,
+  signal?: AbortSignal,
+): Promise<AnthropicResponse> {
+  // Když vyprší sdílený deadline, abort fetche obvykle ukončí i čtení streamu
+  // (read() vyhodí AbortError). Pro jistotu navíc kontrolujeme signal.aborted
+  // přímo ve smyčce níže a vyhodíme čitelnou TIMEOUT hlášku.
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -182,6 +199,7 @@ async function parseSSEStream(body: ReadableStream<Uint8Array>): Promise<Anthrop
 
   try {
     for (;;) {
+      if (signal?.aborted) throw new Error(TIMEOUT_MESSAGE);
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
@@ -265,16 +283,36 @@ async function callClaudeUntilDone(
   let finalText = '';
   let stopReason: string | null = null;
 
-  for (let attempt = 0; attempt <= MAX_PAUSE_CONTINUATIONS; attempt++) {
-    const res = await callClaude({ ...body, messages });
-    stopReason = res.stop_reason ?? null;
-    finalText = extractText(res);
-    if (finalText) combinedText += (combinedText ? '\n' : '') + finalText;
+  // JEDEN sdílený deadline pro celou operaci včetně všech pause_turn pokračování.
+  // Tím zajistíme, že se sami korektně přerušíme s čitelnou hláškou dřív, než
+  // Vercel funkci zabije na maxDuration (= anonymní 504). Viz CLAUDE_TOTAL_BUDGET_MS.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), CLAUDE_TOTAL_BUDGET_MS);
 
-    if (stopReason !== 'pause_turn') break;
+  try {
+    for (let attempt = 0; attempt <= MAX_PAUSE_CONTINUATIONS; attempt++) {
+      try {
+        const res = await callClaude({ ...body, messages }, controller.signal);
+        stopReason = res.stop_reason ?? null;
+        finalText = extractText(res);
+        if (finalText) combinedText += (combinedText ? '\n' : '') + finalText;
 
-    // Obnov pozastavený turn — vrať asistentův dosavadní obsah a pokračuj.
-    messages.push({ role: 'assistant', content: res.content });
+        if (stopReason !== 'pause_turn') break;
+
+        // Obnov pozastavený turn — vrať asistentův dosavadní obsah a pokračuj.
+        messages.push({ role: 'assistant', content: res.content });
+      } catch (err) {
+        // Vypršel-li sdílený deadline AŽ POTÉ, co už máme nasbíraný nějaký
+        // obsah z dřívějších turnů, nepadej tvrdě — vrať částečný výstup a nech
+        // salvage v runScan vytvořit aspoň neúplný posudek. Bez obsahu propaguj
+        // TIMEOUT dál (route ho zmapuje na čitelnou 504 hlášku).
+        const isTimeout = err instanceof Error && err.message === TIMEOUT_MESSAGE;
+        if (isTimeout && combinedText.trim()) break;
+        throw err;
+      }
+    }
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   return { finalText, combinedText, stopReason };

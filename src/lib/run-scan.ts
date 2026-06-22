@@ -25,14 +25,18 @@ const TIER_CONFIGS: Record<
 > = {
   quick:    { max_tokens: 2500,  max_search: 9,  max_fetch: 0,  effort: 'low'    },
   standard: { max_tokens: 4500,  max_search: 9,  max_fetch: 0,  effort: 'medium' },
-  // Detailní a expertní posudek je dlouhý — dřív se ořezával na max_tokens
-  // a výsledný JSON nešel naparsovat. Díky streamingu (viz callClaude) můžeme
-  // dát štědrý strop, aby se kompletní markdown vždy vešel. Lokálně bez limitu;
-  // na Vercel Free se delší běh přeruší časovým limitem (řešeno hláškou).
-  // Expert/detailed mají vyšší max_search a navíc web_fetch — sběr přesných dat
-  // z konkrétních inzerátů je největší pákou přesnosti (viz valuation.ts).
-  detailed: { max_tokens: 16000, max_search: 12, max_fetch: 8,  effort: 'high'   },
-  expert:   { max_tokens: 24000, max_search: 18, max_fetch: 12, effort: 'xhigh'  },
+  // Detailní a expertní posudek je dlouhý — díky streamingu (viz callClaude)
+  // můžeme dát štědřejší max_tokens, aby se markdown vešel.
+  //
+  // CENA vs. PŘESNOST (cíl ≤ $1,50/běh): přesnost NACENĚNÍ stojí na počtu a
+  // kvalitě nalezených inzerátů (comps) — ty pak server robustně zprůměruje ve
+  // valuation.ts. Proto investujeme do POČTU HLEDÁNÍ (víc comps = stabilnější
+  // medián), ale vyhýbáme se drahým pákám, které dřív vyhnaly cenu na ~$10:
+  //   - max_fetch = 0  (stahování celých stránek + jejich resend při pause_turn
+  //                     byl hlavní viník; cenu/rok/nájezd vezmeme z náhledu hledání)
+  //   - effort = 'low' (cenu počítá server, ne model — hluboké uvažování netřeba)
+  detailed: { max_tokens: 12000, max_search: 10, max_fetch: 0, effort: 'low' },
+  expert:   { max_tokens: 16000, max_search: 15, max_fetch: 0, effort: 'low' },
 };
 
 interface AnthropicContent {
@@ -125,13 +129,13 @@ function salvageTruncatedJson(text: string): Record<string, unknown> | null {
  * operaci a nastavíme ho těsně pod route `maxDuration` (= 120 s na Vercelu),
  * abychom se sami korektně přerušili s čitelnou hláškou dřív než Vercel.
  *
- * Vercel:      790 s — pod maxDuration 800 s, rezerva na serializaci odpovědi.
- * Lokální dev: 800 s — žádný serverový limit, dáme dostatek prostoru.
+ * Vercel:      290 s — pod maxDuration 300 s, rezerva na serializaci odpovědi.
+ * Lokální dev: 300 s — žádný serverový limit, dáme dostatek prostoru.
  *
- * Pozn.: musí zůstat v souladu s `maxDuration` v route.ts (= 800 s, vyžaduje
- * Fluid Compute). Pokud se maxDuration změní, uprav i tuhle hodnotu (~10 s rezerva).
+ * Pozn.: musí zůstat v souladu s `maxDuration` v route.ts (= 300 s). Pokud se
+ * maxDuration změní, uprav i tuhle hodnotu (a nech ~10 s rezervu).
  */
-const CLAUDE_TOTAL_BUDGET_MS = process.env.VERCEL ? 790_000 : 800_000;
+const CLAUDE_TOTAL_BUDGET_MS = process.env.VERCEL ? 290_000 : 300_000;
 
 const TIMEOUT_MESSAGE =
   'TIMEOUT: Posudek trval příliš dlouho. ' +
@@ -289,7 +293,7 @@ async function parseSSEStream(
  * Detailní/expertní tier (7–9 searchů) na pause_turn naráží téměř vždy, proto
  * dříve selhával — zatímco rychlý/standardní (3–6) se obvykle vešel do limitu.
  */
-const MAX_PAUSE_CONTINUATIONS = 8;
+const MAX_PAUSE_CONTINUATIONS = 5;
 
 async function callClaudeUntilDone(
   body: { messages: Array<{ role: string; content: unknown }> }
@@ -446,7 +450,7 @@ function buildOutputSpec(tier: string): string {
   if (tier === 'detailed') {
     return `Vrať VÝHRADNĚ validní JSON objekt. Toto je PLACENÝ DETAILNÍ POSUDEK — uživatel za něj platí výrazně víc než za rychlou cenu, takže markdownText MUSÍ obsahovat VŠECHNY následující sekce v plné délce. NEZKRACUJ. Pokud něco neznáš, otevřeně to napiš ("nelze dohledat z dostupných zdrojů"), ale sekci nevynechej.
 
-DŮLEŽITÉ: K nalezeným inzerátům použij web_fetch a OTEVŘI je, ať máš PŘESNOU cenu, nájezd, výkon a převodovku (ne jen odhad z útržku hledání). Tato data vrať i strojově v poli "comparables" — z nich se serverově počítá výsledná cena.
+DŮLEŽITÉ: Z výsledků hledání (Sauto/TipCars/AutoScout v náhledu ukazují cenu, rok i nájezd) vytěž co nejvíc konkrétních inzerátů a jejich přesná data vrať STROJOVĚ v poli "comparables" — z nich se serverově počítá výsledná cena. Čím víc relevantních inzerátů, tím přesnější odhad.
 
 {
   "averagePrice": <CZK — tvůj nejlepší odhad; server ho ověří/přepočítá z comparables>,
@@ -465,8 +469,8 @@ DŮLEŽITÉ: K nalezeným inzerátům použij web_fetch a OTEVŘI je, ať máš 
 
 POSTUP (důležité pro přesnost):
 1. Pokud je zadán VIN, NEJDŘÍV ho dekóduj (země výroby, modelový rok, motor, výbava) a použij pro přesné párování inzerátů.
-2. Najdi inzeráty přes web_search a ty nejrelevantnější OTEVŘI přes web_fetch, ať máš PŘESNOU cenu, nájezd, výkon, převodovku a výbavu (ne odhad z útržku).
-3. Tato přesná data vrať i strojově v poli "comparables" — z nich se serverově počítá výsledná cena (robustní medián s korekcí na nájezd/stáří). Čím víc kvalitních inzerátů, tím přesnější odhad.
+2. Důkladně prohledej inzertní portály a nasbírej co NEJVÍC relevantních inzerátů stejného modelu/generace. Z náhledu výsledků hledání vytěž cenu, rok, nájezd, převodovku a palivo.
+3. Tato data vrať STROJOVĚ v poli "comparables" — z nich se serverově počítá výsledná cena (robustní medián s korekcí na nájezd/stáří). Čím víc kvalitních inzerátů (ideálně 12+), tím přesnější odhad — raději více inzerátů než hloubková analýza jednoho.
 
 {
   "averagePrice": <CZK — tvůj nejlepší odhad; server ho ověří/přepočítá z comparables>,

@@ -449,8 +449,8 @@
     var TIER_PROGRESS = {
         quick:    { est: 22,  label: 'Rychlý odhad' },
         standard: { est: 40,  label: 'Standardní analýza' },
-        detailed: { est: 240, label: 'Detailní posudek' },
-        expert:   { est: 420, label: 'Expertní posudek' }
+        detailed: { est: 90,  label: 'Detailní posudek' },
+        expert:   { est: 130, label: 'Expertní posudek' }
     };
 
     function startProgress(tier, scope) {
@@ -470,7 +470,7 @@
 
         var slow = (tier === 'detailed' || tier === 'expert');
         var hint = slow
-            ? 'Hloubková analýza může trvat několik minut (model otevírá a porovnává inzeráty). Nechte prosím okno otevřené.'
+            ? 'Hloubková analýza obvykle trvá do ~2 minut (model prohledává a porovnává inzeráty). Nechte prosím okno otevřené.'
             : 'Obvykle do ' + cfg.est + ' s.';
 
         resultContent.innerHTML =

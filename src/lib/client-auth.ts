@@ -1,51 +1,36 @@
 'use client';
 
 import type { User } from '@supabase/supabase-js';
-import { useEffect, useMemo, useState } from 'react';
-import { APP_SESSION_EVENT, getAppSession } from '@/lib/app-session';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
 
 export type ClientRole = 'guest' | 'person' | 'dealer';
 
-type SupabaseIdentity = {
-  role: ClientRole;
-  email: string | null;
-  fullName: string | null;
-  companyName: string | null;
-};
-
 type ClientAuthState = {
   ready: boolean;
   role: ClientRole;
-  isSupabaseAuthenticated: boolean;
+  isAuthenticated: boolean;
   isAdmin: boolean;
   email: string | null;
   fullName: string | null;
   companyName: string | null;
 };
 
-const DEFAULT_IDENTITY: SupabaseIdentity = {
+const DEFAULT_STATE: Omit<ClientAuthState, 'ready' | 'isAdmin'> = {
   role: 'guest',
+  isAuthenticated: false,
   email: null,
   fullName: null,
   companyName: null,
 };
 
-function getLegacyRole(): ClientRole {
-  const role = getAppSession().role;
-  return role === 'dealer' || role === 'person' ? role : 'guest';
-}
-
-function resolveSupabaseIdentity(user: User | null | undefined): SupabaseIdentity {
-  if (!user) {
-    return DEFAULT_IDENTITY;
-  }
-
+function resolveIdentity(user: User | null | undefined): Omit<ClientAuthState, 'ready' | 'isAdmin'> {
+  if (!user) return DEFAULT_STATE;
   const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
-
   return {
     role: metadata.account_type === 'dealer' ? 'dealer' : 'person',
+    isAuthenticated: true,
     email: user.email ?? null,
     fullName:
       typeof metadata.full_name === 'string'
@@ -57,9 +42,12 @@ function resolveSupabaseIdentity(user: User | null | undefined): SupabaseIdentit
   };
 }
 
+/**
+ * Stav přihlášení na klientovi. Jediný zdroj pravdy je Supabase session
+ * (+ admin cookie ověřená serverem). Žádný lokální „demo“ režim.
+ */
 export function useClientAuthState(): ClientAuthState {
-  const [legacyRole, setLegacyRole] = useState<ClientRole>(() => getLegacyRole());
-  const [supabaseIdentity, setSupabaseIdentity] = useState<SupabaseIdentity>(DEFAULT_IDENTITY);
+  const [identity, setIdentity] = useState(DEFAULT_STATE);
   const [isAdmin, setIsAdmin] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -76,97 +64,41 @@ export function useClientAuthState(): ClientAuthState {
         setIsAdmin(Boolean(json.admin));
       } catch {
         if (active) setIsAdmin(false);
-      } finally {
-        if (active) setReady(true);
       }
     }
-
     void syncAdminStatus();
-
-    function syncLegacyRole() {
-      if (!active) {
-        return;
-      }
-
-      const nextRole = getLegacyRole();
-      setLegacyRole(nextRole);
-      if (nextRole !== 'guest') {
-        setReady(true);
-      }
-    }
-
-    syncLegacyRole();
-    window.addEventListener(APP_SESSION_EVENT, syncLegacyRole);
-    window.addEventListener('storage', syncLegacyRole);
 
     if (!hasSupabaseEnv()) {
       setReady(true);
-      return () => {
-        active = false;
-        window.removeEventListener(APP_SESSION_EVENT, syncLegacyRole);
-        window.removeEventListener('storage', syncLegacyRole);
-      };
+      return () => { active = false; };
     }
 
     const supabase = createClient();
 
-    async function syncSupabaseUser() {
+    async function syncUser() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!active) {
-          return;
-        }
-
-        setSupabaseIdentity(resolveSupabaseIdentity(user));
+        if (!active) return;
+        setIdentity(resolveIdentity(user));
       } catch {
-        if (!active) {
-          return;
-        }
-
-        setSupabaseIdentity(DEFAULT_IDENTITY);
+        if (active) setIdentity(DEFAULT_STATE);
       } finally {
-        if (active) {
-          setReady(true);
-        }
+        if (active) setReady(true);
       }
     }
+    void syncUser();
 
-    void syncSupabaseUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) {
-        return;
-      }
-
-      setSupabaseIdentity(resolveSupabaseIdentity(session?.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setIdentity(resolveIdentity(session?.user));
       setReady(true);
     });
 
     return () => {
       active = false;
       subscription.unsubscribe();
-      window.removeEventListener(APP_SESSION_EVENT, syncLegacyRole);
-      window.removeEventListener('storage', syncLegacyRole);
     };
   }, []);
 
-  const role = useMemo<ClientRole>(() => {
-    if (legacyRole !== 'guest') {
-      return legacyRole;
-    }
-
-    return supabaseIdentity.role;
-  }, [legacyRole, supabaseIdentity.role]);
-
-  return {
-    ready,
-    role,
-    isSupabaseAuthenticated: supabaseIdentity.role !== 'guest',
-    isAdmin,
-    email: supabaseIdentity.email,
-    fullName: supabaseIdentity.fullName,
-    companyName: supabaseIdentity.companyName,
-  };
+  return { ready, isAdmin, ...identity };
 }

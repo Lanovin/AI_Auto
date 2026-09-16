@@ -1,5 +1,6 @@
 import LegalPage, { LegalSection } from '@/components/legal/LegalPage';
 
+export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Zdroje dat a metodika',
   description: 'Jak Cargent získává tržní data, jak vzniká ocenění a jak respektujeme práva inzertních portálů.',

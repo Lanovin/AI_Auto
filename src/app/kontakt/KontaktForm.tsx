@@ -12,6 +12,7 @@ export default function KontaktForm() {
     email: '',
     typ: 'soukromy',
     zprava: '',
+    web: '',
   });
 
   function update(field: keyof typeof form, value: string) {
@@ -32,6 +33,7 @@ export default function KontaktForm() {
           email: form.email,
           zprava: form.zprava,
           typ: form.typ === 'autobazar' ? 'Autobazar' : 'Soukromá osoba',
+          web: form.web,
         }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
@@ -48,10 +50,7 @@ export default function KontaktForm() {
   if (status === 'success') {
     return (
       <div className="rounded-lg border border-emerald/20 bg-emerald/5 p-8 text-center">
-        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald/10 text-2xl text-emerald">
-          ✓
-        </div>
-        <h2 className="cargent-h3 mt-4 text-[20px]">Zpráva odeslána</h2>
+        <h2 className="cargent-h3 text-[20px]">Zpráva odeslána</h2>
         <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
           Děkujeme za zprávu. Ozveme se vám do 24 hodin v pracovní dny.
         </p>
@@ -60,7 +59,7 @@ export default function KontaktForm() {
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-5" noValidate>
+    <form onSubmit={(e) => void handleSubmit(e)} className="relative space-y-5" noValidate>
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="jmeno" className="text-[13px] font-medium text-ink">
@@ -138,6 +137,12 @@ export default function KontaktForm() {
           placeholder="Popište váš dotaz nebo záměr…"
           className="resize-none rounded-lg border border-line bg-white px-4 py-3 text-[14px] text-ink placeholder:text-ink/30 focus:border-brass focus:outline-none focus:ring-2 focus:ring-brass/20"
         />
+      </div>
+
+      {/* Honeypot — skryté pole, které lidé nevyplní */}
+      <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+        <label htmlFor="web">Web</label>
+        <input id="web" name="web" type="text" tabIndex={-1} autoComplete="off" value={form.web} onChange={(e) => update('web', e.target.value)} />
       </div>
 
       {status === 'error' ? (

@@ -47,7 +47,7 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
 
   if (history.length === 0) {
     return (
-      <div className="mt-5 rounded-lg border border-dashed border-line-2 bg-paper-2 p-5">
+      <div className="mt-4 rounded-md border border-dashed border-line-2 p-5">
         <p className="text-[15px] leading-relaxed text-ink-soft">
           Zatím tu není žádné ocenění. Začněte na{' '}
           <Link
@@ -56,7 +56,7 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
           >
             odhadu ceny
           </Link>
-          {' '}a účet začne dávat smysl i v historii.
+          {'.'}
         </p>
       </div>
     );
@@ -95,7 +95,7 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
                 </p>
                 <p className="mt-1 text-[12px] text-dim">
                   {TIER_LABELS[scan.tier] ?? scan.tier} · {date}
-                  {scan.tokens_spent > 0 && ` · ${scan.tokens_spent} T`}
+                  {scan.tokens_spent > 0 && ` · ${scan.tokens_spent} tokenů`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">

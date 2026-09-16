@@ -1,93 +1,60 @@
-# 🚗 AutoCeny – Odhad ceny ojetých automobilů
+# Cargent — ocenění ojetých vozů z reálných inzerátů
 
-Webová aplikace pro profesionální odhad ceny ojetých automobilů. Kombinuje Next.js obal s legacy HTML/JS nástroji a používá **Anthropic Claude** přes serverový proxy endpoint pro vyhledání aktuálních inzerátů a tržního kontextu.
+Next.js 15 aplikace pro odhad tržní ceny ojetého auta. Claude s web search
+prohledá inzertní portály, server z nalezených inzerátů spočítá vážený medián
+(korekce na nájezd, stáří, převodovku; vyřazení odlehlých) a vrátí cenu
+s pásmem, výkupní cenou a odkazy na zdroje.
 
----
+## Jak to funguje
 
-## 📋 Jak to funguje
+1. Uživatel zadá auto na `/odhad-ceny` (přihlášený účet, platí se tokeny).
+2. `POST /api/price-estimator` odečte tokeny, spustí `runScan()` (Claude Sonnet 5,
+   expertní tier Opus 5) a z pole `comparables` spočítá cenu (`src/lib/valuation.ts`).
+3. Při chybě skenu se tokeny automaticky vrátí (refund přes service-role klíč).
+4. Výsledek se uloží do historie účtu a do sdílené cache (Neon).
 
-1. Vyplníte formulář s parametry vozu (značka, model, rok, km, stav, výbava…)
-2. Kliknete na **Odhadnout cenu**
-3. Aplikace zavolá Claude API, která prohledá internet a najde srovnatelné inzeráty
-4. Zobrazí se detailní cenová analýza s doporučenou prodejní i nákupní cenou
+## Spuštění
 
----
-
-## 🔑 Jak nastavit Anthropic API klíč
-
-1. Přejděte na [console.anthropic.com](https://console.anthropic.com/)
-2. Zaregistrujte se nebo se přihlaste
-3. V sekci **API Keys** vytvořte nový klíč
-4. Klíč začíná `sk-ant-...`
-5. Uložte ho do souboru `.env.local` jako `ANTHROPIC_API_KEY=...`
-
-> **Poznámka:** Klíč se čte pouze na serveru. Uživatelské rozhraní už neobsahuje pole pro ruční zadávání API klíče.
-
----
-
-## 🚀 Jak spustit
-
-### Varianta 1 – Next.js aplikace
 ```bash
 npm install
+cp .env.example .env.local   # doplňte klíče
 npm run dev
 ```
 
-Pak otevřete `http://localhost:3000`.
+Databáze: spusťte SQL z `supabase/migrations/` (v pořadí) v Supabase SQL editoru
+a `neon/migrations/` v Neon Console.
 
-### Varianta 2 – Legacy HTML přes Live Server
-1. Nainstalujte rozšíření [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
-2. Otevřete složku `car-price-estimator` ve VS Code
-3. Klikněte pravým tlačítkem na `index.html` → **Open with Live Server**
+## Klíčové soubory
 
-### Varianta 3 – Libovolný statický server
-```bash
-# Python
-python -m http.server 8000
-
-# Node.js (npx)
-npx serve .
-```
-
----
-
-## 🔒 Nastavení API klíče
-
-API klíč se načítá **centrálně na serveru** ze souboru `.env.local`. Browserové nástroje komunikují s interní route `/api/anthropic`, takže už není potřeba ani možné zadávat klíč ručně do UI.
-
-Použijte `.env.example` jako vzor a vytvořte si lokální `.env.local` s proměnnou `ANTHROPIC_API_KEY`.
-
----
-
-## 📁 Popis souborů
-
-| Soubor | Popis |
+| Cesta | Co dělá |
 |---|---|
-| `src/app` | Next.js App Router stránky, wrappery a API route |
-| `style.css` | Sdílené styly pro legacy HTML nástroje v iframe |
-| `app.js` | Logika legacy ocenění auta a napojení na serverový proxy helper |
-| `shared.js` | Sdílené utility pro data vozu, garáž, nastavení a Anthropic gateway |
-| `.env.example` | Vzorový soubor s proměnnou prostředí pro API klíč |
-| `README.md` | Tento soubor |
+| `src/lib/run-scan.ts` | Prompty, volání Claude (streaming, pause_turn), sanitizace |
+| `src/lib/valuation.ts` | Serverový výpočet ceny z inzerátů |
+| `src/app/api/price-estimator/route.ts` | Účtování tokenů → sken → refund při selhání |
+| `src/lib/tokens.ts` | Ceník akcí v tokenech, popis úrovní ocenění |
+| `src/lib/stripe/config.ts` | Balíčky tokenů a předplatné |
+| `src/app/api/stripe/webhook/route.ts` | Připsání tokenů po platbě (idempotentní) |
+| `src/components/estimator/` | Formulář ocenění a výsledek |
+| `src/components/landing/` | Úvodní stránka |
+| `src/lib/content/registry.ts` | Editovatelné texty (admin CMS `/admin`) |
 
----
+Legacy nástroje pro autobazary (popisky, monitoring, skaut, firemní profil)
+běží jako HTML v iframe (`*.html`, `shared.js`) přes `/legacy/*`.
 
-## ⚙️ Technické detaily
+## Nastavení služeb
 
-- **Interní API endpoint:** `/api/anthropic`
-- **Upstream endpoint:** `https://api.anthropic.com/v1/messages`
-- **Nástroj:** `web_search_20250305` pro živé vyhledávání trhu
-- **Architektura:** Next.js wrapper + legacy HTML/JS nástroje
-- **API klíč:** pouze server-side přes `ANTHROPIC_API_KEY`
+Kompletní checklist pro ostrý provoz (účty, klíče, migrace, Stripe webhook,
+DNS, kontrola po nasazení) je v **[DEPLOY.md](DEPLOY.md)**. Stručně:
 
----
-
-## 📊 Výstup analýzy obsahuje
-
-- **Doporučená prodejní cena** s rozsahem min–max
-- **Nákupní cena pro autobazar**
-- Zdůvodnění ceny na základě tržní situace
-- Faktory ovlivňující cenu (pozitivní / negativní)
-- **3–5 reálných srovnávacích inzerátů** z internetu
-- Doporučení pro autobazar (prezentace, opravy, doba prodeje)
-- Rizika a typické problémy daného modelu
+- **Supabase** — spustit `supabase/migrations/*.sql` v pořadí, včetně
+  `0010_harden_security.sql` (bez něj si uživatel může přes veřejný klíč sám
+  přičíst tokeny). Google přihlášení: Authentication → Providers → Google;
+  do Redirect URLs přidat `https://<doména>/auth/callback`.
+- **Neon** — spustit `neon/migrations/*.sql` (cache skenů, cenové statistiky).
+- **Stripe** — vytvořit produkty (viz `.env.example`), webhook na
+  `/api/stripe/webhook` s událostmi `checkout.session.completed`,
+  `checkout.session.async_payment_succeeded`, `invoice.payment_succeeded`,
+  `customer.subscription.updated/deleted`.
+- **Kontaktní formulář** — Resend API klíč v `RESEND_API_KEY` + ověřená doména.
+- **Admin** — `ADMIN_PASSWORD` min. 10 znaků; v produkci se slabým heslem je
+  administrace vypnutá.

@@ -443,8 +443,8 @@
 
     // ---- App-token pricing (admin-editable; mirrors src/lib/tokens.ts) ----
     var APP_TOKEN_COSTS = {
-        'estimator:quick': 4, 'estimator:standard': 8, 'estimator:detailed': 12,
-        'estimator:expert': 20, 'scout:search': 6, 'monitor:scan': 2, 'popisky:generate': 4
+        'estimator:quick': 2, 'estimator:standard': 6, 'estimator:detailed': 10,
+        'estimator:expert': 14, 'scout:search': 6, 'monitor:scan': 2, 'popisky:generate': 4
     };
     var pricingLoaded = fetch('/api/tokens/pricing')
         .then(function (res) { return res.ok ? res.json() : null; })
@@ -456,25 +456,16 @@
         })
         .catch(function () { return APP_TOKEN_COSTS; });
 
-    // Deduct from the localStorage wallet — fallback for users who are not
-    // signed in to Supabase (server then reports x-autoai-tokens-deducted: 0).
-    function deductLocalAppTokens(cost) {
-        if (!cost || cost <= 0) return;
-        try {
-            var raw = localStorage.getItem('autoai_credits_v1');
-            var wallet = raw ? JSON.parse(raw) : { balance: 100 };
-            wallet.balance = Math.max(0, (wallet.balance || 0) - cost);
-            localStorage.setItem('autoai_credits_v1', JSON.stringify(wallet));
-            try { window.parent.dispatchEvent(new CustomEvent('autoai:credits-changed')); } catch (e) {}
-            try { window.dispatchEvent(new CustomEvent('autoai:credits-changed')); } catch (e) {}
-        } catch (e) { /* ignore storage errors */ }
+    function notifyCreditsChanged() {
+        try { window.parent.dispatchEvent(new CustomEvent('autoai:credits-changed')); } catch (e) {}
+        try { window.dispatchEvent(new CustomEvent('autoai:credits-changed')); } catch (e) {}
     }
 
     var AnthropicGateway = {
         /**
          * @param requestBody Anthropic Messages API payload
-         * @param feature volitelný billing klíč (např. 'popisky:generate') —
-         *   server odečte tokeny přihlášeným, nepřihlášeným se odečte lokálně.
+         * @param feature billing klíč (např. 'popisky:generate') — server odečte
+         *   tokeny z účtu; bez přihlášení proxy vrací 401.
          */
         call: async function (requestBody, feature) {
             var payload = Object.assign({}, requestBody || {});
@@ -489,20 +480,16 @@
             if (!response.ok) {
                 var err = {};
                 try { err = await response.json(); } catch (e) { /* ignore */ }
-                throw new Error('API chyba ' + response.status + ': ' + (((err.error && err.error.message) || err.message) || response.statusText));
+                var message = ((err.error && err.error.message) || err.message) || response.statusText;
+                if (response.status === 401) message = 'Pro použití nástroje se přihlaste (otevřete /prihlaseni).';
+                if (response.status === 402) message = message + ' Kredit dobijete v ceníku (/cenik).';
+                throw new Error(message);
             }
 
-            // Server billed 0 → not signed in → bill the local wallet instead.
-            if (feature && response.headers.get('x-autoai-tokens-deducted') === '0') {
-                pricingLoaded.then(function (costs) {
-                    deductLocalAppTokens(costs[feature] || 0);
-                });
-            }
-
+            notifyCreditsChanged();
             return response.json();
         },
-        getPricing: function () { return pricingLoaded; },
-        deductLocalAppTokens: deductLocalAppTokens
+        getPricing: function () { return pricingLoaded; }
     };
 
     window.TokenTracker = TokenTracker;

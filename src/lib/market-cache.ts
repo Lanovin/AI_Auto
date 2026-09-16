@@ -3,6 +3,20 @@ import { generateSignature, type CarInput } from './car-signature';
 
 export type { CarInput };
 
+export interface ScanValuationMeta {
+  /** Orientační výkupní cena pro autobazar. */
+  dealerBuyPrice: number;
+  /** 0–1 spolehlivost výpočtu (počet + podobnost + rozptyl inzerátů). */
+  confidence: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  /** Počet inzerátů použitých ve výpočtu (po vyřazení odlehlých). */
+  nComps: number;
+  /** true = headline číslo pochází ze serverové statistiky nad inzeráty. */
+  computed: boolean;
+}
+
 export interface ScanData {
   averagePrice: number;
   minPrice: number;
@@ -12,6 +26,9 @@ export interface ScanData {
   modelInput: Record<string, unknown>;
   summary?: string;
   markdownText?: string;
+  valuation?: ScanValuationMeta;
+  /** ID modelu, který sken provedl (pro audit/ladění). */
+  model?: string;
 }
 
 export interface ScanResult {

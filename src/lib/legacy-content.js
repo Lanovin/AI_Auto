@@ -2,7 +2,6 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 
 const pageMap = {
-  ceny: 'ceny.html',
   popisky: 'popisky.html',
   monitoring: 'market-monitor.html',
   profil: 'profil.html',
@@ -10,7 +9,6 @@ const pageMap = {
 };
 
 const assetMap = {
-  'app.js': { fileName: 'app.js', contentType: 'application/javascript; charset=utf-8' },
   'popisky.js': { fileName: 'popisky.js', contentType: 'application/javascript; charset=utf-8' },
   'shared.js': { fileName: 'shared.js', contentType: 'application/javascript; charset=utf-8' },
   'style.css': { fileName: 'style.css', contentType: 'text/css; charset=utf-8' }
@@ -28,7 +26,6 @@ const routeReplacements = [
 const assetReplacements = [
   ['href="style.css"', 'href="/legacy-assets/style.css"'],
   ['src="shared.js"', 'src="/legacy-assets/shared.js"'],
-  ['src="app.js"', 'src="/legacy-assets/app.js"'],
   ['src="popisky.js"', 'src="/legacy-assets/popisky.js"']
 ];
 
@@ -38,6 +35,8 @@ function getWorkspacePath(fileName) {
 
 function rewriteLegacyHtml(html) {
   let nextHtml = html.replace(/<nav class="site-nav">[\s\S]*?<\/nav>/, '');
+  // Legacy patička je v rámci iframe navíc — hlavní web má vlastní.
+  nextHtml = nextHtml.replace(/<footer class="site-footer">[\s\S]*?<\/footer>/, '');
 
   assetReplacements.forEach(([from, to]) => {
     nextHtml = nextHtml.split(from).join(to);

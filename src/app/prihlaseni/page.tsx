@@ -28,15 +28,19 @@ function LoginForm() {
     requestedNext !== '/registrace'
       ? requestedNext
       : '/dashboard';
-  const confirmationError = searchParams.get('error') === 'confirmation';
+  const urlError = searchParams.get('error');
+  const initialError =
+    urlError === 'confirmation'
+      ? 'Potvrzení e-mailu se nezdařilo — odkaz mohl vypršet. Zkuste se přihlásit, nebo se zaregistrujte znovu.'
+      : urlError === 'oauth'
+        ? 'Přihlášení přes Google se nezdařilo. Zkuste to znovu, nebo použijte e-mail a heslo.'
+        : urlError === 'reset'
+          ? 'Odkaz na obnovu hesla už není platný. Nechte si poslat nový.'
+          : null;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(
-    confirmationError
-      ? 'Potvrzení e-mailu se nezdařilo. Zkuste se přihlásit nebo požádat o nový odkaz.'
-      : null,
-  );
+  const [error, setError] = useState<string | null>(initialError);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -53,14 +57,20 @@ function LoginForm() {
   }, [destination]);
 
   async function handleGoogleSignIn() {
+    setError(null);
     setGoogleLoading(true);
     const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
+        queryParams: { access_type: 'offline', prompt: 'select_account' },
       },
     });
+    if (error) {
+      setGoogleLoading(false);
+      setError('Přihlášení přes Google není dostupné. Zkontrolujte nastavení Google provideru v Supabase.');
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -102,7 +112,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-paper px-5 py-12">
+    <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-paper px-5 py-12" id="main">
       <div className="w-full max-w-[400px]">
 
         {/* Logo */}
@@ -172,9 +182,14 @@ function LoginForm() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-medium text-ink-soft" htmlFor="password">
-                Heslo
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[13px] font-medium text-ink-soft" htmlFor="password">
+                  Heslo
+                </label>
+                <Link href="/zapomenute-heslo" className="cargent-link text-[12px] text-dim hover:text-ink">
+                  Zapomenuté heslo?
+                </Link>
+              </div>
               <input
                 autoComplete="current-password"
                 id="password"

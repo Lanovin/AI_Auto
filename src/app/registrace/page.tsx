@@ -12,7 +12,7 @@ const ACCOUNT_CONFIG = {
   person: {
     label: 'Jsem člověk',
     badge: 'Osobní účet',
-    tooltip: 'Soukromý účet pro jednotlivce. Získáte historii ocenění, skauta nabídek a startovací kredit v tokenech.',
+    tooltip: 'Účet pro jednotlivce — historie ocenění, kredit a skaut nabídek.',
     detailLabel: 'Jméno a příjmení',
     detailPlaceholder: 'Např. Jan Novák',
     autoComplete: 'name',
@@ -22,13 +22,13 @@ const ACCOUNT_CONFIG = {
     nextSteps: [
       'Otevřete potvrzovací e-mail a klikněte na odkaz.',
       'Po potvrzení se přihlaste do Cargent.',
-      'V dashboardu uvidíte historii ocenění a startovací kredit.',
+      'V účtu dobijete kredit a spustíte první ocenění.',
     ],
   },
   dealer: {
     label: 'Jsem bazar',
     badge: 'Firemní účet',
-    tooltip: 'Firemní účet pro autobazary. Obsahuje monitoring trhu, generátor popisků a B2B workflow pod jedním přihlášením.',
+    tooltip: 'Účet pro autobazary — navíc monitoring trhu, generátor popisků a import vozů z webu.',
     detailLabel: 'Název autobazaru',
     detailPlaceholder: 'Např. Auto Novák',
     autoComplete: 'organization',
@@ -130,12 +130,19 @@ function SignupForm() {
   async function handleGoogleSignIn() {
     setGoogleLoading(true);
     const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
+        // Typ účtu se u Google registrace předává přes metadata po prvním přihlášení
+        // (viz dashboard → „Typ účtu“); default je osobní účet.
+        queryParams: { prompt: 'select_account' },
       },
     });
+    if (error) {
+      setGoogleLoading(false);
+      setError('Registrace přes Google není dostupná. Zkuste e-mail a heslo.');
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {

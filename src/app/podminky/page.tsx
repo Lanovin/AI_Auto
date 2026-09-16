@@ -1,5 +1,6 @@
 import LegalPage, { LegalSection } from '@/components/legal/LegalPage';
 
+export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Obchodní podmínky',
   description: 'Obchodní podmínky služby Cargent — AI ocenění vozů.',

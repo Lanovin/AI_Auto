@@ -2,6 +2,7 @@ import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import KontaktForm from './KontaktForm';
 
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Kontakt' };
 
 export default function KontaktPage() {
@@ -41,7 +42,7 @@ export default function KontaktPage() {
                 {[
                   {
                     label: 'E-mail',
-                    value: 'ahoj@cargent.cz',
+                    value: 'info@cargent.cz',
                     note: 'Nejrychlejší způsob kontaktu',
                   },
                   {

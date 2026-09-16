@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Hanken_Grotesk, Inter, Spline_Sans_Mono } from 'next/font/google';
+import ChatWidget from '@/components/chat/ChatWidget';
 import './legacy.css';
 import './globals.css';
 
@@ -27,7 +28,12 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+// Veřejná URL: bez metadataBase by Next generoval relativní OG/canonical URL
+// a při buildu varoval. V produkci nastav NEXT_PUBLIC_APP_URL.
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.cargent.cz').replace(/\/$/, '');
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Cargent — AI oceňovací agent pro ojeté vozy',
     template: '%s | Cargent',
@@ -37,6 +43,14 @@ export const metadata: Metadata = {
   icons: {
     icon: '/logo_cargent.png',
     apple: '/logo_cargent.png',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'cs_CZ',
+    siteName: 'Cargent',
+    title: 'Cargent — ocenění ojetého vozu z reálných inzerátů',
+    description: 'Tržní cena s pásmem a odkazy na srovnatelné inzeráty. Čerstvá data v okamžiku dotazu.',
+    images: [{ url: '/logo_cargent.png', width: 512, height: 512, alt: 'Cargent' }],
   },
 };
 
@@ -63,6 +77,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
           Přeskočit na hlavní obsah
         </a>
         {children}
+        {/* David — pomocník v pravém dolním rohu (skrývá se na /admin a /legacy) */}
+        <ChatWidget />
       </body>
     </html>
   );

@@ -2,19 +2,10 @@ import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { type PlanKey } from '@/lib/stripe/config';
+import { PLANS, isPlanKey, type PlanKey } from '@/lib/stripe/config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-function isPlanKey(value: unknown): value is PlanKey {
-  return (
-    value === 'balicek_500' ||
-    value === 'balicek_1000' ||
-    value === 'balicek_2000' ||
-    value === 'balicek_5000'
-  );
-}
 
 interface ChargeMetadata {
   supabaseUserId: string | null;
@@ -28,28 +19,27 @@ function readMetadata(meta: Stripe.Metadata | null | undefined): ChargeMetadata 
     typeof raw.supabase_user_id === 'string' && raw.supabase_user_id ? raw.supabase_user_id : null;
   const planKey = isPlanKey(raw.plan_key) ? raw.plan_key : null;
   const bonusTokensRaw = Number(raw.bonus_tokens);
-  const bonusTokens = Number.isFinite(bonusTokensRaw) && bonusTokensRaw > 0 ? bonusTokensRaw : 0;
+  // Fallback na konfiguraci plánu — kdyby metadata chyběla / byla poškozená.
+  const bonusTokens =
+    Number.isFinite(bonusTokensRaw) && bonusTokensRaw > 0
+      ? bonusTokensRaw
+      : planKey ? PLANS[planKey].bonusTokens : 0;
   return { supabaseUserId, planKey, bonusTokens };
 }
 
 /**
- * Returns true if this event was already processed (idempotency guard).
- * Inserts the event ID on first call; returns false if table doesn't exist yet
- * so the webhook still works before the migration is run.
+ * Idempotence: vloží event_id. Vrací true, když už byl event zpracován.
+ * Při chybě handleru se řádek zase smaže (viz unmarkEvent), aby Stripe retry
+ * mohlo proběhnout — jinak by se tokeny při dočasném výpadku DB nikdy nepřipsaly.
  */
 async function markEventProcessed(eventId: string): Promise<boolean> {
   const admin = getSupabaseAdmin();
   if (!admin) return false;
 
   try {
-    const { error } = await admin
-      .from('stripe_webhook_events')
-      .insert({ event_id: eventId });
-
+    const { error } = await admin.from('stripe_webhook_events').insert({ event_id: eventId });
     if (error) {
-      // Unique constraint violation = duplicate event
-      if (error.code === '23505') return true;
-      // Table doesn't exist yet (migration not run) — log and continue
+      if (error.code === '23505') return true; // duplicate
       if (error.code === '42P01') {
         console.warn('[stripe/webhook] stripe_webhook_events table missing — run migration 0007');
         return false;
@@ -62,22 +52,22 @@ async function markEventProcessed(eventId: string): Promise<boolean> {
   }
 }
 
+async function unmarkEvent(eventId: string): Promise<void> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return;
+  await admin.from('stripe_webhook_events').delete().eq('event_id', eventId);
+}
+
 async function grantTokens(userId: string, amount: number): Promise<void> {
   if (amount <= 0) return;
   const admin = getSupabaseAdmin();
-  if (!admin) {
-    console.error('[stripe/webhook] Supabase admin not configured — cannot grant tokens.');
-    return;
-  }
+  if (!admin) throw new Error('Supabase admin not configured — cannot grant tokens.');
   const { error } = await admin.rpc('add_tokens', { p_user_id: userId, p_amount: amount });
-  if (error) console.error('[stripe/webhook] add_tokens RPC failed:', error.message);
+  if (error) throw new Error(`add_tokens RPC failed: ${error.message}`);
 }
 
-async function updateSubscriptionRow(
-  userId: string,
-  planKey: PlanKey,
-  subscription: Stripe.Subscription,
-): Promise<void> {
+/** Uloží stav předplatného na profil (sloupce dealer_subscription_* z migrace 0001_stripe). */
+async function updateSubscriptionRow(userId: string, subscription: Stripe.Subscription): Promise<void> {
   const admin = getSupabaseAdmin();
   if (!admin) return;
 
@@ -86,34 +76,23 @@ async function updateSubscriptionRow(
       ? new Date(subscription.current_period_end * 1000).toISOString()
       : null;
 
-  const update: Record<string, unknown> = {};
-  if (planKey === 'dealer' as string) {
-    update.dealer_subscription_id = subscription.id;
-    update.dealer_subscription_status = subscription.status;
-    update.dealer_subscription_until = periodEnd;
-  } else if (planKey === 'monitoring' as string) {
-    update.monitoring_subscription_id = subscription.id;
-    update.monitoring_subscription_status = subscription.status;
-    update.monitoring_subscription_until = periodEnd;
-  } else {
-    return;
-  }
-
-  const { error } = await admin.from('profiles').update(update).eq('id', userId);
-  if (error) console.error('[stripe/webhook] profiles update failed:', error.message);
+  const { error } = await admin
+    .from('profiles')
+    .update({
+      dealer_subscription_id: subscription.id,
+      dealer_subscription_status: subscription.status,
+      dealer_subscription_until: periodEnd,
+    })
+    .eq('id', userId);
+  if (error) throw new Error(`profiles update failed: ${error.message}`);
 }
 
-async function markSubscriptionCanceled(userId: string, planKey: PlanKey): Promise<void> {
+async function resolveUserIdByCustomer(customerId: string | null): Promise<string | null> {
+  if (!customerId) return null;
   const admin = getSupabaseAdmin();
-  if (!admin) return;
-
-  const update: Record<string, unknown> = {};
-  if (planKey === 'dealer' as string) update.dealer_subscription_status = 'canceled';
-  else if (planKey === 'monitoring' as string) update.monitoring_subscription_status = 'canceled';
-  else return;
-
-  const { error } = await admin.from('profiles').update(update).eq('id', userId);
-  if (error) console.error('[stripe/webhook] cancel update failed:', error.message);
+  if (!admin) return null;
+  const { data } = await admin.from('profiles').select('id').eq('stripe_customer_id', customerId).maybeSingle();
+  return (data as { id?: string } | null)?.id ?? null;
 }
 
 export async function POST(request: Request) {
@@ -139,41 +118,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
-  // Idempotency: skip already-processed events (Stripe can retry on 5xx)
   const alreadyProcessed = await markEventProcessed(event.id);
   if (alreadyProcessed) {
-    console.log('[stripe/webhook] duplicate event skipped:', event.id);
     return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      // async_payment_succeeded: platební metody s odloženým zúčtováním
+      // (bankovní převod apod.) — session.completed přijde s payment_status
+      // 'unpaid' a tokeny se připíší až tady. Idempotence hlídá stripe_webhook_events.
+      case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object as Stripe.Checkout.Session;
         const meta = readMetadata(session.metadata);
+        const userId = meta.supabaseUserId
+          ?? await resolveUserIdByCustomer(typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null);
 
-        if (!meta.supabaseUserId || !meta.planKey) {
+        if (!userId || !meta.planKey) {
           console.error('[stripe/webhook] checkout.session.completed missing metadata', session.id);
           break;
         }
 
-        await grantTokens(meta.supabaseUserId, meta.bonusTokens);
-
         if (session.mode === 'subscription' && session.subscription) {
+          // U předplatného připisuje tokeny invoice.payment_succeeded (první i další cykly)
+          // — tady jen uložíme stav, ať se nepřipíše dvakrát.
           const stripe = getStripe();
           const subscriptionId =
-            typeof session.subscription === 'string'
-              ? session.subscription
-              : session.subscription.id;
+            typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          await updateSubscriptionRow(meta.supabaseUserId, meta.planKey, subscription);
+          await updateSubscriptionRow(userId, subscription);
+          break;
+        }
+
+        if (session.payment_status === 'paid' || session.payment_status === 'no_payment_required') {
+          await grantTokens(userId, meta.bonusTokens);
         }
         break;
       }
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        if (invoice.billing_reason !== 'subscription_cycle') break;
         if (!invoice.subscription) break;
 
         const stripe = getStripe();
@@ -181,30 +166,27 @@ export async function POST(request: Request) {
           typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription.id;
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const meta = readMetadata(subscription.metadata);
+        const userId = meta.supabaseUserId
+          ?? await resolveUserIdByCustomer(typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null);
 
-        if (!meta.supabaseUserId || !meta.planKey) {
-          console.error('[stripe/webhook] renewal missing metadata', subscription.id);
+        if (!userId) {
+          console.error('[stripe/webhook] invoice.payment_succeeded: user not resolved', subscription.id);
           break;
         }
 
-        await grantTokens(meta.supabaseUserId, meta.bonusTokens);
-        await updateSubscriptionRow(meta.supabaseUserId, meta.planKey, subscription);
+        await grantTokens(userId, meta.bonusTokens || PLANS.predplatne.bonusTokens);
+        await updateSubscriptionRow(userId, subscription);
         break;
       }
 
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
-        const meta = readMetadata(subscription.metadata);
-        if (!meta.supabaseUserId || !meta.planKey) break;
-        await updateSubscriptionRow(meta.supabaseUserId, meta.planKey, subscription);
-        break;
-      }
-
+      case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         const meta = readMetadata(subscription.metadata);
-        if (!meta.supabaseUserId || !meta.planKey) break;
-        await markSubscriptionCanceled(meta.supabaseUserId, meta.planKey);
+        const userId = meta.supabaseUserId
+          ?? await resolveUserIdByCustomer(typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id ?? null);
+        if (!userId) break;
+        await updateSubscriptionRow(userId, subscription);
         break;
       }
 
@@ -212,7 +194,8 @@ export async function POST(request: Request) {
         break;
     }
   } catch (err) {
-    console.error('[stripe/webhook] handler error:', err);
+    console.error('[stripe/webhook] handler error (event will be retried):', err);
+    await unmarkEvent(event.id);
     return NextResponse.json({ received: false }, { status: 500 });
   }
 

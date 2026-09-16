@@ -1,5 +1,6 @@
 import ToolShell from '@/components/tool-shell';
 
+export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Skaut'
 };

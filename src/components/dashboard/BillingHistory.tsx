@@ -42,14 +42,11 @@ export default function BillingHistory() {
   }, []);
 
   return (
-    <section className="mt-6 rounded-xl border border-line bg-surface p-6" style={{ boxShadow: 'var(--shadow-cargent-card)' }}>
+    <section className="mt-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="cargent-mono text-[11px] uppercase tracking-[0.16em] text-brass">Platby</p>
-          <h2 className="cargent-h2 mt-2 text-[24px]">Historie plateb</h2>
-        </div>
+        <h2 className="text-[20px] font-bold tracking-tight text-ink">Historie plateb</h2>
         <a
-          href="/predplatne"
+          href="/cenik"
           className="cargent-link text-[14px] font-medium text-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"
         >
           Koupit tokeny →

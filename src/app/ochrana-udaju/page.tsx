@@ -1,5 +1,6 @@
 import LegalPage, { LegalSection } from '@/components/legal/LegalPage';
 
+export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Ochrana osobních údajů',
   description: 'Zásady zpracování osobních údajů služby Cargent (GDPR).',

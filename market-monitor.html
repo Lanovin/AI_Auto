@@ -933,7 +933,7 @@
             throw new Error('Centrální Anthropic vrstva není načtená.');
         }
 
-        var data = await window.AutoAIAnthropic.call(requestBody);
+        var data = await window.AutoAIAnthropic.call(requestBody, 'monitor:scan');
 
         if (typeof TokenTracker !== 'undefined') {
             TokenTracker.record('monitor', data);
@@ -1374,11 +1374,6 @@
         var data = await response.json();
 
         // Server odečetl 0 tokenů → nepřihlášený uživatel → odečti lokálně.
-        if (!data.tokensDeducted && window.AutoAIAnthropic) {
-            window.AutoAIAnthropic.getPricing().then(function (costs) {
-                window.AutoAIAnthropic.deductLocalAppTokens(costs['monitor:scan'] || 0);
-            });
-        }
 
         return {
             timestamp:   Date.now(),

@@ -6,7 +6,9 @@ Console → SQL Editor, v pořadí podle číselného prefixu — stejná konven
 
 | Skript | Co dělá |
 |---|---|
+| `0000_market_scans.sql` | Sdílená technická cache skenů (`market_scans`) — spustit jako první |
 | `0001_price_stats.sql` | Vlastní odvozená DB cenových statistik (`price_stats`) + index pro úklid `market_scans` |
 
-Pozn.: tabulka `market_scans` (sdílená cache skenů) byla vytvořena ručně před
-zavedením této složky; její definici dokumentuje `src/lib/market-cache.ts`.
+Bez `DATABASE_URL` aplikace funguje dál (cache i statistiky se jen přeskočí
+a do logu jde chyba) — ale každé ocenění pak platí plnou cenu za AI, i když
+stejné auto někdo ocenil před hodinou.

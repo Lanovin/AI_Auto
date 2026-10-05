@@ -6,7 +6,8 @@ Console → SQL Editor, v pořadí podle číselného prefixu — stejná konven
 
 | Skript | Co dělá |
 |---|---|
+| `0000_market_scans.sql` | Sdílená cache skenů `market_scans` (dokumentace ručně vytvořené tabulky + index) |
 | `0001_price_stats.sql` | Vlastní odvozená DB cenových statistik (`price_stats`) + index pro úklid `market_scans` |
 
-Pozn.: tabulka `market_scans` (sdílená cache skenů) byla vytvořena ručně před
-zavedením této složky; její definici dokumentuje `src/lib/market-cache.ts`.
+Pozn.: tabulka `market_scans` byla na produkci vytvořena ručně před zavedením
+této složky; `0000_market_scans.sql` ji zpětně dokumentuje; na produkci jen přidá index, pokud chybí.

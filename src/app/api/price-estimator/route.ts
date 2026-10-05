@@ -3,11 +3,11 @@ import { getScanOrFetch, saveScan } from '@/lib/market-cache';
 import { runScan } from '@/lib/run-scan';
 import { generateSignature, type CarInput } from '@/lib/car-signature';
 import { createHash } from 'node:crypto';
-import { checkTokenBalance, deductTokens } from '@/lib/tokens-server';
+import { chargeTokens, refundCharge } from '@/lib/tokens-server';
 import { type TokenFeature } from '@/lib/tokens';
 import { saveScanHistory } from '@/lib/supabase/user-data';
 import { getPriceStats, updatePriceStats } from '@/lib/price-stats';
-import { checkDailyScanCap } from '@/lib/rate-limit';
+import { ESTIMATOR_DAILY_LIMIT } from '@/lib/rate-limit';
 import { isAdminAuthenticated } from '@/lib/admin/auth';
 
 const TIER_FEATURE: Record<string, TokenFeature> = {
@@ -44,59 +44,28 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120; // Vercel Pro/Enterprise; Free tier is capped at 10 s
 
+/**
+ * Maps a scan failure to a user-facing message. Never exposes server
+ * configuration or raw upstream errors — those go to the server log.
+ */
 function mapApiError(err: unknown): { status: number; error: string } {
-  if (!(err instanceof Error)) {
-    return { status: 500, error: 'Interní chyba serveru. Zkuste to prosím znovu.' };
-  }
-
-  const message = err.message;
+  const message = err instanceof Error ? err.message : '';
 
   if (message.startsWith('TIMEOUT:')) {
     return {
       status: 504,
-      error:
-        'Posudek trval příliš dlouho a byl přerušen (server timeout). ' +
-        'Zkuste tier Standardní nebo Rychlý. Detailní a expertní posudky vyžadují Vercel Pro plán (60s limit). ' +
-        'Peníze za Anthropic API nebyly strhnuty — volání bylo přerušeno před dokončením.',
+      error: 'Posudek trval příliš dlouho a byl přerušen. Zkuste to znovu, případně zvolte rychlejší úroveň.',
     };
   }
 
-  if (message.includes('ANTHROPIC_API_KEY není nastaven na serveru.')) {
-    return {
-      status: 500,
-      error: 'Na serveru chybí ANTHROPIC_API_KEY. Nastavte ji ve Vercel Project Settings -> Environment Variables.',
-    };
-  }
-
-  if (message.includes('You have reached your specified API usage limits')) {
+  if (/^Anthropic API chyba (429|5\d\d)/.test(message)) {
     return {
       status: 503,
-      error: 'Anthropic API limit je vycerpany. Zkontrolujte billing a Usage limits v Anthropic Console.',
+      error: 'Oceňovací služba je teď přetížená. Zkuste to prosím za pár minut.',
     };
   }
 
-  if (message.startsWith('Anthropic API chyba 401')) {
-    return {
-      status: 502,
-      error: 'Serverovy ANTHROPIC_API_KEY je neplatny nebo expirovany.',
-    };
-  }
-
-  if (message.startsWith('Anthropic API chyba 429')) {
-    return {
-      status: 503,
-      error: 'Anthropic API je docasne rate-limited. Zkuste to znovu za chvili.',
-    };
-  }
-
-  if (/^Anthropic API chyba 5\d\d/.test(message)) {
-    return {
-      status: 503,
-      error: 'Anthropic API je docasne nedostupna. Zkuste to znovu pozdeji.',
-    };
-  }
-
-  return { status: 500, error: message };
+  return { status: 500, error: 'Ocenění se nepodařilo dokončit. Zkuste to prosím znovu.' };
 }
 
 /** Extracts the rich CarInput fields from the request body, coercing types. */
@@ -171,97 +140,81 @@ export async function POST(request: Request) {
     // přeskakuje denní limit i strhávání tokenů. Viz isAdminAuthenticated().
     const isAdmin = await isAdminAuthenticated();
 
-    // Denní limit skenů (právní pojistka proti hromadné extrakci — viz rate-limit.ts).
-    // Admina se netýká.
-    if (!isAdmin) {
-      const cap = await checkDailyScanCap();
-      if (!cap.ok) {
-        return NextResponse.json(
-          {
-            error: `Dosáhli jste denního limitu ocenění (${cap.limit} za 24 hodin). Zkuste to znovu později.`,
-          },
-          { status: 429, headers: { 'Retry-After': '3600' } }
-        );
-      }
-    }
-
     const actualTier = (tier && TIER_FEATURE[tier]) ? tier : 'standard';
     const actualScope = scope === 'international' ? 'international' : 'czech';
     const feature = TIER_FEATURE[actualTier];
 
-    // Přihlášení a zůstatek ověř PŘED skenem — dřív se drahé AI volání
-    // provedlo i nepřihlášeným a teprve pak se vrátila chyba 401/402
-    // (Anthropic kredit zaplacený za výsledek, který nikdo nezaplatil).
+    // Tokeny i denní limit (právní pojistka proti hromadné extrakci — viz
+    // rate-limit.ts) se strhnou atomicky PŘED skenem, takže paralelní
+    // požadavky nic neobejdou a Anthropic neplatíme za nezaplacené skeny.
+    // Pokud sken selže, tokeny se vrátí (refundCharge níže). Admin neplatí.
+    let usageId: number | null = null;
+    let tokensDeducted = 0;
     if (!isAdmin) {
-      const affordable = await checkTokenBalance(feature);
-      if (!affordable.ok) {
+      const charge = await chargeTokens(feature, ESTIMATOR_DAILY_LIMIT);
+      if (!charge.ok) {
         return NextResponse.json(
           {
-            error: affordable.status === 401
+            error: charge.status === 401
               ? 'Pro ocenění vozu se musíte přihlásit a mít předplacené tokeny.'
-              : affordable.reason,
+              : charge.reason,
           },
-          { status: affordable.status },
+          {
+            status: charge.status,
+            headers: charge.status === 429 ? { 'Retry-After': '3600' } : undefined,
+          },
         );
       }
+      usageId = charge.usageId;
+      tokensDeducted = charge.cost;
     }
-
-    const carInput = parseRichCarInput(car);
-
-    // Vlastní historická statistika jako prior pro model (src/lib/price-stats.ts).
-    // Při chybě / prázdné DB je null a sken běží beze změny.
-    const prior = await getPriceStats(carInput).catch(() => null);
-
-    // For detailed/expert we ALWAYS run fresh — rich inputs vary per user and
-    // a cached result for a different condition/equipment would be misleading.
-    // We still write the result to cache for analytics/future generic queries.
-    const richHash = richInputHash(carInput);
-    const cacheSuffix =
-      (actualScope === 'international' ? `${actualTier}:intl` : actualTier) + (richHash ? `:${richHash}` : '');
-    const shouldBypassCache = NO_CACHE_TIERS.has(actualTier);
 
     let result: { data: Awaited<ReturnType<typeof runScan>>; cached: boolean; ageHours: number | null };
+    const carInput = parseRichCarInput(car);
+    try {
+      // Vlastní historická statistika jako prior pro model (src/lib/price-stats.ts).
+      // Při chybě / prázdné DB je null a sken běží beze změny.
+      const prior = await getPriceStats(carInput).catch(() => null);
 
-    if (shouldBypassCache) {
-      const freshData = await runScan(carInput, actualTier, actualScope, prior);
-      // fire-and-forget save (best-effort; never blocks)
-      const base = generateSignature(carInput);
-      saveScan(`${base}:${cacheSuffix}`, freshData).catch((err) =>
-        console.error('[price-estimator] background saveScan failed:', err)
-      );
-      result = { data: freshData, cached: false, ageHours: null };
-    } else {
-      const cached = await getScanOrFetch(
-        carInput,
-        (c) => runScan(c, actualTier, actualScope, prior),
-        7,
-        cacheSuffix
-      );
-      result = { data: cached.data, cached: cached.cached, ageHours: cached.ageHours ?? null };
-    }
+      // For detailed/expert we ALWAYS run fresh — rich inputs vary per user and
+      // a cached result for a different condition/equipment would be misleading.
+      // We still write the result to cache for analytics/future generic queries.
+      const richHash = richInputHash(carInput);
+      const cacheSuffix =
+        (actualScope === 'international' ? `${actualTier}:intl` : actualTier) + (richHash ? `:${richHash}` : '');
+      const shouldBypassCache = NO_CACHE_TIERS.has(actualTier);
 
-    // Fold fresh aggregates into our own derived statistics DB — never from
-    // cache hits (no double counting). Fire-and-forget, never blocks.
-    if (!result.cached) {
-      void updatePriceStats(carInput, result.data);
-    }
+      if (shouldBypassCache) {
+        const freshData = await runScan(carInput, actualTier, actualScope, prior);
+        // fire-and-forget save (best-effort; never blocks)
+        const base = generateSignature(carInput);
+        saveScan(`${base}:${cacheSuffix}`, freshData).catch((err) =>
+          console.error('[price-estimator] background saveScan failed:', err)
+        );
+        result = { data: freshData, cached: false, ageHours: null };
+      } else {
+        const cached = await getScanOrFetch(
+          carInput,
+          (c) => runScan(c, actualTier, actualScope, prior),
+          7,
+          cacheSuffix
+        );
+        result = { data: cached.data, cached: cached.cached, ageHours: cached.ageHours ?? null };
+      }
 
-    let tokensDeducted = 0;
-    // Admin nehradí tokeny — neomezené hledání ceny.
-    const deductResult = isAdmin
-      ? ({ ok: true, cost: 0 } as const)
-      : await deductTokens(feature);
-
-    if (deductResult.ok) {
-      tokensDeducted = deductResult.cost;
-    } else if (deductResult.reason === 'Nejste přihlášeni.') {
+      // Fold fresh aggregates into our own derived statistics DB — never from
+      // cache hits (no double counting). Fire-and-forget, never blocks.
+      if (!result.cached) {
+        void updatePriceStats(carInput, result.data);
+      }
+    } catch (scanErr) {
+      console.error('[api/price-estimator] scan failed:', scanErr);
+      const refunded = usageId !== null && (await refundCharge(usageId));
+      const { status, error } = mapApiError(scanErr);
       return NextResponse.json(
-        { error: 'Pro ocenění vozu se musíte přihlásit a mít předplacené tokeny.' },
-        { status: 401 },
+        { error: refunded ? `${error} Tokeny vám byly vráceny.` : error },
+        { status },
       );
-    } else {
-      // Authenticated but insufficient balance → 402
-      return NextResponse.json({ error: deductResult.reason }, { status: 402 });
     }
 
     // Persist scan to user history (fire-and-forget — never blocks the response)

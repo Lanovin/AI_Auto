@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getScanOrFetch } from '@/lib/market-cache';
 import { runMonitorScan } from '@/lib/run-scan';
 import { generateSignature } from '@/lib/car-signature';
-import { checkTokenBalance, deductTokens } from '@/lib/tokens-server';
+import { chargeTokens, refundCharge } from '@/lib/tokens-server';
 import { isAdminAuthenticated } from '@/lib/admin/auth';
 
 export const runtime = 'nodejs';
@@ -33,34 +33,40 @@ export async function POST(request: Request) {
       fuel:         fuel         ? String(fuel)         : undefined,
     };
 
-    // Přihlášení a zůstatek ověř PŘED skenem (dřív sken proběhl zdarma
-    // pro kohokoli a nepřihlášení „platili" jen v localStorage). Admin neplatí.
+    // Tokeny se strhnou atomicky PŘED skenem; když sken selže, vrátí se.
+    // Admin neplatí.
     const isAdmin = await isAdminAuthenticated();
-    if (!isAdmin) {
-      const affordable = await checkTokenBalance('monitor:scan');
-      if (!affordable.ok) {
-        return NextResponse.json(
-          {
-            error: affordable.status === 401
-              ? 'Pro sken trhu se musíte přihlásit a mít předplacené tokeny.'
-              : affordable.reason,
-          },
-          { status: affordable.status },
-        );
-      }
-    }
-
-    const result = await getScanOrFetch(car, runMonitorScan, 3.5, 'monitor');
-
-    // Deduct tokens (price set in /admin → Ceník služeb).
+    let usageId: number | null = null;
     let tokensDeducted = 0;
     if (!isAdmin) {
-      const deductResult = await deductTokens('monitor:scan');
-      if (deductResult.ok) {
-        tokensDeducted = deductResult.cost;
-      } else {
-        return NextResponse.json({ error: deductResult.reason }, { status: deductResult.reason === 'Nejste přihlášeni.' ? 401 : 402 });
+      const charge = await chargeTokens('monitor:scan');
+      if (!charge.ok) {
+        return NextResponse.json(
+          {
+            error: charge.status === 401
+              ? 'Pro sken trhu se musíte přihlásit a mít předplacené tokeny.'
+              : charge.reason,
+          },
+          { status: charge.status },
+        );
       }
+      usageId = charge.usageId;
+      tokensDeducted = charge.cost;
+    }
+
+    let result: Awaited<ReturnType<typeof getScanOrFetch>>;
+    try {
+      result = await getScanOrFetch(car, runMonitorScan, 3.5, 'monitor');
+    } catch (scanErr) {
+      console.error('[api/market-monitor/scan] scan failed:', scanErr);
+      const refunded = usageId !== null && (await refundCharge(usageId));
+      return NextResponse.json(
+        {
+          error: 'Sken trhu se nepodařilo dokončit. Zkuste to prosím znovu.' +
+            (refunded ? ' Tokeny vám byly vráceny.' : ''),
+        },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({

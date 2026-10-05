@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { checkRequestLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -24,14 +25,21 @@ export async function POST(request: Request) {
   const smtpPort = Number(process.env.BREVO_SMTP_PORT ?? '587');
   const smtpUser = process.env.BREVO_SMTP_USER;
   const smtpPass = process.env.BREVO_SMTP_PASS;
-  const toEmail = process.env.BREVO_CONTACT_TO_EMAIL ?? 'ytlaso2@gmail.com';
+  const toEmail = process.env.BREVO_CONTACT_TO_EMAIL;
   const senderEmail = process.env.BREVO_SENDER_EMAIL ?? 'noreply@cargent.cz';
   const senderName = process.env.BREVO_SENDER_NAME ?? 'Cargent Kontakt';
 
-  if (!smtpUser || !smtpPass) {
+  if (!smtpUser || !smtpPass || !toEmail) {
     return NextResponse.json(
       { error: 'Kontaktní formulář není nakonfigurován.' },
       { status: 503 },
+    );
+  }
+
+  if (!(await checkRequestLimit(request, 'kontakt', { failOpen: true }))) {
+    return NextResponse.json(
+      { error: 'Odeslali jste příliš mnoho zpráv. Zkuste to prosím později, nebo nám napište e-mail.' },
+      { status: 429, headers: { 'Retry-After': '3600' } },
     );
   }
 
@@ -46,6 +54,9 @@ export async function POST(request: Request) {
 
   if (!jmeno?.trim() || !email?.trim() || !zprava?.trim()) {
     return NextResponse.json({ error: 'Vyplňte prosím všechna povinná pole.' }, { status: 422 });
+  }
+  if (jmeno.length > 200 || email.length > 254 || zprava.length > 5000 || (typ && typ.length > 100)) {
+    return NextResponse.json({ error: 'Zpráva je příliš dlouhá (max. 5 000 znaků).' }, { status: 422 });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Neplatná e-mailová adresa.' }, { status: 422 });

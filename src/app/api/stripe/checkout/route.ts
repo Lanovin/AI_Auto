@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
 import { getStripe } from '@/lib/stripe/server';
 import {
@@ -106,11 +107,20 @@ export async function POST(request: Request) {
     });
     customerId = customer.id;
 
-    // Best-effort persist — never block checkout if this fails
-    await supabase
-      .from('profiles')
-      .update({ stripe_customer_id: customerId })
-      .eq('id', user.id);
+    // Best-effort persist — never block checkout if this fails.
+    // stripe_customer_id smí od migrace 0009 zapisovat jen service-role.
+    const admin = getSupabaseAdmin();
+    if (admin) {
+      const { error: persistError } = await admin
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', user.id);
+      if (persistError) {
+        console.error('[stripe/checkout] persist stripe_customer_id failed:', persistError.message);
+      }
+    } else {
+      console.error('[stripe/checkout] SUPABASE_SERVICE_ROLE_KEY není nastaven — stripe_customer_id se neuloží.');
+    }
   }
 
   const successUrl = `${origin}/predplatne?status=success&plan=${plan.key}`;

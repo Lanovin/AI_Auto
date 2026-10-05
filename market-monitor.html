@@ -933,7 +933,7 @@
             throw new Error('Centrální Anthropic vrstva není načtená.');
         }
 
-        var data = await window.AutoAIAnthropic.call(requestBody);
+        var data = await window.AutoAIAnthropic.call(requestBody, 'import:web');
 
         if (typeof TokenTracker !== 'undefined') {
             TokenTracker.record('monitor', data);

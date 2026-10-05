@@ -444,7 +444,8 @@
     // ---- App-token pricing (admin-editable; mirrors src/lib/tokens.ts) ----
     var APP_TOKEN_COSTS = {
         'estimator:quick': 4, 'estimator:standard': 8, 'estimator:detailed': 12,
-        'estimator:expert': 20, 'scout:search': 6, 'monitor:scan': 2, 'popisky:generate': 4
+        'estimator:expert': 20, 'scout:search': 6, 'monitor:scan': 2, 'popisky:generate': 4,
+        'import:web': 4
     };
     var pricingLoaded = fetch('/api/tokens/pricing')
         .then(function (res) { return res.ok ? res.json() : null; })

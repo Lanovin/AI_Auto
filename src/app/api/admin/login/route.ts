@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { verifyCredentials, setAdminCookie } from '@/lib/admin/auth';
+import { checkRequestLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
+  if (!(await checkRequestLimit(request, 'adminLogin', { failOpen: true }))) {
+    return NextResponse.json(
+      { ok: false, error: 'Příliš mnoho pokusů o přihlášení. Zkuste to za 15 minut.' },
+      { status: 429, headers: { 'Retry-After': '900' } }
+    );
+  }
+
   let body: { username?: string; password?: string };
   try {
     body = await request.json();

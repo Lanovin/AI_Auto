@@ -369,11 +369,14 @@
     function renderMarkdown(md) {
         let html = md;
 
-        // Escape HTML entities (prevent XSS)
+        // Escape HTML entities (prevent XSS). Quotes too — otherwise a `"`
+        // inside a link URL could break out of the href attribute below.
         html = html
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
 
         // Headings
         html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deductTokens, isUserAuthenticated } from '@/lib/tokens-server';
-import { TOKEN_COSTS } from '@/lib/tokens';
+import { chargeTokens, isUserAuthenticated, refundCharge } from '@/lib/tokens-server';
 import { isAdminAuthenticated } from '@/lib/admin/auth';
 
 const ANTHROPIC_MESSAGES_URL = 'https://api.anthropic.com/v1/messages';
@@ -19,6 +18,14 @@ const ALLOWED_MODELS = new Set([
 ]);
 const MAX_OUTPUT_TOKENS = 16000;
 const MAX_WEB_SEARCH_USES = 10;
+// Strop velikosti vstupu (system + messages), ať jedna akce za pár tokenů
+// nemůže poslat obří prompt na náš účet.
+const MAX_PAYLOAD_CHARS = 60000;
+
+// Akce, které smí přes proxy volat legacy nástroje. Každý požadavek musí
+// nést hlavičku x-autoai-feature s jednou z nich — bez ní se nic nevolá,
+// jinak by šlo proxy používat zdarma.
+const PROXY_FEATURES = new Set(['popisky:generate', 'scout:search', 'import:web']);
 
 function sanitizePayload(payload) {
   if (!payload || typeof payload !== 'object' || !ALLOWED_MODELS.has(payload.model)) {
@@ -56,52 +63,69 @@ export async function POST(request) {
     if (payloadError) {
       return NextResponse.json({ error: { message: payloadError } }, { status: 400 });
     }
+    if (JSON.stringify(payload).length > MAX_PAYLOAD_CHARS) {
+      return NextResponse.json({ error: { message: 'Požadavek je příliš dlouhý.' } }, { status: 413 });
+    }
 
-    // Optional app-token billing: clients identify the billable action via
-    // the x-autoai-feature header (e.g. 'popisky:generate'). Price comes from
-    // the admin price list (token_pricing override → TOKEN_COSTS default).
-    // Admin is not billed (the response carries x-autoai-tokens-deducted: 0).
+    // Každé volání je účtované: klient označí akci hlavičkou x-autoai-feature,
+    // cena jde z ceníku (token_pricing override → TOKEN_COSTS). Tokeny se
+    // odečtou PŘED voláním Anthropicu; při chybě upstreamu se vrátí.
+    // Admin se neúčtuje (odpověď nese x-autoai-tokens-deducted: 0).
     const feature = request.headers.get('x-autoai-feature');
-    let tokensDeducted = 0;
-    if (!isAdmin && feature && feature in TOKEN_COSTS) {
-      try {
-        const deductResult = await deductTokens(feature);
-        if (deductResult.ok) {
-          tokensDeducted = deductResult.cost;
-        } else if (deductResult.reason !== 'Nejste přihlášeni.') {
-          return NextResponse.json(
-            { error: { message: deductResult.reason } },
-            { status: 402 }
-          );
-        }
-      } catch (tokenErr) {
-        console.error('[api/anthropic] deductTokens threw unexpectedly (non-blocking):', tokenErr);
-      }
+    if (!isAdmin && !PROXY_FEATURES.has(feature)) {
+      return NextResponse.json({ error: { message: 'Neznámý typ akce.' } }, { status: 400 });
     }
 
     if (!resolvedApiKey) {
+      console.error('[api/anthropic] ANTHROPIC_API_KEY is not configured.');
       return NextResponse.json(
-        {
-          error: {
-            message: 'Anthropic API key is not configured on the server.'
-          }
-        },
-        { status: 500 }
+        { error: { message: 'AI služba je dočasně nedostupná.' } },
+        { status: 503 }
       );
     }
 
-    const upstreamResponse = await fetch(ANTHROPIC_MESSAGES_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': resolvedApiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(payload),
-      cache: 'no-store'
-    });
+    let usageId = null;
+    let tokensDeducted = 0;
+    if (!isAdmin) {
+      const charge = await chargeTokens(feature);
+      if (!charge.ok) {
+        return NextResponse.json({ error: { message: charge.reason } }, { status: charge.status });
+      }
+      usageId = charge.usageId;
+      tokensDeducted = charge.cost;
+    }
 
-    const responseText = await upstreamResponse.text();
+    let upstreamResponse;
+    let responseText;
+    try {
+      upstreamResponse = await fetch(ANTHROPIC_MESSAGES_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': resolvedApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(payload),
+        cache: 'no-store'
+      });
+      responseText = await upstreamResponse.text();
+    } catch (upstreamErr) {
+      console.error('[api/anthropic] upstream fetch failed:', upstreamErr);
+      const refunded = usageId !== null && (await refundCharge(usageId));
+      return NextResponse.json(
+        { error: { message: 'AI služba neodpověděla.' + (refunded ? ' Tokeny vám byly vráceny.' : '') } },
+        { status: 502 }
+      );
+    }
+
+    if (!upstreamResponse.ok) {
+      console.error('[api/anthropic] upstream error', upstreamResponse.status, responseText.slice(0, 500));
+      const refunded = usageId !== null && (await refundCharge(usageId));
+      return NextResponse.json(
+        { error: { message: 'AI služba vrátila chybu.' + (refunded ? ' Tokeny vám byly vráceny.' : '') } },
+        { status: 502 }
+      );
+    }
 
     return new Response(responseText, {
       status: upstreamResponse.status,
@@ -112,13 +136,7 @@ export async function POST(request) {
       }
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: {
-          message: error instanceof Error ? error.message : 'Invalid request payload.'
-        }
-      },
-      { status: 400 }
-    );
+    console.error('[api/anthropic] request failed:', error);
+    return NextResponse.json({ error: { message: 'Neplatný požadavek.' } }, { status: 400 });
   }
 }

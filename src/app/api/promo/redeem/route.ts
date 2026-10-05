@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
+import { checkRequestLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +19,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, error: 'Promo kódy vyžadují přihlášení (Supabase není nakonfigurováno).' },
       { status: 503 }
+    );
+  }
+
+  // Limit pokusů proti hádání kódů. Fail-closed: bez ověřeného limitu kód neuplatníme.
+  if (!(await checkRequestLimit(request, 'promo', { failOpen: false }))) {
+    return NextResponse.json(
+      { ok: false, error: 'Příliš mnoho pokusů. Zkuste to prosím za hodinu.' },
+      { status: 429, headers: { 'Retry-After': '3600' } }
     );
   }
 
@@ -42,7 +52,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, error } = await supabase.rpc('redeem_promo_code', {
+    // redeem_promo_code je od migrace 0009 spustitelná jen service-role klíčem,
+    // aby šlo kódy uplatňovat jen přes tuto routu (user_id z ověřené session).
+    const admin = getSupabaseAdmin();
+    if (!admin) {
+      console.error('[promo] SUPABASE_SERVICE_ROLE_KEY není nastaven.');
+      return NextResponse.json(
+        { ok: false, error: 'Kód se nepodařilo uplatnit.' },
+        { status: 503 }
+      );
+    }
+
+    const { data, error } = await admin.rpc('redeem_promo_code', {
       p_user_id: user.id,
       p_code: code,
     });

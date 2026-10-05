@@ -1,5 +1,6 @@
 // Server-only — imports next/headers via supabase/server. Never import from Client Components.
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
 import { TOKEN_COSTS, type TokenFeature } from '@/lib/tokens';
 
@@ -64,40 +65,6 @@ export async function getTokenBalance(): Promise<number | null> {
   }
 }
 
-/**
- * Pre-flight check BEFORE running a paid action: is the user signed in and
- * can they afford it? Callers must run this before spending Anthropic credit —
- * otherwise anonymous users (or users with an empty balance) would get the
- * expensive AI call executed and only then be refused.
- *
- * The final charge still happens via deductTokens() after success (the RPC
- * is the authoritative, atomic check); this just avoids paying for scans
- * that can never be billed.
- */
-export async function checkTokenBalance(
-  feature: TokenFeature
-): Promise<{ ok: true; cost: number } | { ok: false; status: 401 | 402; reason: string }> {
-  if (!hasSupabaseEnv()) return { ok: false, status: 401, reason: 'Nejste přihlášeni.' };
-
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { ok: false, status: 401, reason: 'Nejste přihlášeni.' };
-
-    const cost = await getTokenCost(feature);
-    if (cost === 0) return { ok: true, cost };
-
-    const balance = await getTokenBalance();
-    if (balance === null || balance < cost) {
-      return { ok: false, status: 402, reason: 'Nedostatek tokenů. Doplňte kredit.' };
-    }
-    return { ok: true, cost };
-  } catch (err) {
-    console.error('[tokens] checkTokenBalance unexpected error (treated as unauthenticated):', err);
-    return { ok: false, status: 401, reason: 'Nejste přihlášeni.' };
-  }
-}
-
 /** True when a Supabase user is signed in (never throws). */
 export async function isUserAuthenticated(): Promise<boolean> {
   if (!hasSupabaseEnv()) return false;
@@ -110,58 +77,104 @@ export async function isUserAuthenticated(): Promise<boolean> {
   }
 }
 
+export type ChargeResult =
+  | { ok: true; cost: number; remaining: number; usageId: number }
+  | { ok: false; status: 401 | 402 | 429 | 503; reason: string };
+
+const CHARGE_UNAVAILABLE = 'Tokeny se teď nepodařilo odečíst. Zkuste to prosím za chvíli znovu.';
+
 /**
- * Attempts to deduct `cost` tokens from the authenticated user's balance.
- * Uses the Postgres `deduct_tokens` function (security definer) so RLS
- * cannot be bypassed by a client faking the amount.
+ * Charges the authenticated user for `feature` BEFORE the paid action runs.
  *
- * The price is resolved dynamically (admin override → default), and the
- * actually-charged amount is returned as `cost` so callers can report it.
+ * One atomic DB call (`charge_tokens`, migration 0010): locks the profile row,
+ * checks the optional rolling 24h limit, checks the balance, deducts and logs
+ * the usage. Parallel requests are serialized by the row lock, so neither the
+ * balance nor the daily limit can be bypassed. If the action then fails, call
+ * refundCharge(usageId).
  *
- * Returns { ok: true, remaining, cost } on success.
- * Returns { ok: false, reason } if the user is unauthenticated, has insufficient
- * tokens, or if Supabase is unavailable / not configured.
+ * The user id comes from the verified session, never from the request; the
+ * RPC is executable only with the service-role key.
  *
- * NOTE: This function never throws — any unexpected Supabase error is swallowed
- * and treated as "not authenticated" so the caller can fall back to client-side
- * localStorage token deduction without returning a 500 to the user.
+ * Fail-closed: any unexpected error returns ok: false (503) — a paid action
+ * must never run unbilled. Never throws.
  */
-export async function deductTokens(
-  feature: TokenFeature
-): Promise<{ ok: true; remaining: number; cost: number } | { ok: false; reason: string }> {
-  // Guard: Supabase not configured in this environment → treat as unauthenticated
-  if (!hasSupabaseEnv()) return { ok: false, reason: 'Nejste přihlášeni.' };
+export async function chargeTokens(
+  feature: TokenFeature,
+  dailyLimit?: { prefix: string; limit: number }
+): Promise<ChargeResult> {
+  if (!hasSupabaseEnv()) return { ok: false, status: 503, reason: CHARGE_UNAVAILABLE };
 
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { ok: false, reason: 'Nejste přihlášeni.' };
+    if (!user) return { ok: false, status: 401, reason: 'Nejste přihlášeni.' };
 
-    const cost = await getTokenCost(feature);
-    // Free actions (cost 0 set by admin) skip the RPC entirely.
-    if (cost === 0) {
-      const balance = await getTokenBalance();
-      return { ok: true, remaining: balance ?? 0, cost: 0 };
+    const admin = getSupabaseAdmin();
+    if (!admin) {
+      console.error('[tokens] SUPABASE_SERVICE_ROLE_KEY není nastaven — nelze účtovat tokeny.');
+      return { ok: false, status: 503, reason: CHARGE_UNAVAILABLE };
     }
 
-    const { data, error } = await supabase.rpc('deduct_tokens', {
+    const cost = await getTokenCost(feature);
+    const { data, error } = await admin.rpc('charge_tokens', {
       p_user_id: user.id,
+      p_feature: feature,
       p_amount: cost,
+      p_limit_prefix: dailyLimit?.prefix ?? null,
+      p_daily_limit: dailyLimit?.limit ?? null,
     });
 
     if (error) {
-      if (error.message.includes('Nedostatek')) {
-        return { ok: false, reason: 'Nedostatek tokenů. Doplňte kredit.' };
+      if (error.message.includes('DAILY_LIMIT')) {
+        return {
+          ok: false,
+          status: 429,
+          reason: `Dosáhli jste denního limitu (${dailyLimit?.limit} za 24 hodin). Zkuste to znovu později.`,
+        };
       }
-      console.error('[tokens] deduct_tokens RPC error:', error.message);
-      return { ok: false, reason: 'Chyba při odečítání tokenů.' };
+      if (error.message.includes('Nedostatek')) {
+        return { ok: false, status: 402, reason: 'Nedostatek tokenů. Doplňte kredit.' };
+      }
+      console.error('[tokens] charge_tokens RPC error:', error.message);
+      return { ok: false, status: 503, reason: CHARGE_UNAVAILABLE };
     }
 
-    return { ok: true, remaining: data as number, cost };
+    const row = (Array.isArray(data) ? data[0] : data) as
+      | { usage_id: number; new_balance: number }
+      | null;
+    if (!row) {
+      console.error('[tokens] charge_tokens returned no row');
+      return { ok: false, status: 503, reason: CHARGE_UNAVAILABLE };
+    }
+
+    return { ok: true, cost, remaining: row.new_balance, usageId: row.usage_id };
   } catch (err) {
-    // Network error, Supabase project paused, cookie issues, invalid key, etc.
-    // Log the error but never propagate — the scan result must still reach the user.
-    console.error('[tokens] deductTokens unexpected error (treated as unauthenticated):', err);
-    return { ok: false, reason: 'Nejste přihlášeni.' };
+    console.error('[tokens] chargeTokens unexpected error:', err);
+    return { ok: false, status: 503, reason: CHARGE_UNAVAILABLE };
+  }
+}
+
+/**
+ * Returns the tokens of a charge whose action failed (upstream error, timeout)
+ * and marks it refunded, so it also stops counting toward the daily limit.
+ * Idempotent. Never throws; returns false (and logs) if the refund failed.
+ */
+export async function refundCharge(usageId: number): Promise<boolean> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    console.error('[tokens] refundCharge: SUPABASE_SERVICE_ROLE_KEY chybí — refund usage', usageId, 'neproběhl.');
+    return false;
+  }
+
+  try {
+    const { error } = await admin.rpc('refund_charge', { p_usage_id: usageId });
+    if (error) {
+      console.error('[tokens] refund_charge error for usage', usageId, ':', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[tokens] refundCharge unexpected error:', err);
+    return false;
   }
 }

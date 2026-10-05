@@ -1,4 +1,6 @@
 -- ════════════════════════════════════════════════════════════════════════════
+-- Pozn.: dříve 0001_stripe_integration.sql; přečíslováno, protože používá
+-- sloupec tokens_balance z 0002_tokens.sql. add_tokens odsud je nahrazena v 0004 a 0009.
 -- Stripe integration — schema additions for AutoAI
 -- Run this in Supabase SQL editor (Dashboard → SQL → New Query → paste → Run)
 -- Safe to re-run: every statement uses IF NOT EXISTS / OR REPLACE.

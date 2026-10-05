@@ -30,6 +30,8 @@ export const TOKEN_COSTS = {
   'monitor:scan':       2,
   // Ad copy generator — per description
   'popisky:generate':   4,
+  // Import nabídky z webu klienta (profil, monitoring) — web search
+  'import:web':         4,
 } as const;
 
 export type TokenFeature = keyof typeof TOKEN_COSTS;
@@ -43,4 +45,5 @@ export const TOKEN_COST_LABELS: Record<TokenFeature, string> = {
   'scout:search':       'Skaut nabídek — hledání',
   'monitor:scan':       'Monitoring — sken trhu',
   'popisky:generate':   'Generátor popisků — 1 popis',
+  'import:web':         'Import nabídky z webu',
 };

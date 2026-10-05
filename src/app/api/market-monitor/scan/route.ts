@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getScanOrFetch } from '@/lib/market-cache';
 import { runMonitorScan } from '@/lib/run-scan';
 import { generateSignature } from '@/lib/car-signature';
-import { deductTokens } from '@/lib/tokens-server';
+import { checkTokenBalance, deductTokens } from '@/lib/tokens-server';
+import { isAdminAuthenticated } from '@/lib/admin/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,21 +33,34 @@ export async function POST(request: Request) {
       fuel:         fuel         ? String(fuel)         : undefined,
     };
 
+    // Přihlášení a zůstatek ověř PŘED skenem (dřív sken proběhl zdarma
+    // pro kohokoli a nepřihlášení „platili" jen v localStorage). Admin neplatí.
+    const isAdmin = await isAdminAuthenticated();
+    if (!isAdmin) {
+      const affordable = await checkTokenBalance('monitor:scan');
+      if (!affordable.ok) {
+        return NextResponse.json(
+          {
+            error: affordable.status === 401
+              ? 'Pro sken trhu se musíte přihlásit a mít předplacené tokeny.'
+              : affordable.reason,
+          },
+          { status: affordable.status },
+        );
+      }
+    }
+
     const result = await getScanOrFetch(car, runMonitorScan, 3.5, 'monitor');
 
-    // Deduct tokens for Supabase-authenticated users (price set in /admin →
-    // Ceník služeb). Mirrors the price-estimator pattern: deduction must never
-    // break the scan result; unauthenticated users are billed client-side.
+    // Deduct tokens (price set in /admin → Ceník služeb).
     let tokensDeducted = 0;
-    try {
+    if (!isAdmin) {
       const deductResult = await deductTokens('monitor:scan');
       if (deductResult.ok) {
         tokensDeducted = deductResult.cost;
-      } else if (deductResult.reason !== 'Nejste přihlášeni.') {
-        return NextResponse.json({ error: deductResult.reason }, { status: 402 });
+      } else {
+        return NextResponse.json({ error: deductResult.reason }, { status: deductResult.reason === 'Nejste přihlášeni.' ? 401 : 402 });
       }
-    } catch (tokenErr) {
-      console.error('[api/market-monitor/scan] deductTokens threw unexpectedly (non-blocking):', tokenErr);
     }
 
     return NextResponse.json({
@@ -56,6 +70,7 @@ export async function POST(request: Request) {
       maxPrice:     result.data.maxPrice,
       listingCount: result.data.listingCount,
       sources:      result.data.sources,
+      market:       result.data.market ?? null,
       summary:      result.data.summary,
       cached:       result.cached,
       ageHours:     result.ageHours ?? null,

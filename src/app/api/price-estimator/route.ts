@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getScanOrFetch, saveScan } from '@/lib/market-cache';
 import { runScan } from '@/lib/run-scan';
 import { generateSignature, type CarInput } from '@/lib/car-signature';
-import { deductTokens } from '@/lib/tokens-server';
+import { createHash } from 'node:crypto';
+import { checkTokenBalance, deductTokens } from '@/lib/tokens-server';
 import { type TokenFeature } from '@/lib/tokens';
 import { saveScanHistory } from '@/lib/supabase/user-data';
 import { getPriceStats, updatePriceStats } from '@/lib/price-stats';
@@ -19,6 +20,25 @@ const TIER_FEATURE: Record<string, TokenFeature> = {
 /** Tiers that bypass the shared cache. Their rich, user-specific inputs
  *  (condition, equipment, accidents, ...) make cache reuse misleading. */
 const NO_CACHE_TIERS = new Set(['detailed', 'expert']);
+
+/** Rich fields that change the valuation but are not in the base signature. */
+const RICH_KEYS: (keyof CarInput)[] = [
+  'trim', 'vin', 'engineCapacity', 'powerKw', 'drivetrain', 'bodyType', 'color',
+  'techCondition', 'paintCondition', 'accidents', 'serviceHistory', 'owners',
+  'consumption', 'originCountry', 'equipment', 'notes',
+];
+
+/**
+ * Short hash of the rich inputs, appended to the cache key — a cached result
+ * for an Octavia with 85 kW and no equipment must never be served for one
+ * with 140 kW and full equipment. Empty string when no rich field is set.
+ */
+function richInputHash(car: CarInput): string {
+  const rich: Record<string, unknown> = {};
+  for (const key of RICH_KEYS) if (car[key] !== undefined) rich[key] = car[key];
+  if (!Object.keys(rich).length) return '';
+  return createHash('sha256').update(JSON.stringify(rich)).digest('hex').slice(0, 12);
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -169,6 +189,23 @@ export async function POST(request: Request) {
     const actualScope = scope === 'international' ? 'international' : 'czech';
     const feature = TIER_FEATURE[actualTier];
 
+    // Přihlášení a zůstatek ověř PŘED skenem — dřív se drahé AI volání
+    // provedlo i nepřihlášeným a teprve pak se vrátila chyba 401/402
+    // (Anthropic kredit zaplacený za výsledek, který nikdo nezaplatil).
+    if (!isAdmin) {
+      const affordable = await checkTokenBalance(feature);
+      if (!affordable.ok) {
+        return NextResponse.json(
+          {
+            error: affordable.status === 401
+              ? 'Pro ocenění vozu se musíte přihlásit a mít předplacené tokeny.'
+              : affordable.reason,
+          },
+          { status: affordable.status },
+        );
+      }
+    }
+
     const carInput = parseRichCarInput(car);
 
     // Vlastní historická statistika jako prior pro model (src/lib/price-stats.ts).
@@ -178,7 +215,9 @@ export async function POST(request: Request) {
     // For detailed/expert we ALWAYS run fresh — rich inputs vary per user and
     // a cached result for a different condition/equipment would be misleading.
     // We still write the result to cache for analytics/future generic queries.
-    const cacheSuffix = actualScope === 'international' ? `${actualTier}:intl` : actualTier;
+    const richHash = richInputHash(carInput);
+    const cacheSuffix =
+      (actualScope === 'international' ? `${actualTier}:intl` : actualTier) + (richHash ? `:${richHash}` : '');
     const shouldBypassCache = NO_CACHE_TIERS.has(actualTier);
 
     let result: { data: Awaited<ReturnType<typeof runScan>>; cached: boolean; ageHours: number | null };
@@ -243,8 +282,10 @@ export async function POST(request: Request) {
       averagePrice:   result.data.averagePrice,
       minPrice:       result.data.minPrice,
       maxPrice:       result.data.maxPrice,
+      buyPrice:       result.data.buyPrice ?? null,
       listingCount:   result.data.listingCount,
       sources:        result.data.sources,
+      market:         result.data.market ?? null,
       summary:        result.data.summary,
       cached:         result.cached,
       ageHours:       result.ageHours,

@@ -305,46 +305,43 @@
             fuel:         readField('fuelType')
         };
 
-        // For DETAILED and EXPERT tiers, enrich payload with every form field
-        // the user filled. These extras feed deeper prompts on the server side
-        // (see src/lib/run-scan.ts buildCarBlock) and significantly improve
-        // valuation accuracy. Quick/standard intentionally stay lean.
-        var enrichTiers = ['detailed', 'expert'];
-        if (enrichTiers.indexOf(tier) !== -1) {
-            var trim          = readField('trim');
-            var vin           = readField('vin');
-            var engineCapacity= readNumberField('engineCapacity');
-            var powerKw       = readNumberField('powerKw');
-            var drivetrain    = readField('drivetrain');
-            var bodyType      = readField('bodyType');
-            var color         = readField('color');
-            var techCondition = readField('techCondition');
-            var paintCondition= readField('paintCondition');
-            var accidents     = readField('accidents');
-            var serviceHistory= readField('serviceHistory');
-            var owners        = readField('owners');
-            var consumption   = readField('consumption');
-            var originCountry = readField('originCountry');
-            var notes         = readField('notes');
-            var equipment     = readEquipmentCheckboxes();
+        // Send EVERY field the user filled, for ALL tiers. Power, trim and
+        // equipment drive the Sauto.cz comparable search and the valuation
+        // itself (see src/lib/sauto.ts, src/lib/run-scan.ts) — dropping them
+        // for quick/standard made those tiers needlessly imprecise.
+        var trim          = readField('trim');
+        var vin           = readField('vin');
+        var engineCapacity= readNumberField('engineCapacity');
+        var powerKw       = readNumberField('powerKw');
+        var drivetrain    = readField('drivetrain');
+        var bodyType      = readField('bodyType');
+        var color         = readField('color');
+        var techCondition = readField('techCondition');
+        var paintCondition= readField('paintCondition');
+        var accidents     = readField('accidents');
+        var serviceHistory= readField('serviceHistory');
+        var owners        = readField('owners');
+        var consumption   = readField('consumption');
+        var originCountry = readField('originCountry');
+        var notes         = readField('notes');
+        var equipment     = readEquipmentCheckboxes();
 
-            if (trim)           car.trim = trim;
-            if (vin)            car.vin = vin;
-            if (engineCapacity !== null) car.engineCapacity = engineCapacity;
-            if (powerKw !== null)        car.powerKw = powerKw;
-            if (drivetrain)     car.drivetrain = drivetrain;
-            if (bodyType)       car.bodyType = bodyType;
-            if (color)          car.color = color;
-            if (techCondition)  car.techCondition = techCondition;
-            if (paintCondition) car.paintCondition = paintCondition;
-            if (accidents)      car.accidents = accidents;
-            if (serviceHistory) car.serviceHistory = serviceHistory;
-            if (owners)         car.owners = owners;
-            if (consumption)    car.consumption = consumption;
-            if (originCountry)  car.originCountry = originCountry;
-            if (notes)          car.notes = notes;
-            if (equipment.length > 0) car.equipment = equipment;
-        }
+        if (trim)           car.trim = trim;
+        if (vin)            car.vin = vin;
+        if (engineCapacity !== null) car.engineCapacity = engineCapacity;
+        if (powerKw !== null)        car.powerKw = powerKw;
+        if (drivetrain)     car.drivetrain = drivetrain;
+        if (bodyType)       car.bodyType = bodyType;
+        if (color)          car.color = color;
+        if (techCondition)  car.techCondition = techCondition;
+        if (paintCondition) car.paintCondition = paintCondition;
+        if (accidents)      car.accidents = accidents;
+        if (serviceHistory) car.serviceHistory = serviceHistory;
+        if (owners)         car.owners = owners;
+        if (consumption)    car.consumption = consumption;
+        if (originCountry)  car.originCountry = originCountry;
+        if (notes)          car.notes = notes;
+        if (equipment.length > 0) car.equipment = equipment;
 
         var response = await fetch('/api/price-estimator', {
             method: 'POST',
@@ -439,8 +436,8 @@
     // Detailní a expertní posudky běží 60–90 s. Samotný spinner působí jako
     // zamrznutí — proto během čekání zobrazíme odpočet + fáze analýzy.
     var TIER_PROGRESS = {
-        quick:    { est: 22, label: 'Rychlý odhad' },
-        standard: { est: 35, label: 'Standardní analýza' },
+        quick:    { est: 15, label: 'Rychlý odhad' },
+        standard: { est: 25, label: 'Standardní analýza' },
         detailed: { est: 75, label: 'Detailní posudek' },
         expert:   { est: 95, label: 'Expertní posudek' }
     };
@@ -454,8 +451,9 @@
         // Fáze se odvíjejí od podílu uplynulého času vůči odhadu (0–1).
         var stages = [
             { at: 0.00, text: 'Odesílám zadání a sestavuji dotaz…' },
-            { at: 0.10, text: 'Prohledávám aktuální inzeráty (' + portals + ')…' },
-            { at: 0.40, text: 'Porovnávám nalezené ceny a čistím odlehlé hodnoty…' },
+            { at: 0.05, text: 'Hledám srovnatelné vozy na Sauto.cz (model, rok, nájezd, palivo, převodovka)…' },
+            { at: 0.20, text: 'Přepočítávám ceny na rok a nájezd vašeho vozu, čistím odlehlé hodnoty…' },
+            { at: 0.40, text: 'Porovnávám s dalšími zdroji (' + portals + ')…' },
             { at: 0.65, text: 'Vyhodnocuji výbavu, stav a nájezd vozu…' },
             { at: 0.85, text: 'Sestavuji finální posudek a doporučení…' }
         ];
@@ -562,7 +560,22 @@
                 }
             }
 
-            resultContent.innerHTML = cacheHtml + html + sourcesHtml;
+            // Výkupní cena + odkaz na stejné filtrované hledání na Sauto.cz,
+            // aby si dealer mohl srovnávané vozy sám otevřít a ověřit.
+            var marketHtml = '';
+            if (result.buyPrice) {
+                marketHtml += '<div class="cache-notice">💼 Doporučená výkupní cena pro autobazar: <strong>'
+                    + Number(result.buyPrice).toLocaleString('cs-CZ') + ' Kč</strong></div>';
+            }
+            if (result.market && result.market.searchUrl) {
+                var m = result.market;
+                marketHtml += '<div class="cache-notice">🔎 Srovnání z ' + escapeHtml(String(m.analyzed || 0))
+                    + ' vozů na Sauto.cz (' + escapeHtml(m.filterDescription || '') + '), medián přepočtený na tento vůz '
+                    + Number(m.adjustedMedian || 0).toLocaleString('cs-CZ') + ' Kč. '
+                    + '<a href="' + escapeHtml(m.searchUrl) + '" target="_blank" rel="nofollow noopener noreferrer">Otevřít stejné hledání na Sauto</a></div>';
+            }
+
+            resultContent.innerHTML = cacheHtml + marketHtml + html + sourcesHtml;
             resultSection.style.display = 'block';
             resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (err) {

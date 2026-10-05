@@ -10,14 +10,22 @@ export default function ZdrojeDatPage() {
     <LegalPage
       eyebrow="Transparentnost"
       title={<>Zdroje dat a <i>metodika</i></>}
-      updated="Aktualizováno 10. 6. 2026"
+      updated="Aktualizováno 5. 10. 2026"
     >
       <LegalSection n="01" title="Jak ocenění vzniká">
         <p>
-          Po zadání parametrů vozu provede AI model (Anthropic Claude) živé webové vyhledávání,
-          najde aktuální inzeráty srovnatelných vozů a z jejich cen odvodí doporučené cenové
-          pásmo. Každý výsledek obsahuje odkazy na konkrétní inzeráty, ze kterých vychází —
-          odhad si tedy můžete sami ověřit.
+          Postupujeme jako zkušený výkupčí. Na Sauto.cz vyhledáme ojeté vozy se stejnou
+          značkou a modelem, podobným rokem a nájezdem, stejným palivem a převodovkou (a když
+          výkon znáte, i s podobným výkonem). Pokud je srovnatelných vozů málo, filtry postupně
+          rozšíříme.
+        </p>
+        <p>
+          Cenu každého nalezeného vozu přepočteme na rok a nájezd oceňovaného vozu, vyřadíme
+          odlehlé hodnoty a z mediánu a kvartilů vznikne cenové pásmo. AI model (Anthropic
+          Claude) pak konkrétní vůz zařadí do pásma podle výbavy, stavu a historie oproti
+          nejpodobnějším vozům. U vzácných modelů a při mezinárodním srovnání model navíc
+          prohledá web. Každý výsledek obsahuje odkazy na srovnávané inzeráty a odkaz na
+          stejné hledání na Sauto.cz, takže si odhad můžete sami ověřit.
         </p>
         <p>
           U opakovaných dotazů na stejný typ vozu používáme navíc vlastní historické statistiky
@@ -28,7 +36,9 @@ export default function ZdrojeDatPage() {
 
       <LegalSection n="02" title="Jak s daty nakládáme">
         <p>
-          <strong className="text-ink">Data získáváme prostřednictvím vyhledávací infrastruktury
+          <strong className="text-ink">Nabídku Sauto.cz čteme několika cílenými dotazy na
+          každé ocenění, stejně jako při ručním hledání na webu, a pod vlastní identifikací
+          (User-Agent Cargent). Ostatní portály prohledáváme přes vyhledávací infrastrukturu
           Anthropic. Neukládáme kopie inzerátů ani nebudujeme katalog cizích nabídek — uchováváme
           pouze vlastní odvozené statistiky (průměry, mediány, cenová pásma) a krátkodobou
           technickou cache výsledků, která se automaticky maže po 14 dnech.</strong>

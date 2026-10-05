@@ -6,19 +6,19 @@ import { hasSupabaseEnv } from '@/lib/supabase/config';
  * Denní limit skenů na uživatele.
  *
  * Účel je PRÁVNÍ, ne kapacitní: každý sken čerpá malé výňatky z inzertních
- * portálů (přes Anthropic web search). Bez limitu by se naše API dalo použít
+ * portálů (filtrované vyhledávání na Sauto.cz, případně Anthropic web search). Bez limitu by se naše API dalo použít
  * jako nástroj systematické extrakce dat z cizích databází — opakovaná a
  * systematická extrakce i nepodstatných částí může porušit zvláštní právo
  * pořizovatele databáze (směrnice 96/9/ES čl. 7 odst. 5, AZ § 92). Limit
  * drží užívání v mezích běžného individuálního použití.
  *
- * Anonymní (nepřihlášení) uživatelé limit nemají — jsou ekonomicky omezeni
- * klientskými tokeny a bez účtu nelze počítat okno; přihlášení k vyššímu
- * objemu je zároveň žádoucí friction proti automatizaci.
+ * Nepřihlášení uživatelé ocenění spustit nemohou (route vrací 401 ještě
+ * před skenem), takže limit se počítá jen pro přihlášené.
  *
- * Market monitor (`/api/market-monitor/scan`) je záměrně BEZ limitu —
- * runMonitorScan nepoužívá web search, takže z portálů nic neextrahuje
- * (a jeho skeny se nezapisují do scan_history, čítač by je neviděl).
+ * Market monitor (`/api/market-monitor/scan`) tímto limitem neprochází
+ * (jeho skeny se nezapisují do scan_history). Čte jen jedno filtrované
+ * vyhledávání na Sauto.cz bez detailů inzerátů, výsledek se sdílí v cache
+ * 3,5 dne a každý sken se platí tokeny.
  */
 const DAILY_SCAN_LIMIT = Number(process.env.DAILY_SCAN_LIMIT ?? 30);
 

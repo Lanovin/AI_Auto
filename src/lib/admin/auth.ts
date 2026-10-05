@@ -17,6 +17,16 @@ function getAdminPassword(): string {
   return process.env.ADMIN_PASSWORD || 'admin';
 }
 
+/**
+ * V produkci bez vlastního ADMIN_PASSWORD je admin vypnutý. Výchozí
+ * admin / admin zná každý — a protože se z údajů odvozuje i podpisový klíč
+ * cookie, šlo by si admin cookie (= neomezené skeny zdarma) i podvrhnout.
+ * Lokálně (NODE_ENV !== 'production') výchozí údaje dál fungují.
+ */
+function isAdminConfigured(): boolean {
+  return process.env.NODE_ENV !== 'production' || Boolean(process.env.ADMIN_PASSWORD);
+}
+
 function getSessionSecret(): string {
   // Pokud není explicitní secret, odvodíme ho z údajů — změna hesla tak
   // automaticky zneplatní staré cookies.
@@ -28,6 +38,7 @@ function getSessionSecret(): string {
 
 /** Ověří zadané jméno + heslo proti konfiguraci (konstantní čas). */
 export function verifyCredentials(username: string, password: string): boolean {
+  if (!isAdminConfigured()) return false;
   return (
     safeEqual(username, getAdminUsername()) &&
     safeEqual(password, getAdminPassword())
@@ -53,7 +64,7 @@ function createToken(): string {
 }
 
 function isValidToken(token: string | undefined): boolean {
-  if (!token) return false;
+  if (!token || !isAdminConfigured()) return false;
   const dot = token.indexOf('.');
   if (dot < 0) return false;
 

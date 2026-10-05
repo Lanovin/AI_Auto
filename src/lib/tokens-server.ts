@@ -65,6 +65,52 @@ export async function getTokenBalance(): Promise<number | null> {
 }
 
 /**
+ * Pre-flight check BEFORE running a paid action: is the user signed in and
+ * can they afford it? Callers must run this before spending Anthropic credit —
+ * otherwise anonymous users (or users with an empty balance) would get the
+ * expensive AI call executed and only then be refused.
+ *
+ * The final charge still happens via deductTokens() after success (the RPC
+ * is the authoritative, atomic check); this just avoids paying for scans
+ * that can never be billed.
+ */
+export async function checkTokenBalance(
+  feature: TokenFeature
+): Promise<{ ok: true; cost: number } | { ok: false; status: 401 | 402; reason: string }> {
+  if (!hasSupabaseEnv()) return { ok: false, status: 401, reason: 'Nejste přihlášeni.' };
+
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false, status: 401, reason: 'Nejste přihlášeni.' };
+
+    const cost = await getTokenCost(feature);
+    if (cost === 0) return { ok: true, cost };
+
+    const balance = await getTokenBalance();
+    if (balance === null || balance < cost) {
+      return { ok: false, status: 402, reason: 'Nedostatek tokenů. Doplňte kredit.' };
+    }
+    return { ok: true, cost };
+  } catch (err) {
+    console.error('[tokens] checkTokenBalance unexpected error (treated as unauthenticated):', err);
+    return { ok: false, status: 401, reason: 'Nejste přihlášeni.' };
+  }
+}
+
+/** True when a Supabase user is signed in (never throws). */
+export async function isUserAuthenticated(): Promise<boolean> {
+  if (!hasSupabaseEnv()) return false;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    return Boolean(user);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Attempts to deduct `cost` tokens from the authenticated user's balance.
  * Uses the Postgres `deduct_tokens` function (security definer) so RLS
  * cannot be bypassed by a client faking the amount.

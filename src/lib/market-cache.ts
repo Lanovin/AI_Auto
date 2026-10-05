@@ -8,7 +8,22 @@ export interface ScanData {
   minPrice: number;
   maxPrice: number;
   listingCount: number;
+  /** Doporučená výkupní cena pro autobazar (jen runScan). */
+  buyPrice?: number;
   sources: { portal: string; url: string; price: number; title: string }[];
+  /** Souhrn filtrovaného hledání na Sauto.cz (src/lib/sauto.ts), pokud se povedlo. */
+  market?: {
+    portal: string;
+    /** Stejné hledání na webu Sauto — dealer si ho může otevřít a ověřit. */
+    searchUrl: string;
+    filterDescription: string;
+    totalMatching: number;
+    analyzed: number;
+    askingMedian: number;
+    adjustedMedian: number;
+    adjustedP25: number;
+    adjustedP75: number;
+  };
   modelInput: Record<string, unknown>;
   summary?: string;
   markdownText?: string;

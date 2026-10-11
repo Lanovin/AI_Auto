@@ -61,7 +61,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
   balicek_5000: {
     key: 'balicek_5000',
     label: 'Balíček 1 200 tokenů',
-    description: 'Jednorázová platba 5 000 Kč, za kterou získáte 1 200 tokenů. Nejvýhodnější sazba za token — pro intenzivní používání.',
+    description: 'Jednorázová platba 5 000 Kč, za kterou získáte 1 200 tokenů. Nejvýhodnější sazba za token, pro intenzivní používání.',
     priceCzk: 5000,
     mode: 'payment',
     bonusTokens: 1200,

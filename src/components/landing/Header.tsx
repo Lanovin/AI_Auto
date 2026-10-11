@@ -51,7 +51,7 @@ export default function Header(_props: HeaderProps = {}) {
         {/* ── Logo ─────────────────────────────────────────────────── */}
         <Link
           href="/"
-          aria-label="Cargent — domů"
+          aria-label="Cargent, domů"
           className="group flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
         >
           <Image

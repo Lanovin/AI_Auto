@@ -38,7 +38,7 @@ export default async function Footer() {
           <div>
             <Link
               href="/"
-              aria-label="Cargent — domů"
+              aria-label="Cargent, domů"
               className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               <FooterLogoGauge />

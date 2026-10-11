@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       from: { name: senderName, address: senderEmail },
       to: toEmail,
       replyTo: { name: jmeno, address: email },
-      subject: `Cargent — zpráva od ${jmeno}`,
+      subject: `Cargent: zpráva od ${jmeno}`,
       html: htmlContent,
     });
   } catch (err) {

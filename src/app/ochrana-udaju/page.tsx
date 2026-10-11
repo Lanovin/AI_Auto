@@ -26,11 +26,11 @@ export default function OchranaUdajuPage() {
 
       <LegalSection n="02" title="Jaké údaje zpracováváme">
         <ul>
-          <li><strong className="text-ink">Údaje účtu</strong> — e-mail, volitelně jméno či název firmy.</li>
-          <li><strong className="text-ink">Údaje o vozidlech</strong>, které sami zadáte — značka, model, rok, nájezd, výbava, stav, volitelně VIN. VIN může být ve spojení s dalšími údaji osobním údajem; zadáváte jej dobrovolně.</li>
-          <li><strong className="text-ink">Historie ocenění</strong> — zadané parametry vozu, zvolený typ posudku a souhrnné výsledky (cenové pásmo, počet inzerátů). Historie neobsahuje odkazy ani data z cizích inzerátů.</li>
-          <li><strong className="text-ink">Platební údaje</strong> — zpracovává je výhradně Stripe; čísla karet k nám nedoputují.</li>
-          <li><strong className="text-ink">Technické údaje</strong> — IP adresa a logy nezbytné pro provoz a bezpečnost.</li>
+          <li><strong className="text-ink">Údaje účtu</strong>: e-mail, volitelně jméno či název firmy.</li>
+          <li><strong className="text-ink">Údaje o vozidlech</strong>, které sami zadáte: značka, model, rok, nájezd, výbava, stav, volitelně VIN. VIN může být ve spojení s dalšími údaji osobním údajem; zadáváte jej dobrovolně.</li>
+          <li><strong className="text-ink">Historie ocenění</strong>: zadané parametry vozu, zvolený typ posudku a souhrnné výsledky (cenové pásmo, počet inzerátů). Historie neobsahuje odkazy ani data z cizích inzerátů.</li>
+          <li><strong className="text-ink">Platební údaje</strong>: zpracovává je výhradně Stripe; čísla karet k nám nedoputují.</li>
+          <li><strong className="text-ink">Technické údaje</strong>: IP adresa a logy nezbytné pro provoz a bezpečnost.</li>
         </ul>
         <p>
           <strong className="text-ink">Neukládáme osobní údaje prodejců z inzerátů.</strong> AI model
@@ -41,21 +41,21 @@ export default function OchranaUdajuPage() {
 
       <LegalSection n="03" title="Účely a právní základy">
         <ul>
-          <li>Poskytování služby (účet, ocenění, historie) — plnění smlouvy, čl. 6 odst. 1 písm. b) GDPR.</li>
-          <li>Fakturace a účetnictví — právní povinnost, čl. 6 odst. 1 písm. c).</li>
-          <li>Bezpečnost, prevence zneužití (denní limity, logy) — oprávněný zájem, čl. 6 odst. 1 písm. f).</li>
-          <li>Obchodní sdělení registrovaným uživatelům — oprávněný zájem s možností kdykoli se odhlásit.</li>
+          <li>Poskytování služby (účet, ocenění, historie): plnění smlouvy, čl. 6 odst. 1 písm. b) GDPR.</li>
+          <li>Fakturace a účetnictví: právní povinnost, čl. 6 odst. 1 písm. c).</li>
+          <li>Bezpečnost, prevence zneužití (denní limity, logy): oprávněný zájem, čl. 6 odst. 1 písm. f).</li>
+          <li>Obchodní sdělení registrovaným uživatelům: oprávněný zájem s možností kdykoli se odhlásit.</li>
         </ul>
       </LegalSection>
 
       <LegalSection n="04" title="Příjemci a zpracovatelé">
         <p>Údaje zpracováváme pomocí těchto poskytovatelů:</p>
         <ul>
-          <li><strong className="text-ink">Supabase</strong> — databáze účtů a uživatelských dat (EU region).</li>
-          <li><strong className="text-ink">Neon</strong> — anonymní sdílená cache výsledků skenů (EU region, bez vazby na účet).</li>
-          <li><strong className="text-ink">Vercel</strong> — hosting aplikace.</li>
-          <li><strong className="text-ink">Stripe</strong> — platby a fakturace.</li>
-          <li><strong className="text-ink">Anthropic</strong> — AI analýza a webové vyhledávání. Zadané parametry vozu se předávají ke zpracování do USA na základě standardních smluvních doložek (SCC), případně rámce EU-U.S. Data Privacy Framework.</li>
+          <li><strong className="text-ink">Supabase</strong>: databáze účtů a uživatelských dat (EU region).</li>
+          <li><strong className="text-ink">Neon</strong>: anonymní sdílená cache výsledků skenů (EU region, bez vazby na účet).</li>
+          <li><strong className="text-ink">Vercel</strong>: hosting aplikace.</li>
+          <li><strong className="text-ink">Stripe</strong>: platby a fakturace.</li>
+          <li><strong className="text-ink">Anthropic</strong>: AI analýza a webové vyhledávání. Zadané parametry vozu se předávají ke zpracování do USA na základě standardních smluvních doložek (SCC), případně rámce EU-U.S. Data Privacy Framework.</li>
         </ul>
       </LegalSection>
 
@@ -73,8 +73,7 @@ export default function OchranaUdajuPage() {
           Máte právo na přístup ke svým údajům, jejich opravu, výmaz, omezení zpracování,
           přenositelnost a právo vznést námitku. Historii ocenění můžete kdykoli smazat sami
           v dashboardu; o výmaz celého účtu požádejte e-mailem na{' '}
-          <a className="cargent-link text-ink" href="mailto:hello@cargent.cz">hello@cargent.cz</a> —
-          vyřídíme jej do 30 dnů. Dozorovým úřadem je Úřad pro ochranu osobních údajů (uoou.gov.cz).
+          <a className="cargent-link text-ink" href="mailto:hello@cargent.cz">hello@cargent.cz</a>, vyřídíme jej do 30 dnů. Dozorovým úřadem je Úřad pro ochranu osobních údajů (uoou.gov.cz).
         </p>
       </LegalSection>
 

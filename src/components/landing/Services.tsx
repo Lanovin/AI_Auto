@@ -16,7 +16,7 @@ const services = [
   {
     title: 'Odhad ceny',
     description:
-      'Reálná tržní cena auta s intervalem spolehlivosti — projde přední inzertní portály i ověřenou historii vozu.',
+      'Reálná tržní cena auta s intervalem spolehlivosti. Projde přední inzertní portály i ověřenou historii vozu.',
     href: '/odhad-ceny',
     cta: 'Spustit odhad',
     audience: 'Zdarma',
@@ -43,7 +43,7 @@ const services = [
   {
     title: 'Generátor popisků',
     description:
-      'AI prodejní popisek inzerátu za 10 sekund — vezme data o autě a vygeneruje text vhodný k inzerci.',
+      'AI prodejní popisek inzerátu za 10 sekund. Vezme data o autě a vygeneruje text vhodný k inzerci.',
     href: '/popisky',
     cta: 'Generovat popis',
     audience: 'Pro autobazary',
@@ -77,7 +77,7 @@ export default function Services() {
             <Link
               key={service.title}
               href={service.href}
-              aria-label={`${service.title} — ${service.cta}`}
+              aria-label={`${service.title}: ${service.cta}`}
               className="group flex flex-col rounded-[22px] border border-line bg-surface p-7 shadow-cargent-card transition-all duration-200 hover:-translate-y-1 hover:border-line-2 hover:shadow-cargent-2 focus-visible:-translate-y-1 focus-visible:border-brass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2 focus-visible:ring-offset-paper-2 md:p-8"
             >
               <div className="flex items-start justify-between gap-3">

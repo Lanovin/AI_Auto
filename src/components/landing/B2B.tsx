@@ -33,7 +33,7 @@ export default function B2B() {
           {/* ── Left column: copy ─────────────────────────────────── */}
           <div>
             <span className="cargent-mono text-[11px] uppercase tracking-[0.14em] text-brass">
-              — Pro firmy &amp; API
+              Pro firmy &amp; API
             </span>
             <h2 className="cargent-h2 mt-4 text-[36px] text-white md:text-[48px] lg:text-[52px]">
               Zapojte Cargent

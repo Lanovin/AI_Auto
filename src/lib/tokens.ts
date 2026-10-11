@@ -43,12 +43,12 @@ export type TokenFeature = keyof typeof TOKEN_COSTS;
 
 /** Human-readable labels for the cost table shown in UI. */
 export const TOKEN_COST_LABELS: Record<TokenFeature, string> = {
-  'estimator:quick':    'Odhad ceny — Rychlý',
-  'estimator:standard': 'Odhad ceny — Standardní',
-  'estimator:detailed': 'Odhad ceny — Podrobný',
-  'estimator:expert':   'Odhad ceny — Expert',
-  'scout:search':       'Skaut nabídek — hledání',
-  'monitor:scan':       'Monitoring — sken trhu',
-  'popisky:generate':   'Generátor popisků — 1 popis',
+  'estimator:quick':    'Odhad ceny: Rychlý',
+  'estimator:standard': 'Odhad ceny: Standardní',
+  'estimator:detailed': 'Odhad ceny: Podrobný',
+  'estimator:expert':   'Odhad ceny: Expert',
+  'scout:search':       'Skaut nabídek: hledání',
+  'monitor:scan':       'Monitoring: sken trhu',
+  'popisky:generate':   'Generátor popisků: 1 popis',
   'import:web':         'Import nabídky z webu',
 };

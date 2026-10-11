@@ -29,11 +29,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Cargent — AI oceňovací agent pro ojeté vozy',
+    default: 'Cargent: AI oceňovací agent pro ojeté vozy',
     template: '%s | Cargent',
   },
   description:
-    'Cargent projde živé inzeráty, výbavu a ověřenou historii vozu a vrátí tržní ocenění s intervalem spolehlivosti — ne jen tip od oka.',
+    'Cargent projde živé inzeráty, výbavu a ověřenou historii vozu a vrátí tržní ocenění s intervalem spolehlivosti, ne jen tip od oka.',
   icons: {
     icon: '/logo_cargent.png',
     apple: '/logo_cargent.png',

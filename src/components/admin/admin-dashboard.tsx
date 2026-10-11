@@ -72,8 +72,7 @@ export default function AdminDashboard() {
 
       <div className="mt-4 rounded-[10px] border border-brass/25 bg-brass/8 px-4 py-3 text-[13px] leading-relaxed text-ink-soft">
         Jako přihlášený admin máte v <strong className="text-ink">Odhadu ceny</strong> neomezené
-        oceňování (tokeny se nestrhávají). Klikněte na <strong className="text-ink">„Do aplikace →"</strong> —
-        zůstanete přihlášení. Tlačítko <strong className="text-ink">„Odhlásit se"</strong> ukončí
+        oceňování (tokeny se nestrhávají). Klikněte na <strong className="text-ink">„Do aplikace →"</strong> a zůstanete přihlášení. Tlačítko <strong className="text-ink">„Odhlásit se"</strong> ukončí
         admin režim a neomezené oceňování přestane platit.
       </div>
 
@@ -321,7 +320,7 @@ function PricingEditor() {
     for (const f of features) {
       const n = Number(values[f.feature]);
       if (!Number.isInteger(n) || n < 0) {
-        setStatus({ kind: 'err', msg: `Neplatná cena u „${f.label}" — zadejte celé číslo ≥ 0.` });
+        setStatus({ kind: 'err', msg: `Neplatná cena u „${f.label}": zadejte celé číslo ≥ 0.` });
         return;
       }
     }
@@ -357,7 +356,7 @@ function PricingEditor() {
   return (
     <div>
       <div className="rounded-[12px] border border-line bg-paper-2 px-4 py-3 text-[13px] text-ink-soft">
-        Ceny jsou v tokenech — 1 token ≈ {tokenValueCzk} Kč. Cena 0 = akce je zdarma.
+        Ceny jsou v tokenech, 1 token ≈ {tokenValueCzk} Kč. Cena 0 = akce je zdarma.
         Změny platí okamžitě pro všechny uživatele.
       </div>
 
@@ -391,7 +390,7 @@ function PricingEditor() {
                       onChange={(e) =>
                         setValues((v) => ({ ...v, [f.feature]: e.target.value }))
                       }
-                      aria-label={`Cena — ${f.label}`}
+                      aria-label={`Cena: ${f.label}`}
                       className={[
                         'cargent-mono w-24 rounded-[8px] border bg-paper px-3 py-2 text-right text-[14px] tabular-nums text-ink outline-none focus:border-brass',
                         valid ? 'border-line-2' : 'border-[#9C3A2A]',

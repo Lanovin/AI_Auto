@@ -40,7 +40,7 @@ export default function Segments() {
       <div className="mx-auto max-w-[1240px]">
         {/* Section label */}
         <p className="cargent-mono mb-8 text-center text-[11px] uppercase tracking-[0.14em] text-brass">
-          — Pro koho je Cargent
+          Pro koho je Cargent
         </p>
 
         {/* Two-path grid */}
@@ -66,7 +66,7 @@ export default function Segments() {
 
             <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
               Zadejte značku, rok a najeto. Do 30 sekund uvidíte, za kolik se
-              srovnatelná auta prodávají právě teď — a co ovlivňuje cenu
+              srovnatelná auta prodávají právě teď a co ovlivňuje cenu
               vašeho konkrétního vozu.
             </p>
 

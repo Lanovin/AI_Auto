@@ -6,7 +6,7 @@ import { hasSupabaseEnv } from '@/lib/supabase/config';
 import { isStripeConfigured } from '@/lib/stripe/config';
 import PricingPlans from '@/components/pricing-plans';
 
-export const metadata = { title: 'Ceník — tokeny' };
+export const metadata = { title: 'Ceník tokenů' };
 export const dynamic = 'force-dynamic';
 
 interface ProfileRow {

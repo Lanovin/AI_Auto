@@ -2,7 +2,7 @@ import LegalPage, { LegalSection } from '@/components/legal/LegalPage';
 
 export const metadata = {
   title: 'Obchodní podmínky',
-  description: 'Obchodní podmínky služby Cargent — AI ocenění vozů.',
+  description: 'Obchodní podmínky služby Cargent: AI ocenění vozů.',
 };
 
 /**
@@ -86,7 +86,7 @@ export default function PodminkyPage() {
       <LegalSection n="07" title="Duševní vlastnictví">
         <p>
           Texty, design a software služby jsou chráněny autorským právem provozovatele. Výstup
-          ocenění smí uživatel využívat pro vlastní potřebu (včetně podnikatelské — např. ocenění
+          ocenění smí uživatel využívat pro vlastní potřebu (včetně podnikatelské, např. ocenění
           vozů vlastního autobazaru); nesmí jej však hromadně publikovat jako náhradu služby.
         </p>
       </LegalSection>

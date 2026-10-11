@@ -549,14 +549,14 @@
                 var items = result.sources.map(function (src) {
                     if (!src || !src.url) return '';
                     var label = escapeHtml(src.portal || 'Inzerát');
-                    var title = src.title ? ' — ' + escapeHtml(src.title) : '';
-                    var price = src.price ? ' — ' + Number(src.price).toLocaleString('cs-CZ') + ' Kč' : '';
+                    var title = src.title ? ', ' + escapeHtml(src.title) : '';
+                    var price = src.price ? ', ' + Number(src.price).toLocaleString('cs-CZ') + ' Kč' : '';
                     return '<li><a href="' + escapeHtml(src.url) + '" target="_blank" rel="nofollow noopener noreferrer">'
                         + label + title + '</a>' + price + '</li>';
                 }).join('');
                 if (items) {
                     sourcesHtml =
-                        '<h2>🔗 Zdroje — původní inzeráty</h2>' +
+                        '<h2>🔗 Zdroje: původní inzeráty</h2>' +
                         '<ul>' + items + '</ul>' +
                         '<p style="font-size:13px;opacity:0.75;">Odkazy vedou na původní inzeráty na uvedených portálech. '
                         + 'Více o tom, jak s daty pracujeme: <a href="/zdroje-dat" target="_top">Zdroje dat</a>.</p>';

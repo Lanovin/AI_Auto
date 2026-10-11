@@ -294,7 +294,7 @@ export default async function DashboardPage() {
 
                 return (
                   <Link
-                    aria-label={`${tool.label} — ${status.label}`}
+                    aria-label={`${tool.label}: ${status.label}`}
                     key={tool.href}
                     href={tool.href}
                     className="rounded-lg border border-line bg-paper-2 p-4 transition-colors hover:border-brass/40 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-2"

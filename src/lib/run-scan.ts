@@ -125,7 +125,7 @@ function salvageTruncatedJson(text: string): Record<string, unknown> | null {
     summary: '',
     markdownText:
       (markdown.trim() || '## 💰 Odhad tržní ceny\n_Posudek se nepodařilo dokončit._') +
-      '\n\n---\n_⚠️ Posudek byl zkrácen kvůli své délce — výše je vše, co se stihlo vygenerovat. ' +
+      '\n\n---\n_⚠️ Posudek byl zkrácen kvůli své délce. Výše je vše, co se stihlo vygenerovat. ' +
       'Pro úplný výstup zkuste posudek zopakovat nebo zvolit nižší tier._',
   };
 }
@@ -144,7 +144,7 @@ const CLAUDE_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 300_000;
 
 const TIMEOUT_MESSAGE =
   'TIMEOUT: Posudek trval příliš dlouho. ' +
-  'Zkuste tier Standardní nebo Rychlý — nebo kontaktujte podporu pro přístup k detailním posudkům.';
+  'Zkuste tier Standardní nebo Rychlý, případně kontaktujte podporu pro přístup k detailním posudkům.';
 
 /**
  * Server-side fallback: když bezpečnostní klasifikátor modelu požadavek

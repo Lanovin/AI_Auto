@@ -46,7 +46,21 @@ export const DEMO_VALUATION = {
   verified: true,         // ověřená historie vozu
 } as const;
 
-// Rozpad ceny — co cenu posunulo
+// ── Hero: rozložené auto — ilustrativní hodnota dílů ────────────────
+// Součet musí dát DEMO_VALUATION.price (489 000 Kč), ať ukázka sedí s
+// kartou ocenění. Pořadí = pořadí v číslovaném seznamu (od nejdražšího).
+export const EXPLODED_CAR_PARTS = [
+  { id: 'body',     name: 'Karoserie',           price: 140_000 }, // TODO: ilustrativní hodnoty
+  { id: 'engine',   name: 'Motor 2.0 TDI',       price:  96_000 },
+  { id: 'interior', name: 'Interiér a sedadla',  price:  54_000 },
+  { id: 'roof',     name: 'Střecha a sloupky',   price:  52_000 },
+  { id: 'gearbox',  name: 'Převodovka DSG',      price:  42_000 },
+  { id: 'doors',    name: 'Dveře (4×)',          price:  38_000 },
+  { id: 'wheels',   name: 'Kola a pneu (4×)',    price:  36_000 },
+  { id: 'lights',   name: 'Světlomety',          price:  31_000 },
+] as const;
+
+// Rozpad ceny: co cenu posunulo
 export const DEMO_PRICE_BREAKDOWN: ReadonlyArray<{
   label: string;
   /** Positive = adds value, negative = subtracts */

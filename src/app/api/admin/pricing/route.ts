@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     const cost = Number(rawCost);
     if (!Number.isInteger(cost) || cost < 0) {
       return NextResponse.json(
-        { error: `Neplatná cena u „${TOKEN_COST_LABELS[feature as TokenFeature]}" — zadejte celé číslo ≥ 0.` },
+        { error: `Neplatná cena u „${TOKEN_COST_LABELS[feature as TokenFeature]}": zadejte celé číslo ≥ 0.` },
         { status: 400 }
       );
     }

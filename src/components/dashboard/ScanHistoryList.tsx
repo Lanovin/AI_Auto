@@ -122,7 +122,7 @@ export default function ScanHistoryList({ history }: { history: ScanHistoryEntry
           <span className="text-[13px] text-negative">{error}</span>
         ) : (
           <span className="text-[12px] text-faint">
-            Historii můžete kdykoli smazat — záznamy neobsahují odkazy ani data z inzerátů.
+            Historii můžete kdykoli smazat, záznamy neobsahují odkazy ani data z inzerátů.
           </span>
         )}
         <button

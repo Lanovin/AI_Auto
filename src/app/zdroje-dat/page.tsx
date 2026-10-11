@@ -29,7 +29,7 @@ export default function ZdrojeDatPage() {
         </p>
         <p>
           U opakovaných dotazů na stejný typ vozu používáme navíc vlastní historické statistiky
-          (mediány z dřívějších ocenění) jako kontrolu věrohodnosti — odhad je díky tomu odolnější
+          (mediány z dřívějších ocenění) jako kontrolu věrohodnosti, odhad je díky tomu odolnější
           vůči náhodným výkyvům nabídky.
         </p>
       </LegalSection>
@@ -39,14 +39,14 @@ export default function ZdrojeDatPage() {
           <strong className="text-ink">Nabídku Sauto.cz čteme několika cílenými dotazy na
           každé ocenění, stejně jako při ručním hledání na webu, a pod vlastní identifikací
           (User-Agent Cargent). Ostatní portály prohledáváme přes vyhledávací infrastrukturu
-          Anthropic. Neukládáme kopie inzerátů ani nebudujeme katalog cizích nabídek — uchováváme
+          Anthropic. Neukládáme kopie inzerátů ani nebudujeme katalog cizích nabídek. Uchováváme
           pouze vlastní odvozené statistiky (průměry, mediány, cenová pásma) a krátkodobou
           technickou cache výsledků, která se automaticky maže po 14 dnech.</strong>
         </p>
         <p>
           Z každého inzerátu přebíráme jen minimum faktických údajů nutných pro cenové srovnání:
           portál, odkaz, cenu a krátký titulek vozu. Osobní údaje prodejců (jména, telefony,
-          e-maily) nezpracováváme — model je má zakázáno extrahovat a server je navíc filtruje.
+          e-maily) nezpracováváme. Model je má zakázáno extrahovat a server je navíc filtruje.
         </p>
       </LegalSection>
 
@@ -57,7 +57,7 @@ export default function ZdrojeDatPage() {
           lacentrale.fr (Francie), willhaben.at (Rakousko).
         </p>
         <p>
-          Odkazy na inzeráty vedou vždy na původní stránku portálu — návštěvnost a kontakt
+          Odkazy na inzeráty vedou vždy na původní stránku portálu, návštěvnost a kontakt
           na prodejce zůstávají portálům.
         </p>
       </LegalSection>
@@ -68,7 +68,7 @@ export default function ZdrojeDatPage() {
           96/9/ES, § 88 a násl. autorského zákona). Naše opatření:
         </p>
         <ul>
-          <li>žádný plošný scraping — pouze cílené vyhledání několika srovnatelných inzerátů pro konkrétní dotaz uživatele,</li>
+          <li>žádný plošný scraping, pouze cílené vyhledání několika srovnatelných inzerátů pro konkrétní dotaz uživatele,</li>
           <li>krátkodobá cache (max. 14 dní) místo trvalého ukládání,</li>
           <li>dlouhodobě uchováváme jen vlastní vypočtené agregáty, nikdy obsah inzerátů,</li>
           <li>denní limit počtu ocenění na uživatele proti hromadné extrakci,</li>
@@ -78,7 +78,7 @@ export default function ZdrojeDatPage() {
 
       <LegalSection n="05" title="Omezení a přesnost">
         <p>
-          Odhad je informativní — vychází z nabídkových cen (ne z realizovaných prodejů) a z dat
+          Odhad je informativní, vychází z nabídkových cen (ne z realizovaných prodejů) a z dat
           dostupných v okamžiku dotazu. Skutečná prodejní cena se může lišit podle stavu vozu,
           regionu a vyjednávání. Proto vždy uvádíme pásmo min–max, nikoli jediné číslo.
         </p>

@@ -54,7 +54,7 @@ export default function Testimonials() {
       <div className="mx-auto max-w-[1240px]">
         <header className="mb-10 flex flex-col items-center gap-3 text-center">
           <span className="cargent-mono text-[11px] uppercase tracking-[0.14em] text-brass">
-            — Co říkají uživatelé
+            Co říkají uživatelé
           </span>
           <h2 className="cargent-h2 text-[34px] md:text-[44px]">
             Reálné výsledky,
@@ -102,7 +102,7 @@ export default function Testimonials() {
         </div>
 
         <p className="mt-5 text-center text-[12px] text-faint">
-          ⚠️ Ukázková reference — nahradit reálnými recenzemi po sběru zpětné vazby.
+          ⚠️ Ukázková reference: nahradit reálnými recenzemi po sběru zpětné vazby.
         </p>
       </div>
     </section>

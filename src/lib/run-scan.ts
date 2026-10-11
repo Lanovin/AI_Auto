@@ -5,12 +5,13 @@ import { fetchSautoMarket, formatMarketForPrompt, type SautoMarket } from './sau
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 /**
- * Model pro ocenění. Claude Opus 5.5 — nejlepší poměr přesnost/cena pro
- * úlohu „porovnej vůz s tabulkou srovnatelných inzerátů a dorovnej výbavu
- * a stav": silné uvažování nad čísly, levnější než Opus 4.8 ($4/$20 vs.
- * $5/$25 za MTok). Thinking je u něj vždy zapnutý; hloubku řídí `effort`.
+ * Model pro ocenění. Claude Sonnet 5.5 ($2/$10 za MTok) — TESTOVACÍ větev:
+ * polovina ceny Opusu 5.5 ($4/$20). Úloha „porovnej vůz s tabulkou
+ * srovnatelných inzerátů a dorovnej výbavu a stav" je hlavně počítání nad
+ * čísly; kvalitu je potřeba ověřit proti Opusu 5.5 (návrat: 'claude-opus-5-5').
+ * Thinking je vždy zapnutý; hloubku řídí `effort`.
  */
-const VALUATION_MODEL = 'claude-opus-5-5';
+const VALUATION_MODEL = 'claude-sonnet-5-5';
 /** Levný model pro monitoring, když Sauto nemá dost dat. */
 const MONITOR_FALLBACK_MODEL = 'claude-haiku-4-5';
 

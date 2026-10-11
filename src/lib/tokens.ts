@@ -1,5 +1,10 @@
 // ── Shared constants (safe to import in both Client and Server Components) ──
 
+// DOČASNÝ TESTOVACÍ REŽIM: true = všechny akce stojí 0 tokenů (u všech účtů).
+// Přihlášení, log použití i denní limit zůstávají. Návrat: false (nebo zahodit
+// větev test/bez-tokenu — main tuhle změnu neobsahuje).
+export const TOKENS_DISABLED = true;
+
 // Starting balance for every new account. Change here to adjust the trial.
 export const TOKENS_STARTING_BALANCE = 100;
 

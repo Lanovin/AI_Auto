@@ -2,7 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { hasSupabaseEnv } from '@/lib/supabase/config';
-import { TOKEN_COSTS, type TokenFeature } from '@/lib/tokens';
+import { TOKEN_COSTS, TOKENS_DISABLED, type TokenFeature } from '@/lib/tokens';
 
 /**
  * Returns the EFFECTIVE price list: defaults from TOKEN_COSTS overridden by
@@ -12,6 +12,10 @@ import { TOKEN_COSTS, type TokenFeature } from '@/lib/tokens';
  */
 export async function getTokenPricing(): Promise<Record<TokenFeature, number>> {
   const pricing: Record<TokenFeature, number> = { ...TOKEN_COSTS };
+  if (TOKENS_DISABLED) {
+    for (const feature of Object.keys(pricing) as TokenFeature[]) pricing[feature] = 0;
+    return pricing;
+  }
   if (!hasSupabaseEnv()) return pricing;
 
   try {

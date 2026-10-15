@@ -34,7 +34,6 @@ export default async function Engine() {
         <div className="lg:sticky lg:top-24">
           <AnimateOnScroll>
             <SectionHead
-              eyebrow={t('engine.eyebrow')}
               title={<RichText>{t('engine.title')}</RichText>}
             />
           </AnimateOnScroll>

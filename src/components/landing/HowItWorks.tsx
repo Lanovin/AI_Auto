@@ -23,7 +23,6 @@ export default async function HowItWorks() {
       <div className="mx-auto max-w-[1240px]">
         <AnimateOnScroll>
           <SectionHead
-            eyebrow={t('how.eyebrow')}
             title={<RichText>{t('how.title')}</RichText>}
             align="center"
           />
@@ -70,11 +69,11 @@ export function SectionHead({
   title,
   align = 'left',
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: React.ReactNode;
   align?: 'left' | 'center';
 }) {
-  const cleanEyebrow = eyebrow.replace(/^[—–-]\s*/, '');
+  const cleanEyebrow = eyebrow?.replace(/^[—–-]\s*/, '');
 
   return (
     <header
@@ -83,9 +82,11 @@ export function SectionHead({
         align === 'center' ? 'items-center text-center' : '',
       ].join(' ')}
     >
-      <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brass">
-        {cleanEyebrow}
-      </span>
+      {cleanEyebrow && (
+        <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brass">
+          {cleanEyebrow}
+        </span>
+      )}
       <h2
         className={[
           'cargent-h2 text-[32px] md:text-[42px]',

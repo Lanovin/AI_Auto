@@ -24,16 +24,8 @@ export default async function Hero() {
       <div className="mx-auto max-w-310 px-5.5 md:px-8">
         {/* ── Nadpis ───────────────────────────────────────────────── */}
         <div className="flex flex-col items-center text-center">
-          <span
-            className="animate-fade-up inline-flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-dim"
-            style={{ animationDelay: '0ms' }}
-          >
-            <span className="h-px w-5 bg-brass" aria-hidden="true" />
-            {t('hero.eyebrow').replace(/^[—–-]\s*/, '')}
-          </span>
-
           <h1
-            className="animate-rise-soft cargent-h1 mt-6"
+            className="animate-rise-soft cargent-h1"
             style={{ animationDelay: '100ms', fontSize: 'clamp(40px, 5.6vw, 74px)', letterSpacing: '-0.036em' }}
           >
             <RichText>{t('hero.title')}</RichText>
@@ -122,9 +114,6 @@ export default async function Hero() {
 
         {/* ── Ukázka ocenění ───────────────────────────────────────── */}
         <div className="mt-14 md:mt-16">
-          <p className="mb-6 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
-            {t('hero.deck_caption')}
-          </p>
           <CardDeck />
         </div>
       </div>

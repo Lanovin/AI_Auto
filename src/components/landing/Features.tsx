@@ -33,7 +33,6 @@ export default async function Features() {
       <div className="mx-auto max-w-[1240px]">
         <AnimateOnScroll>
           <SectionHead
-            eyebrow={t('features.eyebrow')}
             title={<RichText>{t('features.title')}</RichText>}
             align="center"
           />

@@ -23,11 +23,6 @@ export interface ContentField {
 
 export const CONTENT_REGISTRY = {
   // ── Hero ────────────────────────────────────────────────────────────────
-  'hero.eyebrow': {
-    default: 'Řízeno daty',
-    group: 'Hero (úvodní blok)',
-    label: 'Nadřazený popisek',
-  },
   'hero.title': {
     default: 'Tržní cena vašeho auta.\n_Podložená inzeráty._',
     group: 'Hero (úvodní blok)',
@@ -66,11 +61,6 @@ export const CONTENT_REGISTRY = {
     label: 'Upoutávka na ocenění: text',
     multiline: true,
   },
-  'hero.deck_caption': {
-    default: 'Ukázka výsledku ocenění',
-    group: 'Hero (úvodní blok)',
-    label: 'Popisek nad kartami s ukázkou ocenění',
-  },
   'hero.cta_primary': {
     default: 'Ocenit vůz zdarma',
     group: 'Hero (úvodní blok)',
@@ -95,18 +85,7 @@ export const CONTENT_REGISTRY = {
   'hero.metric.2.value': { default: 'Až 16', group: 'Hero (úvodní blok)', label: 'Metrika 3: číslo' },
   'hero.metric.2.label': { default: 'Inzerátů na odhad', group: 'Hero (úvodní blok)', label: 'Metrika 3: popisek' },
 
-  // ── Trust strip ─────────────────────────────────────────────────────────
-  'trust.0.stat': { default: 'Až 8', group: 'Pruh důvěry', label: 'Položka 1: číslo' },
-  'trust.0.label': { default: 'inzertních portálů najednou', group: 'Pruh důvěry', label: 'Položka 1: popisek' },
-  'trust.1.stat': { default: 'min–max', group: 'Pruh důvěry', label: 'Položka 2: číslo' },
-  'trust.1.label': { default: 'cenové pásmo u každého odhadu', group: 'Pruh důvěry', label: 'Položka 2: popisek' },
-  'trust.2.stat': { default: '30 s', group: 'Pruh důvěry', label: 'Položka 3: číslo' },
-  'trust.2.label': { default: 'a máte rychlý odhad', group: 'Pruh důvěry', label: 'Položka 3: popisek' },
-  'trust.3.stat': { default: 'Živá data', group: 'Pruh důvěry', label: 'Položka 4: číslo' },
-  'trust.3.label': { default: 'žádná zastaralá databáze', group: 'Pruh důvěry', label: 'Položka 4: popisek' },
-
   // ── Přehled platformy (Features) ────────────────────────────────────────
-  'features.eyebrow': { default: 'Co Cargent umí', group: 'Přehled platformy', label: 'Nadřazený popisek' },
   'features.title': {
     default: 'Vše pro _přesné ocenění_\nna jednom místě.',
     group: 'Přehled platformy',
@@ -145,7 +124,6 @@ export const CONTENT_REGISTRY = {
   },
 
   // ── Jak to funguje ──────────────────────────────────────────────────────
-  'how.eyebrow': { default: 'Jak to funguje', group: 'Jak to funguje', label: 'Nadřazený popisek' },
   'how.title': {
     default: 'Tři kroky k _reálné ceně._',
     group: 'Jak to funguje',
@@ -174,7 +152,6 @@ export const CONTENT_REGISTRY = {
   },
 
   // ── Proč věřit ceně (Engine) ────────────────────────────────────────────
-  'engine.eyebrow': { default: 'Proč věřit naší ceně', group: 'Proč věřit ceně', label: 'Nadřazený popisek' },
   'engine.title': {
     default: 'Čísla, která\n_něco znamenají._',
     group: 'Proč věřit ceně',
@@ -206,23 +183,6 @@ export const CONTENT_REGISTRY = {
     group: 'Proč věřit ceně', label: 'Důvod 4: text', multiline: true,
   },
   'engine.table_caption': { default: 'Srovnatelné vozy v analýze', group: 'Proč věřit ceně', label: 'Popisek tabulky' },
-
-  // ── Závěrečná výzva (CTA) ───────────────────────────────────────────────
-  'cta.eyebrow': { default: 'Začněte zdarma', group: 'Závěrečná výzva', label: 'Nadřazený popisek' },
-  'cta.title': {
-    default: 'Kolik vaše auto\n_skutečně stojí?_',
-    group: 'Závěrečná výzva',
-    label: 'Nadpis',
-    multiline: true,
-  },
-  'cta.subtitle': {
-    default: 'Zadejte auto a do 30 sekund uvidíte výsledek. Zdarma, bez registrace, bez kreditky.',
-    group: 'Závěrečná výzva',
-    label: 'Podnadpis',
-    multiline: true,
-  },
-  'cta.button': { default: 'Ocenit vůz zdarma', group: 'Závěrečná výzva', label: 'Tlačítko' },
-  'cta.microcopy': { default: 'Neukládáme osobní data · Výsledek ihned', group: 'Závěrečná výzva', label: 'Drobný text' },
 
   // ── Patička ─────────────────────────────────────────────────────────────
   'footer.tagline': {
